@@ -28,10 +28,10 @@
 | 名称                         | 版本       |
 |-----------------------------|------------|
 | RocketMQ                    | 5.3.0      |
-| Msql                        | 5.7        |
+| Msql                        | 8.0.32     |
 | Redis                       | 6.2        |
 | TDengine                    | 3.3.6.13   |
-| Seata                       | 1.7.1      |
+| Seata                       | 2.1.0      |
 | Sentinel                    | 1.8.7      |
 
 ### 模块说明
@@ -64,9 +64,6 @@ nqboard
      └── nqboard-visual-monitor -- 服务监控
      ├── nqboard-visual-codegen -- 图形化代码生成
      └── nqboard-visual-quartz -- 定时任务管理台
-└── nqboard-workflow
-     └── nqboard-workflow-api -- 工作流管理模块公共api模块
-     ├── nqboard-workflow-biz -- 工作流管理模块业务处理模块
 ```
 ## 项目截图
 ![](./nqboard-device/nqboard-device-biz/src/main/resources/img/demo.gif)
