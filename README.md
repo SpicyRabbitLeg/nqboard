@@ -54,7 +54,7 @@ nqboard
      └── nqboard-common-xss -- xss 安全封装
 └── nqboard-device -- iot设备管理模块
      └── nqboard-device-api -- iot设备管理模块公共api模块
-     ├── nqboard-device-biz -- iot设备管理模块业务处理模块
+     └── nqboard-device-biz -- iot设备管理模块业务处理模块
 ├── nqboard-register -- Nacos Server
 ├── nqboard-gateway -- Spring Cloud Gateway网关
 └── nqboard-upms -- 通用用户权限管理模块
