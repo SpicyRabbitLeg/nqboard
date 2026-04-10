@@ -1,0 +1,151 @@
+/*
+ *    Copyright (c) 2018-2025, lengleng All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ * Redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution.
+ * Neither the name of the pig4cloud.com developer nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ * Author: lengleng (wangiegie@gmail.com)
+ */
+
+package com.mx.nqboard.codegen.controller;
+
+import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.mx.nqboard.codegen.service.GenGroupService;
+import com.mx.nqboard.codegen.entity.GenGroupEntity;
+import com.mx.nqboard.codegen.util.vo.GroupVO;
+import com.mx.nqboard.codegen.util.vo.TemplateGroupDTO;
+import com.mx.nqboard.common.core.util.R;
+import com.mx.nqboard.common.log.annotation.SysLog;
+import com.mx.nqboard.common.security.annotation.HasPermission;
+import com.pig4cloud.plugin.excel.annotation.ResponseExcel;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+/**
+ * 模板分组管理控制器
+ *
+ * @author lengleng
+ * @date 2025/05/31
+ */
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/group")
+@Tag(description = "group", name = "模板分组管理模块")
+@SecurityRequirement(name = HttpHeaders.AUTHORIZATION)
+public class GenGroupController {
+
+	private final GenGroupService genGroupService;
+
+	/**
+	 * 分页查询模板分组
+	 * @param page 分页对象
+	 * @param genGroup 模板分组查询条件
+	 * @return 分页查询结果
+	 */
+	@GetMapping("/page")
+	@HasPermission("codegen_group_view")
+	@Operation(summary = "分页查询模板分组", description = "分页查询模板分组")
+	public R getGroupPage(Page page, GenGroupEntity genGroup) {
+		LambdaQueryWrapper<GenGroupEntity> wrapper = Wrappers.<GenGroupEntity>lambdaQuery()
+			.like(genGroup.getId() != null, GenGroupEntity::getId, genGroup.getId())
+			.like(StrUtil.isNotEmpty(genGroup.getGroupName()), GenGroupEntity::getGroupName, genGroup.getGroupName());
+		return R.ok(genGroupService.page(page, wrapper));
+	}
+
+	/**
+	 * 通过id查询模板分组
+	 * @param id id
+	 * @return R
+	 */
+	@GetMapping("/{id}")
+	@HasPermission("codegen_group_view")
+	@Operation(summary = "通过id查询模板分组", description = "通过id查询模板分组")
+	public R getGroupById(@PathVariable("id") Long id) {
+		return R.ok(genGroupService.getGroupVoById(id));
+	}
+
+	/**
+	 * 新增模板分组
+	 * @param genTemplateGroup 模板分组
+	 * @return R
+	 */
+	@PostMapping
+	@SysLog("新增模板分组")
+	@HasPermission("codegen_group_add")
+	@Operation(summary = "新增模板分组", description = "新增模板分组")
+	public R saveGroup(@RequestBody TemplateGroupDTO genTemplateGroup) {
+		genGroupService.saveGenGroup(genTemplateGroup);
+		return R.ok();
+	}
+
+	/**
+	 * 修改模板分组
+	 * @param groupVo 模板分组
+	 * @return R
+	 */
+	@PutMapping
+	@SysLog("修改模板分组")
+	@HasPermission("codegen_group_edit")
+	@Operation(summary = "修改模板分组", description = "修改模板分组")
+	public R updateGroup(@RequestBody GroupVO groupVo) {
+		genGroupService.updateGroupAndTemplateById(groupVo);
+		return R.ok();
+	}
+
+	/**
+	 * 通过id删除模板分组
+	 * @param ids id列表
+	 * @return R
+	 */
+	@DeleteMapping
+	@SysLog("通过id删除模板分组")
+	@HasPermission("codegen_group_del")
+	@Operation(summary = "通过id删除模板分组", description = "通过id删除模板分组")
+	public R removeGroupByIds(@RequestBody Long[] ids) {
+		genGroupService.delGroupAndTemplate(ids);
+		return R.ok();
+	}
+
+	/**
+	 * 导出excel 表格
+	 * @param genGroup 查询条件
+	 * @return excel 文件流
+	 */
+	@ResponseExcel
+	@GetMapping("/export")
+	@HasPermission("codegen_group_export")
+	@Operation(summary = "导出模板分组", description = "导出模板分组")
+	public List<GenGroupEntity> exportGroups(GenGroupEntity genGroup) {
+		return genGroupService.list(Wrappers.query(genGroup));
+	}
+
+	/**
+	 * 查询列表
+	 * @return 包含列表数据的响应信息
+	 */
+	@GetMapping("/list")
+	@Operation(summary = "查询列表", description = "查询列表")
+	public R listGroups() {
+		List<GenGroupEntity> list = genGroupService
+			.list(Wrappers.<GenGroupEntity>lambdaQuery().orderByDesc(GenGroupEntity::getCreateTime));
+		return R.ok(list);
+	}
+
+}

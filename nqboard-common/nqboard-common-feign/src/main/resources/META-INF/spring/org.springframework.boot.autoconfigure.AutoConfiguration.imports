@@ -1,0 +1,3 @@
+com.mx.nqboard.common.feign.NqBoardFeignAutoConfiguration
+com.mx.nqboard.common.feign.sentinel.SentinelAutoConfiguration
+com.mx.nqboard.common.feign.sentinel.handle.GlobalBizExceptionHandler

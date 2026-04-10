@@ -1,0 +1,5 @@
+com.mx.nqboard.common.core.config.JacksonConfiguration
+com.mx.nqboard.common.core.config.RedisTemplateConfiguration
+com.mx.nqboard.common.core.config.RestTemplateConfiguration
+com.mx.nqboard.common.core.config.WebMvcConfiguration
+com.mx.nqboard.common.core.util.SpringContextHolder

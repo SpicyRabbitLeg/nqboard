@@ -1,0 +1,2 @@
+com.mx.nqboard.common.rocketmq.config.RocketMqAutoConfiguration
+org.apache.rocketmq.spring.autoconfigure.RocketMQAutoConfiguration

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.mx.nqboard.device.mapper.IotDeviceMapper">
+    <resultMap id="iotDeviceMap" type="com.mx.nqboard.device.api.vo.IotDeviceVO">
+        <id property="id" column="id"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="orderNum" column="order_num"/>
+        <result property="delFlag" column="del_flag"/>
+        <result property="name" column="name"/>
+        <result property="longitude" column="longitude"/>
+        <result property="latitude" column="latitude"/>
+        <result property="status" column="status"/>
+        <result property="remark" column="remark"/>
+        <result property="productId" column="product_id"/>
+        <result property="cron" column="cron"/>
+        <association property="product" javaType="com.mx.nqboard.device.api.entity.IotProductEntity"
+                     column="product_id"
+                     select="com.mx.nqboard.device.mapper.IotProductMapper.selectById"/>
+    </resultMap>
+
+    <sql id="iotDeviceSql">
+        id,create_by,create_time,update_by,update_time,order_num,del_flag,name,longitude,latitude,status,remark,product_id,cron
+    </sql>
+
+    <select id="selectPage" resultMap="iotDeviceMap">
+        SELECT
+        <include refid="iotDeviceSql"/>
+        FROM
+        iot_device
+        <where>
+            del_flag = '0'
+            <if test="entity.name != null and entity.name != ''">
+                AND name like concat('%', #{entity.name}, '%')
+            </if>
+            <if test="entity.status != null and entity.status != ''">
+                AND status = #{entity.status}
+            </if>
+            <if test="entity.userId != null">
+                AND user_id = #{entity.userId}
+            </if>
+            <if test="entity.productId != null">
+                AND product_id = #{entity.productId}
+            </if>
+            <if test="entity.onlineDeviceIds != null and entity.onlineDeviceIds.size() > 0">
+                AND id IN
+                <foreach collection="entity.onlineDeviceIds" item="id" open="(" separator="," close=")">
+                    #{id}
+                </foreach>
+            </if>
+            <if test="entity.offlineDeviceIds != null and entity.offlineDeviceIds.size() > 0">
+                AND id NOT IN
+                <foreach collection="entity.offlineDeviceIds" item="id" open="(" separator="," close=")">
+                    #{id}
+                </foreach>
+            </if>
+        </where>
+    </select>
+</mapper>

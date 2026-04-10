@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.mx.nqboard.device.mapper.IotProductMapper">
+    <resultMap id="iotProductMap" type="com.mx.nqboard.device.api.vo.IotProductVO">
+        <id property="id" column="id"/>
+        <result property="categoryId" column="category_id"/>
+        <result property="name" column="name"/>
+        <result property="remark" column="remark"/>
+        <result property="protocol" column="protocol"/>
+        <result property="authSwitch" column="auth_switch"/>
+        <result property="authMode" column="auth_mode"/>
+        <result property="img" column="img"/>
+        <result property="orderNum" column="order_num"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="delFlag" column="del_flag"/>
+        <association property="iotCategory" javaType="com.mx.nqboard.device.api.entity.IotCategoryEntity"
+                     column="category_id"
+                     select="com.mx.nqboard.device.mapper.IotCategoryMapper.selectById"/>
+    </resultMap>
+
+
+    <sql id="iotProductSql">
+        id,order_num,category_id,name,remark,protocol,auth_switch,auth_mode,img,create_by,create_time,update_by,update_time,del_flag
+    </sql>
+
+    <select id="selectPage" resultMap="iotProductMap">
+        SELECT
+        <include refid="iotProductSql"/>
+        FROM iot_product as ip
+        <where>
+            del_flag = '0'
+            <if test="iotProduct.name != null and iotProduct.name !=''">
+                AND name like concat('%', #{iotProduct.name}, '%')
+            </if>
+
+            <if test="iotProduct.categoryId != null">
+                AND category_id = #{iotProduct.categoryId}
+            </if>
+        </where>
+    </select>
+
+
+</mapper>

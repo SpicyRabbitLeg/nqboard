@@ -1,0 +1,41 @@
+spring:
+  cache:
+    type: redis # 缓存类型 Redis
+  data:
+    redis:
+      database: 9
+      host: 127.0.0.1
+      port: 6379
+      password:
+  # 数据库相关配置
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: root
+    url: jdbc:mysql://127.0.0.1:3306/nqboard?characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=GMT%2B8&allowMultiQueries=true&nullCatalogMeansCurrent=true
+
+# 本地文件系统
+file:
+  local:
+    enable: true
+    base-path: /Users/lengleng/Downloads/img
+
+## 登录配置
+security:
+  # 登录报文加密根密钥 ，必须是16位
+  encodeKey: thanks,pig4cloud
+  # 跳过验证码校验的客户端
+  ignore-clients:
+    - test
+
+# 配置文件加密根密码
+jasypt:
+  encryptor:
+    password: pig  # 加密根密码
+    algorithm: PBEWithMD5AndDES  # 加密算法
+    iv-generator-classname: org.jasypt.iv.NoIvGenerator # 无向量生成器
+
+# 短信插件配置：https://www.yuque.com/vxixfq/pig/zw8udk
+sms:
+  is-print: false # 是否打印日志
+  config-type: yaml # 配置类型，yaml

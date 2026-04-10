@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.mx.nqboard.device.mapper.IotDynamicTableMapper">
+
+    <resultMap id="tableFieldMap" type="com.mx.nqboard.device.api.vo.IotTableFieldVO">
+        <result column="field" property="name"/>
+        <result column="length" property="length"/>
+        <result column="note" property="note"/>
+        <result column="type" property="type"/>
+    </resultMap>
+
+    <insert id="createStableTable">
+        CREATE STABLE ${tableName}
+        (   ts timestamp,
+            temp_value varchar ( 60 )
+        )  TAGS (
+            device_name varchar ( 1000 ),
+            location varchar ( 1000 )
+        );
+    </insert>
+
+    <insert id="insert">
+        INSERT INTO ${tableName}
+        <foreach open="(" close=")" collection="fieldList" item="field" separator=",">
+            ${field}
+        </foreach>
+        VALUES
+        <foreach open="(" close=")"  collection="valueList" item="value" separator=",">
+            #{value}
+        </foreach>
+    </insert>
+
+    <update id="createTableTable">
+        CREATE TABLE ${tableName} USING ${superTableName} TAGS (${tags})
+    </update>
+
+    <update id="addStableTableFiled">
+        ALTER TABLE ${tableName} ADD COLUMN ${field.name} ${field.type}
+        <if test="field.comment != null and field.comment != ''">
+            COMMENT ${field.comment}
+        </if>
+    </update>
+
+
+    <update id="updateStableTableFiled">
+        ALTER TABLE ${tableName} MODIFY COLUMN ${field.name} ${field.type}
+        <if test="field.comment != null and field.comment != ''">
+            COMMENT ${field.comment}
+        </if>
+    </update>
+
+
+    <delete id="deleteStableTableFiled">
+        ALTER TABLE ${tableName} DROP COLUMN ${field};
+    </delete>
+
+    <delete id="deleteTable">
+        DROP TABLE IF EXISTS ${tableName}
+    </delete>
+
+    <delete id="deleteStable">
+        DROP STABLE IF EXISTS ${tableName}
+    </delete>
+
+
+    <select id="selectStableTableField" resultMap="tableFieldMap">
+        DESCRIBE ${tableName};
+    </select>
+
+
+    <select id="selectStables" resultType="java.lang.String">
+        SHOW STABLES;
+    </select>
+
+    <select id="selectTables" resultType="java.lang.String">
+        SHOW TABLES;
+    </select>
+
+
+    <select id="selectLastByDevice" resultType="java.util.Map">
+        SELECT
+        <foreach item="field" collection="fieldList" separator=",">
+            last(${field}) AS ${field}
+        </foreach>
+        FROM ${sTableName}
+        <where>
+            device_name = #{deviceName}
+        </where>
+    </select>
+
+    <select id="selectIotDynamicDevicePage" resultType="java.util.Map">
+        SELECT
+        <foreach item="field" collection="fieldList" separator=",">
+            ${field}
+        </foreach>
+        FROM ${sTableName}
+        <where>
+            device_name = #{deviceName}
+            <if test="filterTime != null">
+                AND ts between #{filterTime[0]} and #{filterTime[1]}
+            </if>
+        </where>
+    </select>
+</mapper>

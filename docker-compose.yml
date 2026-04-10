@@ -1,0 +1,124 @@
+services:
+  nqboard-mysql:
+    build:
+      context: ./db
+    environment:
+      MYSQL_ROOT_HOST: "%"
+      MYSQL_ROOT_PASSWORD: root
+    restart: always
+    container_name: nqboard-mysql
+    image: nqboard-mysql
+    mem_limit: 1g
+    mem_reservation: 512m
+    ports:
+      - 3306:3306
+    networks:
+      - spring_cloud_default
+
+  nqboard-taos:
+    image: tdengine/tdengine:3.3.6.13
+    container_name: nqboard-taos
+    restart: always
+    ports:
+      - "6030:6030"
+      - "6041:6041"
+      - "6035:6035"
+      - "6043:6043"
+      - "6044:6044"
+      - "6045:6045"
+      - "6060:6060"
+    volumes:
+      - ./db/taos/taos.cfg:/etc/taos/taos.cfg:ro
+    mem_limit: 1g
+    mem_reservation: 512m
+    environment:
+      - TZ=Asia/Shanghai
+    networks:
+      - spring_cloud_default
+
+  nqboard-redis:
+    image: registry.cn-hangzhou.aliyuncs.com/dockerhub_mirror/redis
+    ports:
+      - 6379:6379
+    restart: always
+    mem_limit: 1g
+    mem_reservation: 512m
+    container_name: nqboard-redis
+    hostname: nqboard-redis
+    networks:
+      - spring_cloud_default
+
+  nqboard-register:
+    build:
+      context: ./nqboard-register
+    restart: always
+    ports:
+      - 8848:8848
+      - 9848:9848
+      - 8080:8080
+    environment:
+      MYSQL_HOST: nqboard-mysql
+      REDIS_HOST: nqboard-redis
+    mem_limit: 1g
+    mem_reservation: 512m
+    container_name: nqboard-register
+    hostname: nqboard-register
+    image: nqboard-register
+    networks:
+      - spring_cloud_default
+        
+  nqboard-seata:
+    image: apache/seata-server:2.1.0
+    container_name: nqboard-seata
+    restart: always
+    ports:
+      - "7091:7091"
+      - "8091:8091"
+    mem_limit: 1g
+    mem_reservation: 512m
+    volumes:
+      - ./db/seata/application.yml:/seata-server/resources/application.yml
+    depends_on:
+      - nqboard-register
+    networks:
+      - spring_cloud_default
+
+  nqboard-rocketmq-server:
+    image: apache/rocketmq:5.3.0
+    container_name: nqboard-rocketmq-server
+    restart: always
+    privileged: true
+    ports:
+      - "9876:9876"
+    mem_limit: 1g
+    mem_reservation: 512m
+    command: sh mqnamesrv
+    networks:
+      - spring_cloud_default
+
+  nqboard-rocketmq-broker1:
+    image: apache/rocketmq:5.3.0
+    container_name: nqboard-rocketmq-broker1
+    restart: always
+    privileged: true
+    ports:
+      - "10911:10911"
+      - "10909:10909"
+      - "10912:10912"
+    environment:
+      - NAMESRV_ADDR=nqboard-rocketmq-server:9876
+      - JAVA_OPT_EXT=-Xms512m -Xmx512m -Xmn256m
+    volumes:
+      - ./db/rocketmq/broker.conf:/home/rocketmq/conf/broker.conf
+    mem_limit: 2g
+    mem_reservation: 1g
+    depends_on:
+      - nqboard-rocketmq-server
+    command: sh mqbroker -c /home/rocketmq/conf/broker.conf
+    networks:
+      - spring_cloud_default
+        
+networks:
+  spring_cloud_default:
+    name:  spring_cloud_default
+    driver: bridge

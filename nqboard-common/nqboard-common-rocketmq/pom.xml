@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>com.mx</groupId>
+		<artifactId>nqboard-common</artifactId>
+		<version>${revision}</version>
+	</parent>
+
+	<artifactId>nqboard-common-rocketmq</artifactId>
+	<description>nqboard 消息队列处理模块</description>
+
+	<dependencies>
+		<!--核心依赖-->
+		<dependency>
+			<groupId>com.mx</groupId>
+			<artifactId>nqboard-common-core</artifactId>
+		</dependency>
+
+		<!-- rocketMQ -->
+		<dependency>
+			<groupId>org.apache.rocketmq</groupId>
+			<artifactId>rocketmq-spring-boot-starter</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>org.apache.rocketmq</groupId>
+					<artifactId>rocketmq-client</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.rocketmq</groupId>
+			<artifactId>rocketmq-client</artifactId>
+		</dependency>
+	</dependencies>
+</project>

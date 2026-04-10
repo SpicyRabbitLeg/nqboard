@@ -1,0 +1,8 @@
+com.mx.nqboard.common.security.service.NqBoardUserDetailsServiceImpl
+com.mx.nqboard.common.security.service.NqBoardAppUserDetailsServiceImpl
+com.mx.nqboard.common.security.service.NqBoardRedisOAuth2AuthorizationService
+com.mx.nqboard.common.security.service.NqBoardRedisOAuth2AuthorizationConsentService
+com.mx.nqboard.common.security.component.NqBoardSecurityInnerAspect
+com.mx.nqboard.common.security.component.NqBoardSecurityMessageSourceConfiguration
+com.mx.nqboard.common.security.component.NqBoardBootCorsProperties
+com.mx.nqboard.common.security.service.NqBoardRemoteRegisteredClientRepository

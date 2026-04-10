@@ -1,0 +1,7 @@
+com.mx.nqboard.admin.api.feign.RemoteClientDetailsService
+com.mx.nqboard.admin.api.feign.RemoteDictService
+com.mx.nqboard.admin.api.feign.RemoteFileService
+com.mx.nqboard.admin.api.feign.RemoteLogService
+com.mx.nqboard.admin.api.feign.RemoteParamService
+com.mx.nqboard.admin.api.feign.RemoteTokenService
+com.mx.nqboard.admin.api.feign.RemoteUserService

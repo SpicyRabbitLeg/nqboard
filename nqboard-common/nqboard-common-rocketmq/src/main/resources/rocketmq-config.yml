@@ -1,0 +1,23 @@
+# RocketMQ 配置
+rocketmq:
+  # NameServer 地址，多个地址用分号分隔
+  name-server: 127.0.0.1:9876
+  # 启用 RocketMQ（默认 true，可省略）
+  enabled: true
+  # 生产者配置
+  producer:
+    # 生产者组（必填，建议与业务模块相关）
+    group: nqboard-iot-group
+    # 消息发送超时（毫秒，默认 3000）
+    send-message-timeout: 10000
+    # 发送失败重试次数（默认 2）
+    retry-times-when-send-failed: 2
+    # 最大消息大小（字节，默认 4MB）
+    max-message-size: 4194304
+    # 压缩消息阈值（字节，默认 4KB，低于此值不压缩）
+    compress-message-body-threshold: 4096
+    # 是否开启事务消息（默认 false）
+    transactional: true
+  # ACL（访问控制）配置（可选，若服务端启用 ACL 则必须配置）
+  access-key: nqboard
+  secret-key: nqboard

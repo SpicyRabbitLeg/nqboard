@@ -1,0 +1,3 @@
+com.mx.nqboard.common.websocket.config.WebSocketAutoConfiguration
+com.mx.nqboard.common.websocket.config.RedisMessageDistributorConfiguration
+com.mx.nqboard.common.websocket.config.LocalMessageDistributorConfiguration

@@ -1,0 +1,40 @@
+/*
+ *    Copyright (c) 2018-2025, lengleng All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ * Redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution.
+ * Neither the name of the pig4cloud.com developer nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ * Author: lengleng (wangiegie@gmail.com)
+ */
+
+package com.mx.nqboard.daemon.quartz.event;
+
+import com.mx.nqboard.daemon.quartz.entity.SysJob;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import org.quartz.Trigger;
+
+/**
+ * 系统任务事件类，用于封装定时任务及其触发器
+ *
+ * @author frwcloud
+ * @author lengleng
+ * @date 2025/05/31
+ */
+@Getter
+@AllArgsConstructor
+public class SysJobEvent {
+
+	private final SysJob sysJob;
+
+	private final Trigger trigger;
+
+}

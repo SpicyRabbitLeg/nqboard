@@ -1,0 +1,65 @@
+server:
+  port: 7091
+
+spring:
+  application:
+    name: seata-server
+  profiles:
+    active: docker
+
+logging:
+  config: classpath:logback-spring.xml
+  file:
+    path: ${log.home:${user.home}/logs/seata}
+
+console:
+  user:
+    username: seata
+    password: seata
+
+seata:
+  # 配置中心：从 Nacos 读取 seata 配置
+  config:
+    type: nacos
+    nacos:
+      server-addr: nqboard-register:8848
+      namespace: public
+      group: DEFAULT_GROUP
+      username: nacos
+      password: nacos
+      data-id: seata.properties
+
+  # 注册中心：把 Seata 注册到 Nacos
+  registry:
+    type: nacos
+    nacos:
+      server-addr: nqboard-register:8848
+      namespace: public
+      group: DEFAULT_GROUP
+      username: nacos
+      password: nacos
+      application: seata-server
+      cluster: default
+
+  # 服务端口
+  server:
+    service-port: 8091
+    enable-check-auth: false
+    max-commit-retry-timeout: -1
+    max-rollback-retry-timeout: -1
+
+  # 存储模式（默认 file，生产建议 db）
+  store:
+    mode: file
+    session:
+      mode: file
+    lock:
+      mode: file
+
+  # 安全配置
+  security:
+    secretKey: SeataSecretKey0c382ef121d778043159209298fd40bf3850a017
+    tokenValidityInMilliseconds: 1800000
+
+  metrics:
+    enabled: false

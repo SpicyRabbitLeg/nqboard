@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mx.nqboard.admin.mapper.SysUserMapper">
+	<!-- 通用查询映射结果 -->
+	<resultMap id="baseResultMap" type="com.mx.nqboard.admin.api.vo.UserVO">
+		<id column="user_id" property="userId"/>
+		<result column="username" property="username"/>
+		<result column="password" property="password"/>
+		<result column="salt" property="salt"/>
+		<result column="phone" property="phone"/>
+		<result column="avatar" property="avatar"/>
+		<result column="wx_openid" property="wxOpenid"/>
+		<result column="qq_openid" property="qqOpenid"/>
+		<result column="gitee_login" property="giteeOpenId"/>
+		<result column="osc_id" property="oscOpenId"/>
+		<result column="create_time" property="createTime"/>
+		<result column="update_time" property="updateTime"/>
+		<result column="lock_flag" property="lockFlag"/>
+		<result column="del_flag" property="delFlag"/>
+		<result column="nickname" property="nickname"/>
+		<result column="name" property="name"/>
+		<result column="email" property="email"/>
+		<association property="dept" javaType="com.mx.nqboard.admin.api.entity.SysDept" column="dept_id"
+                     select="com.mx.nqboard.admin.mapper.SysDeptMapper.selectById">
+		</association>
+		<collection property="roleList" ofType="com.mx.nqboard.admin.api.entity.SysRole"
+					select="com.mx.nqboard.admin.mapper.SysRoleMapper.listRolesByUserId" column="user_id">
+		</collection>
+		<collection property="postList" ofType="com.mx.nqboard.admin.api.entity.SysPost"
+					select="com.mx.nqboard.admin.mapper.SysPostMapper.listPostsByUserId" column="user_id">
+		</collection>
+	</resultMap>
+
+	<!-- 用户查询SQL -->
+	<sql id="userQuerySql">
+		SELECT * FROM sys_user u
+		<where>
+			u.del_flag = '0'
+			<if test="query.userId != null and query.userId != ''">
+				AND u.user_id = #{query.userId}
+			</if>
+			<if test="query.username != null and query.username != ''">
+				<bind name="usernameLike" value="'%'+query.username+'%'"/>
+				AND u.username LIKE #{usernameLike}
+			</if>
+			<if test="query.deptId != null and query.deptId != ''">
+				AND u.dept_id = #{query.deptId}
+			</if>
+			<if test="query.phone != null and query.phone != ''">
+				<bind name="phoneLike" value="'%'+query.phone+'%'"/>
+				AND u.phone LIKE #{phoneLike}
+			</if>
+		</where>
+		ORDER BY u.create_time DESC
+	</sql>
+
+	<!-- 分页查询 -->
+	<select id="getUsersPage" resultMap="baseResultMap">
+		<include refid="userQuerySql"/>
+	</select>
+
+	<!-- 用户列表  -->
+	<select id="listUsers" resultMap="baseResultMap">
+		<include refid="userQuerySql"/>
+	</select>
+
+	<!-- 查询用户信息  （单个）-->
+	<select id="getUser" resultMap="baseResultMap">
+		SELECT * FROM sys_user u
+		<where>
+			u.del_flag = '0'
+			<if test="query.userId != null and query.userId != ''">
+				AND u.user_id = #{query.userId}
+			</if>
+			<if test="query.username != null and query.username != ''">
+				AND u.username = #{query.username}
+			</if>
+			<if test="query.deptId != null and query.deptId != ''">
+				AND u.dept_id = #{query.deptId}
+			</if>
+			<if test="query.phone != null and query.phone != ''">
+				AND u.phone = #{query.phone}
+			</if>
+		</where>
+	</select>
+</mapper>
