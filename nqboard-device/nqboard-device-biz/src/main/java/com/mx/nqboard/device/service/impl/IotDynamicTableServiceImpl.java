@@ -18,9 +18,9 @@ import com.mx.nqboard.device.api.vo.IotPointVO;
 import com.mx.nqboard.device.api.vo.IotTableFieldVO;
 import com.mx.nqboard.device.mapper.IotDeviceMapper;
 import com.mx.nqboard.device.mapper.IotDynamicTableMapper;
-import com.mx.nqboard.device.mapper.IotPointMapper;
 import com.mx.nqboard.device.mapper.IotProductMapper;
 import com.mx.nqboard.device.service.IotDynamicTableService;
+import com.mx.nqboard.device.service.IotPointService;
 import com.mx.nqboard.device.utils.ColumnNameValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +41,7 @@ public class IotDynamicTableServiceImpl implements IotDynamicTableService {
 
     private final IotDeviceMapper deviceMapper;
 
-    private final IotPointMapper pointMapper;
+    private final IotPointService pointService;
 
     private final IotProductMapper productMapper;
 
@@ -126,7 +126,7 @@ public class IotDynamicTableServiceImpl implements IotDynamicTableService {
         // 根据设备获取表字段
         IotPointEntity queryPoint = new IotPointEntity();
         queryPoint.setDeviceId(deviceId);
-        List<IotPointVO> pointList = pointMapper.getPointDetailByDeviceId(queryPoint);
+        List<IotPointVO> pointList = pointService.getPointDetailByDeviceId(queryPoint);
         List<String> fieldList = pointList.stream()
                 .map(IotPointVO::getModel)
                 .map(IotModelVO::getIdentifier)
@@ -145,7 +145,7 @@ public class IotDynamicTableServiceImpl implements IotDynamicTableService {
         // 根据设备获取表字段
         IotPointEntity queryPoint = new IotPointEntity();
         queryPoint.setDeviceId(query.getDeviceId());
-        List<IotPointVO> pointList = pointMapper.getPointDetailByDeviceId(queryPoint);
+        List<IotPointVO> pointList = pointService.getPointDetailByDeviceId(queryPoint);
         List<String> fieldList = pointList.stream()
                 .map(IotPointVO::getModel)
                 .map(IotModelVO::getIdentifier)

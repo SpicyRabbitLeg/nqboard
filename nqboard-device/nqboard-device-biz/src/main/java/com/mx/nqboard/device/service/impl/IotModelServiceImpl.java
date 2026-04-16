@@ -2,7 +2,9 @@ package com.mx.nqboard.device.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.lang.Assert;
+import cn.hutool.core.util.ObjectUtil;
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.baomidou.mybatisplus.extension.toolkit.SqlHelper;
@@ -13,10 +15,13 @@ import com.mx.nqboard.device.api.dto.IotModelDTO;
 import com.mx.nqboard.device.api.dto.TransactionDTO;
 import com.mx.nqboard.device.api.entity.IotModelEntity;
 import com.mx.nqboard.device.api.entity.IotModelTemplateEntity;
+import com.mx.nqboard.device.api.entity.IotPointEntity;
 import com.mx.nqboard.device.api.entity.IotProductEntity;
 import com.mx.nqboard.device.api.vo.IotModelVO;
+import com.mx.nqboard.device.api.vo.IotPointVO;
 import com.mx.nqboard.device.mapper.IotModelMapper;
 import com.mx.nqboard.device.mapper.IotModelTemplateMapper;
+import com.mx.nqboard.device.mapper.IotPointMapper;
 import com.mx.nqboard.device.mapper.IotProductMapper;
 import com.mx.nqboard.device.service.IotDynamicTableService;
 import com.mx.nqboard.device.service.IotModelService;
@@ -31,7 +36,10 @@ import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -49,6 +57,8 @@ public class IotModelServiceImpl extends ServiceImpl<IotModelMapper, IotModelEnt
     private final IotModelTemplateMapper modelTemplateMapper;
 
     private final IotProductMapper productMapper;
+
+    private final IotPointMapper pointMapper;
 
     private final IotDynamicTableService dynamicTableService;
 
@@ -74,7 +84,28 @@ public class IotModelServiceImpl extends ServiceImpl<IotModelMapper, IotModelEnt
 
     @Override
     public List<IotModelVO> getModelByProduct(Long productId, Long deviceId) {
-        return modelMapper.selectModelByProduct(productId,deviceId);
+        List<IotModelEntity> modelList = modelMapper.selectList(Wrappers.<IotModelEntity>lambdaQuery()
+                .eq(IotModelEntity::getProductId, productId)
+                .orderByAsc(IotModelEntity::getOrderNum));
+        if (ObjectUtil.isEmpty(modelList)) {
+            return Collections.emptyList();
+        }
+
+        List<Long> modelIds = modelList.stream().map(IotModelEntity::getId).collect(Collectors.toList());
+        Map<Long, IotPointEntity> pointMap = pointMapper.selectList(Wrappers.<IotPointEntity>lambdaQuery()
+                        .eq(IotPointEntity::getDeviceId, deviceId)
+                        .in(IotPointEntity::getModelId, modelIds))
+                .stream()
+                .collect(Collectors.toMap(IotPointEntity::getModelId, point -> point, (a, b) -> a));
+
+        return modelList.stream().map(model -> {
+            IotModelVO vo = BeanUtil.copyProperties(model, IotModelVO.class);
+            IotPointEntity pointEntity = pointMap.get(model.getId());
+            if (ObjectUtil.isNotNull(pointEntity)) {
+                vo.setPoint(BeanUtil.copyProperties(pointEntity, IotPointVO.class));
+            }
+            return vo;
+        }).collect(Collectors.toList());
     }
 
     @Override

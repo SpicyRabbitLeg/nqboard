@@ -22,7 +22,7 @@ public interface IotProductService extends IService<IotProductEntity> {
      * @param iotProduct iotProduct
      * @return 分页对象
      */
-    IPage<IotProductVO> page(Page page, IotProductEntity iotProduct);
+    IPage<IotProductVO> page(Page<IotProductEntity> page, IotProductEntity iotProduct);
 
     /**
      * 新增产品

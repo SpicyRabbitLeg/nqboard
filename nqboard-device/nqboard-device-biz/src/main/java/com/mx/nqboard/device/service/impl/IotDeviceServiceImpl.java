@@ -100,7 +100,41 @@ public class IotDeviceServiceImpl extends ServiceImpl<IotDeviceMapper, IotDevice
                 entity.setStatus(null);
             }
         }
-        IPage<IotDeviceVO> resultPage = deviceMapper.selectPage(page, entity);
+        LambdaQueryWrapper<IotDeviceEntity> queryWrapper = Wrappers.lambdaQuery();
+        queryWrapper.like(StrUtil.isNotBlank(entity.getName()), IotDeviceEntity::getName, entity.getName());
+        queryWrapper.eq(StrUtil.isNotBlank(entity.getStatus()), IotDeviceEntity::getStatus, entity.getStatus());
+        queryWrapper.eq(ObjectUtil.isNotNull(entity.getUserId()), IotDeviceEntity::getUserId, entity.getUserId());
+        queryWrapper.eq(ObjectUtil.isNotNull(entity.getProductId()), IotDeviceEntity::getProductId, entity.getProductId());
+        queryWrapper.in(ObjectUtil.isNotEmpty(entity.getOnlineDeviceIds()), IotDeviceEntity::getId, entity.getOnlineDeviceIds());
+        queryWrapper.notIn(ObjectUtil.isNotEmpty(entity.getOfflineDeviceIds()), IotDeviceEntity::getId, entity.getOfflineDeviceIds());
+
+        IPage<IotDeviceEntity> devicePage = deviceMapper.selectPage(page, queryWrapper);
+        List<IotDeviceEntity> deviceRecords = devicePage.getRecords();
+
+        Map<Long, IotProductEntity> productMap = Collections.emptyMap();
+        if (ObjectUtil.isNotEmpty(deviceRecords)) {
+            List<Long> productIds = deviceRecords.stream()
+                    .map(IotDeviceEntity::getProductId)
+                    .filter(ObjectUtil::isNotNull)
+                    .distinct()
+                    .collect(Collectors.toList());
+            if (ObjectUtil.isNotEmpty(productIds)) {
+                productMap = productMapper.selectList(Wrappers.<IotProductEntity>lambdaQuery()
+                                .in(IotProductEntity::getId, productIds))
+                        .stream()
+                        .collect(Collectors.toMap(IotProductEntity::getId, product -> product, (a, b) -> a));
+            }
+        }
+        final Map<Long, IotProductEntity> finalProductMap = productMap;
+
+        List<IotDeviceVO> voRecords = deviceRecords.stream().map(device -> {
+            IotDeviceVO vo = BeanUtil.copyProperties(device, IotDeviceVO.class);
+            vo.setProduct(finalProductMap.get(device.getProductId()));
+            return vo;
+        }).collect(Collectors.toList());
+
+        Page<IotDeviceVO> resultPage = new Page<>(devicePage.getCurrent(), devicePage.getSize(), devicePage.getTotal());
+        resultPage.setRecords(voRecords);
 
         // 查询在线状态
         for (IotDeviceVO record : resultPage.getRecords()) {
