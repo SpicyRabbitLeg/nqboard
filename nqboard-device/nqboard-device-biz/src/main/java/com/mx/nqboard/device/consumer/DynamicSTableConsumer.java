@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 /**
  * 产品保存成功，生成时序超级表
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  **/
 @Slf4j
 @Component

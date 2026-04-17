@@ -46,7 +46,7 @@ import java.util.stream.Collectors;
  * 物模型管理 服务实现类
  * </p>
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 @Slf4j
 @Service

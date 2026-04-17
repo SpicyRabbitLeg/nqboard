@@ -6,7 +6,7 @@ import lombok.Data;
 /**
  * 正常范围对象
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 @Data
 public class SpecsDTO {

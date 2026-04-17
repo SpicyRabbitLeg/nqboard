@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
 /**
  * 产品表
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 @Mapper
 public interface IotProductMapper extends BaseMapper<IotProductEntity> {

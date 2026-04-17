@@ -30,7 +30,7 @@ import java.util.Map;
 /**
  * 主动采集设备数据入库
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 @Slf4j
 @Service

@@ -9,7 +9,7 @@ import org.apache.ibatis.annotations.Mapper;
  * 通用物模型管理 Mapper 接口
  * </p>
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 @Mapper
 public interface IotModelTemplateMapper extends BaseMapper<IotModelTemplateEntity> {

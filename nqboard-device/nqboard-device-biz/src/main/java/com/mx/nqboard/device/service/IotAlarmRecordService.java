@@ -9,7 +9,7 @@ import com.mx.nqboard.device.api.entity.IotAlarmRecordEntity;
  * 告警记录管理 服务类
  * </p>
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 public interface IotAlarmRecordService extends IService<IotAlarmRecordEntity> {
 	/**

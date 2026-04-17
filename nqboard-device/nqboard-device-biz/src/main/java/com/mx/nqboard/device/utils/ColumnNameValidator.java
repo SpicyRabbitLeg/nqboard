@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
 /**
  * 校验字段是否符合规范
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 public class ColumnNameValidator {
     /**

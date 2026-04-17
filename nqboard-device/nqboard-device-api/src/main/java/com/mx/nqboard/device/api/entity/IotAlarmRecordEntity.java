@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
  * 告警记录表
  * </p>
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 @Data
 @TableName("iot_alarm_record")

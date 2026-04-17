@@ -23,7 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * mqtt协议
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 @Slf4j
 @Service

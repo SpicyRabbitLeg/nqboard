@@ -13,7 +13,7 @@ import java.util.List;
  * 物模型管理 服务类
  * </p>
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 public interface IotModelService extends IService<IotModelEntity> {
     /**

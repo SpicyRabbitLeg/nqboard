@@ -11,7 +11,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 /**
  * 服务启动类
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 @EnableNqBoardDoc(value = "device")
 @EnableNqBoardFeignClients

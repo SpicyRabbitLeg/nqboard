@@ -8,7 +8,7 @@ import java.io.Serializable;
 /**
  * 分布式事务传输对象
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  **/
 @Data
 public class TransactionDTO<T> implements Serializable {

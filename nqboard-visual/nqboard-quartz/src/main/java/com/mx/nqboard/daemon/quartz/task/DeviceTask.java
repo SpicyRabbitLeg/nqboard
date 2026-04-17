@@ -23,7 +23,7 @@ import java.util.List;
 /**
  * 设备定时采集任务
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 @Slf4j
 @Component("device")

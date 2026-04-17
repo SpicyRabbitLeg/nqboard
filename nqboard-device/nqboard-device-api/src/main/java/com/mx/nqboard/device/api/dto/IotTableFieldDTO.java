@@ -6,7 +6,7 @@ import lombok.Data;
 /**
  * 时序数据库字段
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 @Data
 public class IotTableFieldDTO {

@@ -15,7 +15,7 @@ import java.util.Map;
 /**
  * 时序数据库动态表
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 @DS("taso_iot")
 @Mapper

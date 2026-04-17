@@ -3,7 +3,7 @@ package com.mx.nqboard.common.core.exception;
 /**
  * 导入文件错误
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 public class ImportFileException extends RuntimeException {
     private static final long serialVersionUID = 1L;

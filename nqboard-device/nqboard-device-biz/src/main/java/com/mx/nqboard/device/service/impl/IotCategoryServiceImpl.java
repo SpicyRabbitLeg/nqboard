@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
  * 产品分类管理 服务实现类
  * </p>
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 @Slf4j
 @Service

@@ -11,7 +11,7 @@ import java.util.Map;
 /**
  * 策略模式
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 @Log4j2
 @Service

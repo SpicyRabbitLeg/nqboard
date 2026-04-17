@@ -12,7 +12,7 @@ import java.util.List;
  * 设备值 服务类
  * </p>
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 @Slf4j
 @Service

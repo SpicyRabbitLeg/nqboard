@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 /**
  * 通用物模型导出excel
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 @Data
 @Schema(description = "通用物模型导出excel")

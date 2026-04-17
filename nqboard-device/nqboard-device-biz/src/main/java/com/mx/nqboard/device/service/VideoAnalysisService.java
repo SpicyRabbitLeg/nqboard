@@ -6,7 +6,7 @@ import com.mx.nqboard.device.api.vo.VideoAnalysisResponseVO;
 /**
  * 摄像头AI服务接口
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 public interface VideoAnalysisService {
 

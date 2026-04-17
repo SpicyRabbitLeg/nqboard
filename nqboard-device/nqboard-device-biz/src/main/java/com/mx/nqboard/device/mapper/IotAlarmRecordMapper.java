@@ -9,7 +9,7 @@ import org.apache.ibatis.annotations.Mapper;
  * 告警记录管理 Mapper 接口
  * </p>
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 @Mapper
 public interface IotAlarmRecordMapper extends BaseMapper<IotAlarmRecordEntity> {

@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
  * 通用物模型管理 服务实现类
  * </p>
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 @Service
 public class IotModelTemplateServiceImpl extends ServiceImpl<IotModelTemplateMapper, IotModelTemplateEntity> implements IotModelTemplateService {

@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * 设备告警-生成告警记录
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  **/
 @Log4j2
 @Component

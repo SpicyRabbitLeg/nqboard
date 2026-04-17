@@ -12,7 +12,7 @@ import java.io.Serializable;
 /**
  * 产品
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 @Data
 @ToString(callSuper = true)

@@ -30,7 +30,7 @@ import java.util.List;
  * 产品分类管理 前端控制器
  * </p>
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 @RestController
 @RequiredArgsConstructor

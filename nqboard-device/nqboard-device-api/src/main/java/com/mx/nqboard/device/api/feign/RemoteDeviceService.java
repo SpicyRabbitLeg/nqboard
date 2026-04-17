@@ -11,7 +11,7 @@ import java.util.List;
 
 /**
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 @FeignClient(contextId = "remoteDeviceService", value = ServiceNameConstants.DEVICE_SERVICE)
 public interface RemoteDeviceService {

@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit;
  * 告警记录管理 服务实现类
  * </p>
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 @Slf4j
 @Service

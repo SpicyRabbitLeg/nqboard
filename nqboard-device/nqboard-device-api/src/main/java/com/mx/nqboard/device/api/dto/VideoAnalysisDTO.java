@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * 摄像头AI服务注册请求DTO
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 @Data
 @Schema(description = "摄像头AI服务注册请求")

@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 /**
  * 分布式事务handler
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  **/
 public interface TransactionCustomService<T> {
     /**

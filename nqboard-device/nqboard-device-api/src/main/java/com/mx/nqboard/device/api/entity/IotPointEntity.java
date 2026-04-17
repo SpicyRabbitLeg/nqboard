@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 /**
  * 设备端点表
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 @Data
 @TableName("iot_point")

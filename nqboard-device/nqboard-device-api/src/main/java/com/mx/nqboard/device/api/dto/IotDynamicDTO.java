@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * 动态表入参
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 @Data
 public class IotDynamicDTO {

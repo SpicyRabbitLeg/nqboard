@@ -12,7 +12,7 @@ import org.springframework.messaging.Message;
 /**
  * 全局事务处理
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  **/
 @Log4j2
 @RequiredArgsConstructor

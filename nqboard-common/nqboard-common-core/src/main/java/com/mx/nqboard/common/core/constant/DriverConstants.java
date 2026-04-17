@@ -3,7 +3,7 @@ package com.mx.nqboard.common.core.constant;
 /**
  * 驱动类型【与字典匹配 protocol】
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 public interface DriverConstants {
     /**

@@ -6,7 +6,7 @@ import java.util.Arrays;
 import java.util.Optional;
 
 /**
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 public enum PointTypeFlagEnum {
     /**

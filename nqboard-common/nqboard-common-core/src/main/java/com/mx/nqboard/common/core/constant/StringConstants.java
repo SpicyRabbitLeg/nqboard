@@ -1,7 +1,7 @@
 package com.mx.nqboard.common.core.constant;
 
 /**
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 public interface StringConstants {
     /**

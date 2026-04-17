@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 /**
  * 设备删除
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  **/
 @Slf4j
 @Service

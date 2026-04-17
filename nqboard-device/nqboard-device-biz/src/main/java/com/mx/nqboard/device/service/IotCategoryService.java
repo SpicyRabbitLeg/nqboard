@@ -8,7 +8,7 @@ import com.mx.nqboard.device.api.entity.IotCategoryEntity;
  * 产品分类管理 服务类
  * </p>
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 public interface IotCategoryService extends IService<IotCategoryEntity> {
 

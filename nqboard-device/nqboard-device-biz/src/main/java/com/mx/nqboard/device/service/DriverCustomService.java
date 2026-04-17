@@ -8,7 +8,7 @@ import java.util.Map;
 /**
  * 驱动自定义
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 public interface DriverCustomService {
     /**

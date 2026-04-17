@@ -12,7 +12,7 @@ import java.util.Optional;
  * 策略模式
  * 分布式事务消息
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 @Log4j2
 @Service

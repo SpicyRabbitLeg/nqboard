@@ -10,7 +10,7 @@ import java.util.Map;
 /**
  * 设备写入数据传输对象
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 @Data
 @Schema(description = "设备写入数据传输对象")

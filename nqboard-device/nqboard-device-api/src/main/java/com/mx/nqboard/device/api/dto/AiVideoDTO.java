@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 /**
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  **/
 @Data
 public class AiVideoDTO {

@@ -8,7 +8,7 @@ import com.mx.nqboard.device.api.entity.IotModelTemplateEntity;
  * 通用物模型管理 服务类
  * </p>
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 public interface IotModelTemplateService extends IService<IotModelTemplateEntity> {
 }

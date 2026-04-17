@@ -12,7 +12,7 @@ import com.mx.nqboard.device.api.vo.IotProductVO;
  * 产品管理 服务类
  * </p>
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 public interface IotProductService extends IService<IotProductEntity> {
 

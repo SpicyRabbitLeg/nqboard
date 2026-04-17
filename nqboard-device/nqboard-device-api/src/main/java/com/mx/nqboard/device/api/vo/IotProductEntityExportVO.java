@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 
 /**
  * 产品导出excel
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 @Data
 @Schema(description = "产品导出excel")

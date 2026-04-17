@@ -13,7 +13,7 @@ import java.util.Map;
  * 时序数据库动态表 服务类
  * </p>
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 public interface IotDynamicTableService {
 

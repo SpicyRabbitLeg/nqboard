@@ -27,7 +27,7 @@ import java.util.List;
  * 物模型管理 前端控制器
  * </p>
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 @RestController
 @RequiredArgsConstructor

@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 /**
  * 产品表
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 @Data
 @TableName("iot_product")

@@ -4,7 +4,7 @@ import lombok.NoArgsConstructor;
 
 /**
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 @NoArgsConstructor
 public class ReadPointException extends RuntimeException {

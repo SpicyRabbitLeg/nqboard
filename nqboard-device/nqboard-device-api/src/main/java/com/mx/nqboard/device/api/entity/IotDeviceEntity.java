@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 /**
  * 设备表
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 @Data
 @TableName("iot_device")

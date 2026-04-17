@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * opc-ua驱动
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 @Slf4j
 @Service

@@ -16,7 +16,7 @@ import java.util.List;
  * 设备管理 服务类
  * </p>
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 public interface IotDeviceService extends IService<IotDeviceEntity> {
 

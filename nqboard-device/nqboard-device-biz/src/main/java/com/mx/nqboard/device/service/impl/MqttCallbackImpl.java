@@ -28,7 +28,7 @@ import java.util.List;
 /**
  * mqtt callback
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 @Slf4j
 public class MqttCallbackImpl implements MqttCallback {

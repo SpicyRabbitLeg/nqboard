@@ -8,7 +8,7 @@ import org.springframework.context.annotation.PropertySource;
 /**
  * rocketmq 配置类
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 @PropertySource(value = "classpath:rocketmq-config.yml", factory = YamlPropertySourceFactory.class)
 @Configuration(proxyBeanMethods = false)

@@ -2,7 +2,7 @@ package com.mx.nqboard.device.api.constant;
 
 /**
  * 物模型常理
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 public interface IotModelConstant {
     /**

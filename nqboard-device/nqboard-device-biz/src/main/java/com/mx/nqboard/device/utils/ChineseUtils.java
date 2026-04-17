@@ -12,7 +12,7 @@ import java.util.Locale;
 /**
  * 转中文
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 public class ChineseUtils {
     /**

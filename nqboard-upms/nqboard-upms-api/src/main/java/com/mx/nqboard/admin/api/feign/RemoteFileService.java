@@ -14,7 +14,7 @@ import java.util.Map;
 /**
  * 远程字典文件接口
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 @FeignClient(contextId = "remoteFileService", value = ServiceNameConstants.UPMS_SERVICE)
 public interface RemoteFileService {

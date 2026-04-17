@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
  * 产品分类表
  * </p>
  *
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 @Data
 @TableName("iot_category")

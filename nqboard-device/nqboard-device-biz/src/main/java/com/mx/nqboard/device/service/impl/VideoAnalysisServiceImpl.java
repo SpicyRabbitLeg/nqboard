@@ -18,7 +18,7 @@ import java.util.Map;
 
 /**
  * 摄像头AI服务实现类
- * @author 泥鳅压滑板
+ * @author SpicyRabbitLeg
  */
 @Slf4j
 @Service
