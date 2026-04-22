@@ -123,7 +123,7 @@ services:
       context: ./nqboard-upms/nqboard-upms-biz
     restart: always
     environment:
-      NACOS_HOST: 127.0.0.1
+      NACOS_HOST: 192.168.2.210
     mem_limit: 1g
     mem_reservation: 512m
     container_name: nqboard-upms-biz
@@ -137,7 +137,7 @@ services:
       context: ./nqboard-device/nqboard-device-biz
     restart: always
     environment:
-      NACOS_HOST: 127.0.0.1
+      NACOS_HOST: 192.168.2.210
     mem_limit: 1g
     mem_reservation: 512m
     container_name: nqboard-device-biz
@@ -151,7 +151,7 @@ services:
       context: ./nqboard-auth
     restart: always
     environment:
-      NACOS_HOST: 127.0.0.1
+      NACOS_HOST: 192.168.2.210
     mem_limit: 1g
     mem_reservation: 512m
     container_name: nqboard-auth
@@ -165,7 +165,7 @@ services:
       context: ./nqboard-visual/nqboard-quartz
     restart: always
     environment:
-      NACOS_HOST: 127.0.0.1
+      NACOS_HOST: 192.168.2.210
     mem_limit: 1g
     mem_reservation: 512m
     container_name: nqboard-quartz
@@ -181,7 +181,7 @@ services:
     ports:
       - 5001:5001
     environment:
-      NACOS_HOST: 127.0.0.1
+      NACOS_HOST: 192.168.2.210
     mem_limit: 1g
     mem_reservation: 512m
     container_name: nqboard-monitor
@@ -197,7 +197,7 @@ services:
     ports:
       - 9999:9999
     environment:
-      NACOS_HOST: 127.0.0.1
+      NACOS_HOST: 192.168.2.210
     mem_limit: 1g
     mem_reservation: 512m
     container_name: nqboard-gateway
