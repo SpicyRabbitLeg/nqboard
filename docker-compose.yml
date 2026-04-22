@@ -117,7 +117,95 @@ services:
     command: sh mqbroker -c /home/rocketmq/conf/broker.conf
     networks:
       - spring_cloud_default
-        
+
+  nqboard-upms-biz:
+    build:
+      context: ./nqboard-upms/nqboard-upms-biz
+    restart: always
+    environment:
+      NACOS_HOST: 127.0.0.1
+    mem_limit: 1g
+    mem_reservation: 512m
+    container_name: nqboard-upms-biz
+    hostname: nqboard-upms-biz
+    image: nqboard-upms-biz
+    networks:
+      - spring_cloud_default
+      -
+  nqboard-device-biz:
+    build:
+      context: ./nqboard-device/nqboard-device-biz
+    restart: always
+    environment:
+      NACOS_HOST: 127.0.0.1
+    mem_limit: 1g
+    mem_reservation: 512m
+    container_name: nqboard-device-biz
+    hostname: nqboard-device-biz
+    image: nqboard-device-biz
+    networks:
+      - spring_cloud_default
+
+  nqboard-auth:
+    build:
+      context: ./nqboard-auth
+    restart: always
+    environment:
+      NACOS_HOST: 127.0.0.1
+    mem_limit: 1g
+    mem_reservation: 512m
+    container_name: nqboard-auth
+    hostname: nqboard-auth
+    image: nqboard-auth
+    networks:
+      - spring_cloud_default
+
+  nqboard-quartz:
+    build:
+      context: ./nqboard-visual/nqboard-quartz
+    restart: always
+    environment:
+      NACOS_HOST: 127.0.0.1
+    mem_limit: 1g
+    mem_reservation: 512m
+    container_name: nqboard-quartz
+    hostname: nqboard-quartz
+    image: nqboard-quartz
+    networks:
+      - spring_cloud_default
+
+  nqboard-monitor:
+    build:
+      context: ./nqboard-visual/nqboard-monitor
+    restart: always
+    ports:
+      - 5001:5001
+    environment:
+      NACOS_HOST: 127.0.0.1
+    mem_limit: 1g
+    mem_reservation: 512m
+    container_name: nqboard-monitor
+    hostname: nqboard-monitor
+    image: nqboard-monitor
+    networks:
+      - spring_cloud_default
+
+  nqboard-gateway:
+    build:
+      context: ./nqboard-gateway
+    restart: always
+    ports:
+      - 9999:9999
+    environment:
+      NACOS_HOST: 127.0.0.1
+    mem_limit: 1g
+    mem_reservation: 512m
+    container_name: nqboard-gateway
+    hostname: nqboard-gateway
+    image: nqboard-gateway
+    networks:
+      - spring_cloud_default
+
 networks:
   spring_cloud_default:
     name:  spring_cloud_default
