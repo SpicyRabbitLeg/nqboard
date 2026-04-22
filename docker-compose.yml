@@ -123,7 +123,7 @@ services:
       context: ./nqboard-upms/nqboard-upms-biz
     restart: always
     environment:
-      NACOS_HOST: 192.168.2.210
+      NACOS_HOST: nqboard-register
     mem_limit: 1g
     mem_reservation: 512m
     container_name: nqboard-upms-biz
@@ -131,13 +131,12 @@ services:
     image: nqboard-upms-biz
     networks:
       - spring_cloud_default
-      -
   nqboard-device-biz:
     build:
       context: ./nqboard-device/nqboard-device-biz
     restart: always
     environment:
-      NACOS_HOST: 192.168.2.210
+      NACOS_HOST: nqboard-register
     mem_limit: 1g
     mem_reservation: 512m
     container_name: nqboard-device-biz
@@ -145,13 +144,12 @@ services:
     image: nqboard-device-biz
     networks:
       - spring_cloud_default
-
   nqboard-auth:
     build:
       context: ./nqboard-auth
     restart: always
     environment:
-      NACOS_HOST: 192.168.2.210
+      NACOS_HOST: nqboard-register
     mem_limit: 1g
     mem_reservation: 512m
     container_name: nqboard-auth
@@ -159,13 +157,12 @@ services:
     image: nqboard-auth
     networks:
       - spring_cloud_default
-
   nqboard-quartz:
     build:
       context: ./nqboard-visual/nqboard-quartz
     restart: always
     environment:
-      NACOS_HOST: 192.168.2.210
+      NACOS_HOST: nqboard-register
     mem_limit: 1g
     mem_reservation: 512m
     container_name: nqboard-quartz
@@ -173,7 +170,6 @@ services:
     image: nqboard-quartz
     networks:
       - spring_cloud_default
-
   nqboard-monitor:
     build:
       context: ./nqboard-visual/nqboard-monitor
@@ -181,7 +177,7 @@ services:
     ports:
       - 5001:5001
     environment:
-      NACOS_HOST: 192.168.2.210
+      NACOS_HOST: nqboard-register
     mem_limit: 1g
     mem_reservation: 512m
     container_name: nqboard-monitor
@@ -189,7 +185,6 @@ services:
     image: nqboard-monitor
     networks:
       - spring_cloud_default
-
   nqboard-gateway:
     build:
       context: ./nqboard-gateway
@@ -197,7 +192,7 @@ services:
     ports:
       - 9999:9999
     environment:
-      NACOS_HOST: 192.168.2.210
+      NACOS_HOST: nqboard-register
     mem_limit: 1g
     mem_reservation: 512m
     container_name: nqboard-gateway
@@ -205,7 +200,6 @@ services:
     image: nqboard-gateway
     networks:
       - spring_cloud_default
-
 networks:
   spring_cloud_default:
     name:  spring_cloud_default
