@@ -101,6 +101,7 @@
 		<module>nqboard-visual</module>
 		<module>nqboard-boot</module>
 		<module>nqboard-device</module>
+		<module>nqboard-workflow</module>
 	</modules>
 
 	<dependencyManagement>

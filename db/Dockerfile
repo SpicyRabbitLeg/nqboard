@@ -14,4 +14,6 @@ COPY nqboard_device.sql /docker-entrypoint-initdb.d
 
 COPY nqboard_seata.sql /docker-entrypoint-initdb.d
 
+COPY nqboard_flw.sql /docker-entrypoint-initdb.d
+
 EXPOSE 3306

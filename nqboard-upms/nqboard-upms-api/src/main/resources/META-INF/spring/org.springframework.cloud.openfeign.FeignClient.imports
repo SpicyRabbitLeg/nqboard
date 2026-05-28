@@ -5,3 +5,4 @@ com.mx.nqboard.admin.api.feign.RemoteLogService
 com.mx.nqboard.admin.api.feign.RemoteParamService
 com.mx.nqboard.admin.api.feign.RemoteTokenService
 com.mx.nqboard.admin.api.feign.RemoteUserService
+com.mx.nqboard.admin.api.feign.RemoteRoleService

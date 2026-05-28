@@ -84,6 +84,17 @@ public class SysRoleController {
 	}
 
 	/**
+	 * 查询角色详细信息
+	 * @param query 角色查询条件对象
+	 * @return 包含角色信息的响应结果
+	 */
+	@GetMapping("/detailsList")
+	@Operation(summary = "查询角色详细信息", description = "查询角色详细信息")
+	public R getDetailsList(@ParameterObject SysRole query) {
+		return R.ok(sysRoleService.list(Wrappers.query(query)));
+	}
+
+	/**
 	 * 添加角色
 	 * @param sysRole 角色信息
 	 * @return 操作结果，成功返回success，失败返回false

@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>com.mx</groupId>
+		<artifactId>nqboard-workflow</artifactId>
+		<version>${revision}</version>
+	</parent>
+
+	<artifactId>nqboard-workflow-biz</artifactId>
+	<description>nqboard 工作流管理业务处理模块</description>
+
+	<properties>
+		<flowable.version>7.2.0</flowable.version>
+	</properties>
+
+	<dependencies>
+		<!--device api、model 模块-->
+		<dependency>
+			<groupId>com.mx</groupId>
+			<artifactId>nqboard-workflow-api</artifactId>
+		</dependency>
+		<!--feign 调用-->
+		<dependency>
+			<groupId>com.mx</groupId>
+			<artifactId>nqboard-common-feign</artifactId>
+		</dependency>
+		<!--安全模块-->
+		<dependency>
+			<groupId>com.mx</groupId>
+			<artifactId>nqboard-common-security</artifactId>
+		</dependency>
+		<!--日志处理-->
+		<dependency>
+			<groupId>com.mx</groupId>
+			<artifactId>nqboard-common-log</artifactId>
+		</dependency>
+		<!--xss 过滤-->
+		<dependency>
+			<groupId>com.mx</groupId>
+			<artifactId>nqboard-common-xss</artifactId>
+		</dependency>
+		<!--接口文档-->
+		<dependency>
+			<groupId>com.mx</groupId>
+			<artifactId>nqboard-common-swagger</artifactId>
+		</dependency>
+		<!-- 分布式事务 -->
+		<dependency>
+			<groupId>com.mx</groupId>
+			<artifactId>nqboard-common-seata</artifactId>
+		</dependency>
+		<!-- orm 模块-->
+		<dependency>
+			<groupId>com.baomidou</groupId>
+			<artifactId>mybatis-plus-spring-boot3-starter</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.mysql</groupId>
+			<artifactId>mysql-connector-j</artifactId>
+		</dependency>
+		<!-- 动态数据源 -->
+		<dependency>
+			<groupId>com.mx</groupId>
+			<artifactId>nqboard-common-datasource</artifactId>
+		</dependency>
+		<!--注册中心客户端-->
+		<dependency>
+			<groupId>com.alibaba.cloud</groupId>
+			<artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+		</dependency>
+		<!--配置中心客户端-->
+		<dependency>
+			<groupId>com.alibaba.cloud</groupId>
+			<artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+		</dependency>
+		<!--undertow容器-->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-undertow</artifactId>
+		</dependency>
+		<!-- Flowable核心依赖 -->
+		<dependency>
+			<groupId>org.flowable</groupId>
+			<artifactId>flowable-spring-boot-starter</artifactId>
+			<version>${flowable.version}</version>
+		</dependency>
+		<!-- Flowable流程引擎 -->
+		<dependency>
+			<groupId>org.flowable</groupId>
+			<artifactId>flowable-engine</artifactId>
+			<version>${flowable.version}</version>
+		</dependency>
+		<!-- Flowable Spring集成 -->
+		<dependency>
+			<groupId>org.flowable</groupId>
+			<artifactId>flowable-spring</artifactId>
+			<version>${flowable.version}</version>
+		</dependency>
+	</dependencies>
+
+	<profiles>
+		<profile>
+			<id>boot</id>
+		</profile>
+		<profile>
+			<id>cloud</id>
+			<activation>
+				<!-- 默认环境 -->
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.springframework.boot</groupId>
+						<artifactId>spring-boot-maven-plugin</artifactId>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+
+	<build>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+				<excludes>
+					<exclude>**/*.xlsx</exclude>
+					<exclude>**/*.xls</exclude>
+				</excludes>
+			</resource>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>false</filtering>
+				<includes>
+					<include>**/*.xlsx</include>
+					<include>**/*.xls</include>
+				</includes>
+			</resource>
+		</resources>
+	</build>
+</project>

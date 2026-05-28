@@ -1011,7 +1011,29 @@ INSERT INTO `sys_menu`  VALUES (2040110571465031681, '设备告警', 'alarm reco
 INSERT INTO `sys_menu`  VALUES (2040116983687626753, '设备告警删除', '', 'device_iotAlarmRecord_del', '', 2040110571465031681, '1', '1', 3, '0', NULL, '1', 'admin', '2026-04-04 01:19:27', 'admin', NULL, '0');
 INSERT INTO `sys_menu`  VALUES (2040116923151237121, '设备告警编辑', '', 'device_iotAlarmRecord_edit', '', 2040110571465031681, '1', '1', 2, '0', NULL, '1', 'admin', '2026-04-04 01:19:13', 'admin', NULL, '0');
 INSERT INTO `sys_menu`  VALUES (2040116858659618818, '设备告警新增', '', 'device_iotAlarmRecord_add', '', 2040110571465031681, '1', '1', 1, '0', NULL, '1', 'admin', '2026-04-04 01:18:57', 'admin', NULL, '0');
-
+INSERT INTO `sys_menu`  VALUES (1971948381718835201, '流程管理', 'workflow', '', '/workflow', -1, 'iconfont icon-juxingkaobei', '1', 100, '0', '0', '0', 'spicy', '2025-09-27 22:41:46', 'spicy', '2025-09-27 22:41:57', '0');
+INSERT INTO `sys_menu`  VALUES (1971948706899030018, '流程监听', 'flow listener', '', '/workflow/listener/index', 1971948381718835201, 'iconfont icon-AIshiyanshi', '1', 4, '0', '0', '0', 'spicy', '2025-09-27 22:43:03', 'spicy', '2025-09-27 22:47:11', '0');
+INSERT INTO `sys_menu`  VALUES (1971949013817225217, '流程监听添加', '', 'workflow_flowListener_add', '/workflow/listener', 1971948706899030018, 'iconfont icon-AIshiyanshi', '1', 1, '0', '0', '1', 'spicy', '2025-09-27 22:44:17', 'spicy', '2025-09-27 22:44:29', '1');
+INSERT INTO `sys_menu`  VALUES (1971949182239502338, '流程监听新增', NULL, 'workflow_flowListener_add', NULL, 1971948706899030018, '1', '1', 1, '0', NULL, '1', 'spicy', '2025-09-27 22:44:57', 'spicy', NULL, '0');
+INSERT INTO `sys_menu`  VALUES (1971949238036328449, '流程监听编辑', NULL, 'workflow_flowListener_edit', NULL, 1971948706899030018, '1', '1', 2, '0', NULL, '1', 'spicy', '2025-09-27 22:45:10', 'spicy', '2025-09-27 22:45:25', '0');
+INSERT INTO `sys_menu`  VALUES (1971949275600515074, '流程监听删除', NULL, 'workflow_flowListener_del', NULL, 1971948706899030018, '1', '1', 3, '0', NULL, '1', 'spicy', '2025-09-27 22:45:19', 'spicy', NULL, '0');
+INSERT INTO `sys_menu`  VALUES (1987099923213664257, '流程表达式', 'flow expression', '', '/workflow/expression/index', 1971948381718835201, 'iconfont icon-neiqianshujuchucun', '1', 6, '0', '0', '0', 'spicy', '2025-11-08 18:08:35', 'spicy', '2025-11-08 18:17:21', '0');
+INSERT INTO `sys_menu`  VALUES (1987100215200137218, '流程表达式新增', '', 'workflow_flwExpression_add', '', 1987099923213664257, '', '1', 1, '0', '0', '1', 'spicy', '2025-11-08 18:09:44', 'spicy', '2025-11-08 18:10:10', '0');
+INSERT INTO `sys_menu`  VALUES (1987100277493940225, '流程表达式编辑', '', 'workflow_flwExpression_edit', '', 1987099923213664257, '', '1', 2, '0', '0', '1', 'spicy', '2025-11-08 18:09:59', 'spicy', '2025-11-08 18:10:14', '0');
+INSERT INTO `sys_menu`  VALUES (1987100381286187010, '流程表达式删除', '', 'workflow_flwExpression_del', '', 1987099923213664257, '', '1', 3, '0', '0', '1', 'spicy', '2025-11-08 18:10:24', 'spicy', NULL, '0');
+INSERT INTO `sys_menu`  VALUES (1987101096410824705, '流程定义', 'flow definition', '', '/workflow/definition/index', 1971948381718835201, 'iconfont icon-xianshimima', '1', 1, '0', '0', '0', 'spicy', '2025-11-08 18:13:15', 'spicy', '2025-11-08 18:13:45', '0');
+INSERT INTO `sys_menu`  VALUES (1987101420009766913, '流程添加', '', 'workflow_flowDefinition_add', '', 1987101096410824705, '', '1', 1, '0', '0', '1', 'spicy', '2025-11-08 18:14:32', ' ', NULL, '0');
+INSERT INTO `sys_menu`  VALUES (1987101475060006914, '流程删除', '', 'workflow_flowDefinition_del', '', 1987101096410824705, '', '1', 2, '0', '0', '1', 'spicy', '2025-11-08 18:14:45', ' ', NULL, '0');
+INSERT INTO `sys_menu`  VALUES (1987101526381510657, '流程编辑', '', 'workflow_flowDefinition_edit', '', 1987101096410824705, '', '1', 3, '0', '0', '1', 'spicy', '2025-11-08 18:14:57', ' ', NULL, '0');
+INSERT INTO `sys_menu`  VALUES (1987101574901219330, '流程启动', '', 'workflow_flowDefinition_start', '', 1987101096410824705, '', '1', 4, '0', '0', '1', 'spicy', '2025-11-08 18:15:09', ' ', NULL, '0');
+INSERT INTO `sys_menu`  VALUES (1987101870180220929, '流程定义model', '', '', '/workflow/definition/model', 1971948381718835201, 'iconfont icon-wenducanshu-05', '0', 99, '0', '0', '0', 'spicy', '2025-11-08 18:16:19', 'spicy', '2025-11-08 18:16:33', '0');
+INSERT INTO `sys_menu`  VALUES (1987168355175358465, '任务管理', 'task', '', '/task', -1, 'iconfont icon-gerenzhongxin', '1', 101, '0', '0', '0', 'spicy', '2025-11-08 22:40:30', 'spicy', '2025-11-08 22:40:53', '0');
+INSERT INTO `sys_menu`  VALUES (1987168621358473217, '已发任务', 'process', '', '/workflow/task/myProcess/index', 1987168355175358465, 'iconfont icon-gerenzhongxin', '1', 0, '0', '0', '0', 'spicy', '2025-11-08 22:41:34', 'spicy', '2025-11-08 22:43:36', '0');
+INSERT INTO `sys_menu`  VALUES (1987168744205443073, '待办任务', 'to do task', '', '/workflow/task/todo/index', 1987168355175358465, 'iconfont icon-gerenzhongxin', '1', 2, '0', '0', '0', 'spicy', '2025-11-08 22:42:03', 'spicy', '2025-11-08 23:02:07', '0');
+INSERT INTO `sys_menu`  VALUES (1987168955648696322, '已办任务', 'finished task', '', '/tooask', 1987168355175358465, 'iconfont icon-gerenzhongxin', '1', 3, '0', '0', '0', 'spicy', '2025-11-08 22:42:53', 'spicy', '2025-11-08 22:42:53', '0');
+INSERT INTO `sys_menu`  VALUES (1987169323514322946, '已发任务-详情', 'process', '', '/workflow/task/myProcess/detail', 1987168355175358465, 'iconfont icon-gerenzhongxin', '0', 4, '0', '0', '0', 'spicy', '2025-11-08 22:44:21', 'spicy', '2025-11-08 22:44:21', '0');
+INSERT INTO `sys_menu`  VALUES (1987169626842193921, '已发任务-发送', '', '', '/workflow/task/myProcess/send', 1987168355175358465, 'iconfont icon-shuaxin', '0', 5, '0', '0', '0', 'spicy', '2025-11-08 22:45:34', 'spicy', '2025-11-08 22:45:44', '0');
+INSERT INTO `sys_menu`  VALUES (1987177066992230401, '待办任务-详情', 'to do task', '', '/workflow/task/todo/detail', 1987168355175358465, 'iconfont icon-gerenzhongxin', '0', 6, '0', '0', '0', 'spicy', '2025-11-08 23:15:07', 'spicy', '2025-11-08 23:15:07', '0');
 -- ----------------------------
 -- Table structure for sys_oauth_client_details
 -- ----------------------------

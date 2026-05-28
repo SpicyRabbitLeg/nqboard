@@ -21,12 +21,16 @@ package com.mx.nqboard.admin.api.feign;
 
 import com.mx.nqboard.admin.api.dto.UserDTO;
 import com.mx.nqboard.admin.api.dto.UserInfo;
+import com.mx.nqboard.admin.api.vo.UserVO;
 import com.mx.nqboard.common.core.constant.ServiceNameConstants;
 import com.mx.nqboard.common.core.util.R;
 import com.mx.nqboard.common.feign.annotation.NoToken;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+
+import java.util.List;
 
 /**
  * 远程用户服务接口：提供用户信息查询功能
@@ -46,4 +50,23 @@ public interface RemoteUserService {
 	@GetMapping("/user/info/query")
 	R<UserInfo> info(@SpringQueryMap UserDTO user);
 
+
+	/**
+	 * (未登录状态调用，需要加 @NoToken) 通过id查询用户信息
+	 *
+	 * @param id id
+	 * @return R
+	 */
+	@NoToken
+	@GetMapping("/user/details/{id}")
+	R<UserVO> getDetails(@PathVariable(value = "id") Long id);
+
+
+	/**
+	 * 获取全部用户
+	 *
+	 * @return R
+	 */
+	@GetMapping("/user/getUserAll")
+	R<List<UserVO>> getUserAll();
 }

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.mx.workflow.mapper.FlwExpressionMapper">
+
+  <resultMap id="flwExpressionMap" type="com.mx.workflow.api.entity.FlwExpressionEntity">
+        <id property="id" column="id"/>
+        <result property="orderNum" column="order_num"/>
+        <result property="name" column="name"/>
+        <result property="expression" column="expression"/>
+        <result property="dataType" column="data_type"/>
+        <result property="status" column="status"/>
+        <result property="remark" column="remark"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="delFlag" column="del_flag"/>
+  </resultMap>
+</mapper>

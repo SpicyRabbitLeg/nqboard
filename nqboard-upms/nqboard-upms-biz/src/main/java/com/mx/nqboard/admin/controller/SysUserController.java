@@ -19,12 +19,14 @@
 
 package com.mx.nqboard.admin.controller;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mx.nqboard.admin.api.dto.UserDTO;
 import com.mx.nqboard.admin.api.dto.UserInfo;
 import com.mx.nqboard.admin.api.entity.SysUser;
 import com.mx.nqboard.admin.api.vo.UserExcelVO;
+import com.mx.nqboard.admin.api.vo.UserVO;
 import com.mx.nqboard.admin.service.SysUserService;
 import com.mx.nqboard.common.core.constant.CommonConstants;
 import com.mx.nqboard.common.core.util.R;
@@ -96,6 +98,7 @@ public class SysUserController {
 	 * @param id 用户ID
 	 * @return 包含用户信息的响应对象
 	 */
+	@Inner(false)
 	@GetMapping("/details/{id}")
 	@Operation(summary = "通过ID查询用户信息", description = "通过ID查询用户信息")
 	public R user(@PathVariable Long id) {
@@ -164,6 +167,15 @@ public class SysUserController {
 	@Operation(summary = "分页查询用户", description = "分页查询用户")
 	public R getUserPage(@ParameterObject Page page, @ParameterObject UserDTO userDTO) {
 		return R.ok(userService.getUsersWithRolePage(page, userDTO));
+	}
+
+	/**
+	 * 获取全部用户
+	 * @return R
+	 */
+	@GetMapping("/getUserAll")
+	public R getUserAll() {
+		return R.ok(BeanUtil.copyToList(userService.list(), UserVO.class));
 	}
 
 	/**
