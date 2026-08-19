@@ -102,6 +102,7 @@
 		<module>nqboard-boot</module>
 		<module>nqboard-device</module>
 		<module>nqboard-workflow</module>
+		<module>nqboard-quanta</module>
 	</modules>
 
 	<dependencyManagement>
