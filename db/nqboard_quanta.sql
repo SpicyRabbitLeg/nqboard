@@ -19,7 +19,7 @@ CREATE TABLE `stock_basic` (
    `update_time` datetime NULL DEFAULT NULL COMMENT '修改时间',
    `del_flag` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '删除状态（0未删除、1删除）',
    `order_num` int NULL DEFAULT NULL COMMENT '排序字段',
-   `remark `     varchar(500) null comment '备注',
+   `remark`    varchar(500) null comment '备注',
    `ts_code` varchar(32) NOT NULL COMMENT '股票代码 000001.SZ',
    `symbol` varchar(16) DEFAULT NULL COMMENT '股票代码',
    `name` varchar(64) DEFAULT NULL COMMENT '股票名称',

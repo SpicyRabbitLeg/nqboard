@@ -62,7 +62,9 @@
     </logger>
 
 	<logger name="com.mx.nqboard.admin.mapper" level="DEBUG"/>
-	<logger name="com.mx.nqboard.admin.mapper" level="DEBUG"/>
+	<logger name="com.mx.nqboard.device.mapper" level="DEBUG"/>
+	<logger name="com.mx.nqboard.quanta.mapper" level="DEBUG"/>
+	<logger name="com.mx.workflow.device.mapper" level="DEBUG"/>
 
     <!-- Level: FATAL 0  ERROR 3  WARN 4  INFO 6  DEBUG 7 -->
     <root level="INFO">

@@ -1,23 +1,19 @@
 package com.mx.nqboard.quanta.service.impl;
 
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.HttpRequest;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mx.nqboard.quanta.api.entity.StockBasicEntity;
 import com.mx.nqboard.quanta.mapper.StockBasicMapper;
 import com.mx.nqboard.quanta.service.StockBasicService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -43,19 +39,16 @@ public class StockBasicServiceImpl extends ServiceImpl<StockBasicMapper, StockBa
 
 	/**
 	 * 默认同步市场
+	 * 			主板,创业板,科创板
 	 */
 	private static final String DEFAULT_MARKET = "主板";
 
 	private final StockBasicMapper stockBasicMapper;
 
-	private final RestTemplate restTemplate;
-
-	private final ObjectMapper objectMapper;
-
 	/**
 	 * tushare token（Nacos 配置 + 环境变量注入，禁止硬编码）
 	 */
-	@Value("${tushare.token:uyuibwqjgeuq}")
+	@Value("${tushare.token:}")
 	private String token;
 
 	/**
@@ -74,32 +67,33 @@ public class StockBasicServiceImpl extends ServiceImpl<StockBasicMapper, StockBa
 		if (StrUtil.isBlank(token)) {
 			throw new IllegalStateException("tushare token 未配置，请在 Nacos 配置或环境变量中设置 tushare.token");
 		}
-		// 组装请求体
+		// 组装请求体（fastjson 序列化）
 		Map<String, Object> params = new HashMap<>(4);
 		params.put("api_name", API_NAME_STOCK_BASIC);
 		params.put("token", token);
 		params.put("params", Map.of("market", StrUtil.blankToDefault(market, "")));
 
-		HttpHeaders headers = new HttpHeaders();
-		headers.setContentType(MediaType.APPLICATION_JSON);
-		HttpEntity<Map<String, Object>> request = new HttpEntity<>(params, headers);
-
 		log.info("开始从 tushare 同步股票基础信息, market={}", market);
-		ResponseEntity<JsonNode> response = restTemplate.postForEntity(TUSHARE_URL, request, JsonNode.class);
-		JsonNode body = response.getBody();
-		if (body == null || body.get("code").asInt() != 0) {
-			String msg = body != null ? body.has("msg") ? body.get("msg").asText() : body.toString() : "空响应";
+		// hutool 发起 JSON POST 请求
+		String respBody = HttpRequest.post(TUSHARE_URL)
+				.header("Content-Type", "application/json")
+				.body(JSON.toJSONString(params))
+				.execute()
+				.body();
+		JSONObject body = JSON.parseObject(respBody);
+		if (body == null || body.getIntValue("code") != 0) {
+			String msg = body != null ? body.getString("msg") : "空响应";
 			throw new IllegalStateException("tushare 接口调用失败: " + msg);
 		}
 
-		JsonNode dataNode = body.get("data");
-		List<String> fields = objectMapper.convertValue(dataNode.get("fields"), new TypeReference<>() {});
-		JsonNode itemsNode = dataNode.get("items");
+		JSONObject data = body.getJSONObject("data");
+		List<String> fields = data.getJSONArray("fields").toJavaList(String.class);
+		JSONArray items = data.getJSONArray("items");
 
 		List<StockBasicEntity> entities = new ArrayList<>();
 		int inserted = 0;
-		for (JsonNode item : itemsNode) {
-			StockBasicEntity entity = mapRow(fields, item);
+		for (int i = 0; i < items.size(); i++) {
+			StockBasicEntity entity = mapRow(fields, items.getJSONArray(i));
 			if (entity == null || StrUtil.isBlank(entity.getTsCode())) {
 				continue;
 			}
@@ -130,12 +124,12 @@ public class StockBasicServiceImpl extends ServiceImpl<StockBasicMapper, StockBa
 	/**
 	 * 按 fields 顺序把 items 行映射为实体
 	 */
-	private StockBasicEntity mapRow(List<String> fields, JsonNode item) {
+	private StockBasicEntity mapRow(List<String> fields, JSONArray item) {
 		StockBasicEntity entity = new StockBasicEntity();
 		boolean hasValue = false;
 		for (int i = 0; i < fields.size(); i++) {
 			String field = fields.get(i);
-			String value = item.has(i) && !item.get(i).isNull() ? item.get(i).asText() : null;
+			String value = item.getString(i);
 			if (value != null) {
 				hasValue = true;
 			}
