@@ -44,11 +44,16 @@ sms:
 # Tushare 数据同步配置（同名配置可在 Nacos 中覆盖）
 tushare:
   # token 属敏感信息，禁止硬编码
-  token: xxxxxx
+  token: xxxx
   daily:
     # 日线同步市场过滤：全部 / 主板 / 创业板 / 科创板（留空等价于"全部"）
     market: 全部
     # 是否全量获取：true = 2024-01-01 至今天；false = 仅增量获取今天
-    full: true
-    # 相邻股票请求间隔（毫秒），防止触发 tushare 频率限制，可按积分档位调整
-    delay-ms: 200
+    full: false
+
+# 中证指数成分股权重同步配置（官网 closeweight.xls）
+csindex:
+  # 待同步的指数代码列表（英文逗号分隔）
+  indexes: 000300,000016,000905,000852,000500,000922
+  # 权重文件下载地址模板，{} 替换为指数代码
+  url: https://oss-ch.csindex.com.cn/static/html/csindex/public/uploads/file/autofile/closeweight/{}closeweight.xls
