@@ -80,6 +80,11 @@
 			<groupId>com.mx</groupId>
 			<artifactId>nqboard-device-api</artifactId>
 		</dependency>
+		<!-- quanta（股票基础信息同步任务） -->
+		<dependency>
+			<groupId>com.mx</groupId>
+			<artifactId>nqboard-quanta-api</artifactId>
+		</dependency>
 		<!-- 消息队列 -->
 		<dependency>
 			<groupId>com.mx</groupId>

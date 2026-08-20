@@ -36,4 +36,9 @@ public interface ServiceNameConstants {
 	 * device模块
 	 */
 	String DEVICE_SERVICE = "nqboard-device-biz";
+
+	/**
+	 * quanta模块
+	 */
+	String QUANTA_SERVICE = "nqboard-quanta-biz";
 }
