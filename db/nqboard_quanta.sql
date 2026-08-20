@@ -180,6 +180,34 @@ CREATE TABLE `stock_top_list` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Tushare top_list龙虎榜每日明细';
 
 -- ----------------------------
+-- Table structure for stock_mot_ann_news
+-- ----------------------------
+DROP TABLE IF EXISTS `stock_mot_ann_news`;
+CREATE TABLE `stock_mot_ann_news` (
+   `id` bigint NOT NULL COMMENT '业务id（雪花ID）',
+   `ts_code` varchar(32) NOT NULL COMMENT 'TS股票代码',
+   `pub_date` varchar(16) NOT NULL COMMENT '发布日期 YYYYMMDD',
+   `pub_datetime` varchar(32) DEFAULT NULL COMMENT '精确发布时间',
+   `news_type` varchar(10) NOT NULL COMMENT 'ann交易所公告 media媒体新闻',
+   `src` varchar(64) DEFAULT NULL COMMENT '来源：巨潮资讯/东方财富等',
+   `title` text NOT NULL COMMENT '新闻/公告标题【核心字段】',
+   `summary` text COMMENT '简短摘要，不要存全文',
+   `url` varchar(512) DEFAULT NULL COMMENT '原文链接',
+   `create_by` varchar(64) DEFAULT NULL COMMENT '创建人',
+   `update_by` varchar(64) DEFAULT NULL COMMENT '修改人',
+   `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+   `update_time` datetime DEFAULT NULL COMMENT '修改时间',
+   `del_flag` char(1) NOT NULL DEFAULT '0' COMMENT '删除标记,1:已删除,0:正常',
+   `order_num` int DEFAULT 0 COMMENT '排序字段',
+   PRIMARY KEY (`id`),
+   UNIQUE KEY `uk_mot_ann_news` (`ts_code`, `pub_date`, `news_type`, `url`),
+   KEY `idx_ts_code` (`ts_code`),
+   KEY `idx_pub_date` (`pub_date`),
+   KEY `idx_news_type` (`news_type`),
+   KEY `idx_del_flag` (`del_flag`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='公告&媒体新闻表';
+
+-- ----------------------------
 -- Records of lock_table
 -- ----------------------------
 
