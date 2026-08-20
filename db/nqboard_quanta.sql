@@ -208,6 +208,33 @@ CREATE TABLE `stock_mot_ann_news` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='公告&媒体新闻表';
 
 -- ----------------------------
+-- Table structure for stock_index_daily
+-- ----------------------------
+DROP TABLE IF EXISTS `stock_index_daily`;
+CREATE TABLE `stock_index_daily` (
+   `id` bigint NOT NULL COMMENT '业务id（雪花ID）',
+   `index_code` varchar(32) NOT NULL COMMENT '指数代码 sh000300 / sh000905',
+   `trade_date` varchar(16) NOT NULL COMMENT '交易日期 YYYYMMDD',
+   `open` decimal(16,4) DEFAULT NULL COMMENT '开盘价',
+   `high` decimal(16,4) DEFAULT NULL COMMENT '最高价',
+   `low` decimal(16,4) DEFAULT NULL COMMENT '最低价',
+   `close` decimal(16,4) DEFAULT NULL COMMENT '收盘价',
+   `volume` decimal(24,0) DEFAULT NULL COMMENT '成交量',
+   `amount` decimal(24,4) DEFAULT NULL COMMENT '成交额(元)',
+   `create_by` varchar(64) DEFAULT NULL COMMENT '创建人',
+   `update_by` varchar(64) DEFAULT NULL COMMENT '修改人',
+   `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+   `update_time` datetime DEFAULT NULL COMMENT '修改时间',
+   `del_flag` char(1) NOT NULL DEFAULT '0' COMMENT '删除标记,1:已删除,0:正常',
+   `order_num` int DEFAULT 0 COMMENT '排序字段',
+   PRIMARY KEY (`id`),
+   UNIQUE KEY `uk_idx_index_date` (`index_code`, `trade_date`),
+   KEY `idx_index_code` (`index_code`),
+   KEY `idx_trade_date` (`trade_date`),
+   KEY `idx_del_flag` (`del_flag`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='指数日线K线表';
+
+-- ----------------------------
 -- Records of lock_table
 -- ----------------------------
 

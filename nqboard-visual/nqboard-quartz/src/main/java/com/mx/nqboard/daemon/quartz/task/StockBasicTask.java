@@ -30,6 +30,8 @@ public class StockBasicTask {
 
 	private final RemoteStockTopListService remoteStockTopListService;
 
+	private final RemoteStockIndexDailyService remoteStockIndexDailyService;
+
 	/**
 	 * 股票基础信息同步调度入口（无参，同步默认市场：主板）
 	 *
@@ -43,8 +45,7 @@ public class StockBasicTask {
 					.orElse(0);
 			log.info("[股票基础信息定时任务] 同步完成, 成功处理 {} 条", count);
 			return NqBoardQuartzEnum.JOB_LOG_STATUS_SUCCESS.getType();
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			log.error("[股票基础信息定时任务] 同步失败, 异常:{}", e.getMessage(), e);
 			return NqBoardQuartzEnum.JOB_LOG_STATUS_FAIL.getType();
 		}
@@ -58,13 +59,12 @@ public class StockBasicTask {
 	public String syncDaily() {
 		log.info("[股票日线信息定时任务] 开始同步");
 		try {
-			Integer count = RetOps.of(remoteStockDailyService.syncFromTushare("全部",true))
+			Integer count = RetOps.of(remoteStockDailyService.syncFromTushare("全部", true))
 					.getData()
 					.orElse(0);
 			log.info("[股票日线信息定时任务] 同步完成, 成功处理 {} 条", count);
 			return NqBoardQuartzEnum.JOB_LOG_STATUS_SUCCESS.getType();
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			log.error("[股票日线信息定时任务] 同步失败, 异常:{}", e.getMessage(), e);
 			return NqBoardQuartzEnum.JOB_LOG_STATUS_FAIL.getType();
 		}
@@ -83,8 +83,7 @@ public class StockBasicTask {
 					.orElse(0);
 			log.info("[指数成分股权重定时任务] 同步完成, 成功处理 {} 条", count);
 			return NqBoardQuartzEnum.JOB_LOG_STATUS_SUCCESS.getType();
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			log.error("[指数成分股权重定时任务] 同步失败, 异常:{}", e.getMessage(), e);
 			return NqBoardQuartzEnum.JOB_LOG_STATUS_FAIL.getType();
 		}
@@ -99,13 +98,12 @@ public class StockBasicTask {
 	public String syncMotHolder() {
 		log.info("[股东增减持重定时任务] 开始同步");
 		try {
-			Integer count = RetOps.of(remoteStockMotHolderService.syncFromTushare("全部",true))
+			Integer count = RetOps.of(remoteStockMotHolderService.syncFromTushare("全部", true))
 					.getData()
 					.orElse(0);
 			log.info("[股东增减持重定时任务] 同步完成, 成功处理 {} 条", count);
 			return NqBoardQuartzEnum.JOB_LOG_STATUS_SUCCESS.getType();
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			log.error("[股东增减持重定时任务] 同步失败, 异常:{}", e.getMessage(), e);
 			return NqBoardQuartzEnum.JOB_LOG_STATUS_FAIL.getType();
 		}
@@ -120,13 +118,12 @@ public class StockBasicTask {
 	public String syncMotHolderCount() {
 		log.info("[同步股东户数重定时任务] 开始同步");
 		try {
-			Integer count = RetOps.of(remoteStockMotHolderCountService.syncFromTushare("全部",true))
+			Integer count = RetOps.of(remoteStockMotHolderCountService.syncFromTushare("全部", true))
 					.getData()
 					.orElse(0);
 			log.info("[同步股东户数重定时任务] 同步完成, 成功处理 {} 条", count);
 			return NqBoardQuartzEnum.JOB_LOG_STATUS_SUCCESS.getType();
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			log.error("[同步股东户数重定时任务] 同步失败, 异常:{}", e.getMessage(), e);
 			return NqBoardQuartzEnum.JOB_LOG_STATUS_FAIL.getType();
 		}
@@ -145,9 +142,27 @@ public class StockBasicTask {
 					.orElse(0);
 			log.info("[龙虎榜定时任务] 同步完成, 成功处理 {} 条", count);
 			return NqBoardQuartzEnum.JOB_LOG_STATUS_SUCCESS.getType();
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			log.error("[龙虎榜定时任务] 同步失败, 异常:{}", e.getMessage(), e);
+			return NqBoardQuartzEnum.JOB_LOG_STATUS_FAIL.getType();
+		}
+	}
+
+	/**
+	 * 指数日线K线同步调度入口（无参，按 yml 配置 tushare.daily.full 决定全量/增量，默认增量=仅今天）
+	 *
+	 * @return 任务执行状态：0 成功 / 1 失败
+	 */
+	public String syncIndexDaily() {
+		log.info("[指数日线定时任务] 开始同步");
+		try {
+			Integer count = RetOps.of(remoteStockIndexDailyService.syncFromEastMoney(true))
+					.getData()
+					.orElse(0);
+			log.info("[指数日线定时任务] 同步完成, 成功处理 {} 条", count);
+			return NqBoardQuartzEnum.JOB_LOG_STATUS_SUCCESS.getType();
+		} catch (Exception e) {
+			log.error("[指数日线定时任务] 同步失败, 异常:{}", e.getMessage(), e);
 			return NqBoardQuartzEnum.JOB_LOG_STATUS_FAIL.getType();
 		}
 	}
