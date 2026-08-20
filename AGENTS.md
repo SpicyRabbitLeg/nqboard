@@ -127,6 +127,38 @@ Controller 五个标准接口（对照 `IotCategoryController`）：
 
 > Feign 调用方写法：新增业务 `Controller` 前，先确认同域 `-api` 模块是否已有 `RemoteXxxService`；跨域调用用 `OpenFeign`，接口标注 `@FeignClient(contextId = "xxx", value = ServiceNameConstants.XXX)` 并启用 `EnableNqBoardFeignClients`。
 
+### 实体审计字段约定（MyBatis-Plus 自动填充，禁止漏注）
+
+生成实体时，**审计字段必须显式添加 MyBatis-Plus 注解**，否则无法触发公共自动填充（创建人/时间由 `BaseEntity` 字段填充器统一处理）和逻辑删除，会导致数据缺失：
+
+| 字段 | 必加注解 |
+|------|----------|
+| `createBy` / `createTime` | `@TableField(fill = FieldFill.INSERT)` |
+| `updateBy` / `updateTime` | `@TableField(fill = FieldFill.INSERT_UPDATE)` |
+| `delFlag`（逻辑删除） | `@TableLogic` + `@TableField(fill = FieldFill.INSERT)` |
+| 主键 `id` | `@TableId(type = IdType.AUTO / ASSIGN_ID)` |
+
+- 首选继承 `BaseEntity`（`com.mx.nqboard.common.mybatis.base.BaseEntity`，已内置上述审计字段与填充注解）；若按业务需自声明字段，也必须按上表补齐注解。
+- `delFlag` 默认值需入参默认正常态（如 `"0"`），并在 `@TableField(fill = FieldFill.INSERT)` 配合字段填充器写入。
+- **自查标准**：落地任何实体后，确认 `createBy/createTime/updateBy/updateTime/delFlag` 是否都带 `@TableField`，无 `@TableField` 一律视为缺陷。
+
+---
+
+### Feign 客户端注册（imports 文件，必须登记全限定名）
+
+每个 `-api` 模块新增 `@FeignClient` 接口后，**必须同步在以下 spring imports 注册文件中登记该类全限定名**，否则该 Feign 客户端不会被 `@EnableNqBoardFeignClients` / Spring Cloud OpenFeign 自动加载，调用时报找不到 bean：
+
+```
+nqboard-<域>-api/src/main/resources/META-INF.spring/org.springframework.cloud.openfeign.FeignClient.imports
+```
+
+示例（一行一个 FQCN）：
+```
+com.mx.nqboard.quanta.api.feign.RemoteStockBasicService
+```
+
+- **自查标准**：每新增一个 `RemoteXxxService`，就检查上述 imports 文件是否已追加其全限定名；遗漏即视为缺陷。
+
 ---
 
 ## API 模块划分
