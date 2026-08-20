@@ -35,6 +35,37 @@ CREATE TABLE `stock_basic` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Tushare股票基础信息';
 
 -- ----------------------------
+-- Table structure for stock_daily
+-- ----------------------------
+DROP TABLE IF EXISTS `stock_daily`;
+CREATE TABLE `stock_daily` (
+   `id` bigint NOT NULL COMMENT '业务id（雪花ID）',
+   `ts_code` varchar(32) DEFAULT NULL COMMENT '股票代码',
+   `trade_date` varchar(16) DEFAULT NULL COMMENT '交易日期',
+   `open` float DEFAULT NULL COMMENT '开盘价',
+   `high` float DEFAULT NULL COMMENT '最高价',
+   `low` float DEFAULT NULL COMMENT '最低价',
+   `close` float DEFAULT NULL COMMENT '收盘价',
+   `pre_close` float DEFAULT NULL COMMENT '昨收价【除权价】',
+   `change` float DEFAULT NULL COMMENT '涨跌额',
+   `pct_chg` float DEFAULT NULL COMMENT '涨跌幅（%）【基于除权后的昨收计算的涨跌幅：（今收-除权昨收）/除权昨收】',
+   `vol` float DEFAULT NULL COMMENT '成交量 （手）',
+   `amount` float DEFAULT NULL COMMENT '成交额 （千元）',
+   `ah_vol` float DEFAULT NULL COMMENT '盘后成交量 （手）',
+   `ah_amount` float DEFAULT NULL COMMENT '盘后成交额 （千元）',
+   `create_by` varchar(64) DEFAULT NULL COMMENT '创建人',
+   `update_by` varchar(64) DEFAULT NULL COMMENT '修改人',
+   `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+   `update_time` datetime DEFAULT NULL COMMENT '修改时间',
+   `del_flag` char(1) DEFAULT '0' COMMENT '删除标记,1:已删除,0:正常',
+   `order_num` int DEFAULT NULL COMMENT '排序字段',
+   PRIMARY KEY (`id`),
+   UNIQUE KEY `uk_ts_trade` (`ts_code`, `trade_date`),
+   KEY `idx_ts_code` (`ts_code`),
+   KEY `idx_trade_date` (`trade_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Tushare日线行情';
+
+-- ----------------------------
 -- Records of lock_table
 -- ----------------------------
 

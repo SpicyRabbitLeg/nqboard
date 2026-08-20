@@ -1,1 +1,2 @@
 com.mx.nqboard.quanta.api.feign.RemoteStockBasicService
+com.mx.nqboard.quanta.api.feign.RemoteStockDailyService

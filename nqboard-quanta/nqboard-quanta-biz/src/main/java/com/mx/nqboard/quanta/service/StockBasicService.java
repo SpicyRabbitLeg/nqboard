@@ -1,7 +1,11 @@
 package com.mx.nqboard.quanta.service;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.mx.nqboard.quanta.api.entity.StockBasicEntity;
+import com.mx.nqboard.quanta.api.vo.StockOptionVO;
+
+import java.util.List;
 
 /**
  * <p>
@@ -11,6 +15,17 @@ import com.mx.nqboard.quanta.api.entity.StockBasicEntity;
  * @author SpicyRabbitLeg
  */
 public interface StockBasicService extends IService<StockBasicEntity> {
+
+	/**
+	 * 股票下拉选项分页查询（精简 tsCode/name）
+	 * <p>
+	 * 前端下拉 remote 搜索 + 滚动到底自动加载下一页；keyword 按代码/名称模糊匹配
+	 * @param keyword 关键字，可空（空则查询全部）
+	 * @param current 页码，从 1 开始
+	 * @param size 每页条数
+	 * @return 下拉选项分页结果
+	 */
+	IPage<StockOptionVO> options(String keyword, long current, long size);
 
 	/**
 	 * 从 tushare 同步股票基础信息（按市场）

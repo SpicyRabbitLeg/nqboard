@@ -1,13 +1,17 @@
 package com.mx.nqboard.quanta.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpRequest;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mx.nqboard.quanta.api.entity.StockBasicEntity;
+import com.mx.nqboard.quanta.api.vo.StockOptionVO;
 import com.mx.nqboard.quanta.mapper.StockBasicMapper;
 import com.mx.nqboard.quanta.service.StockBasicService;
 import lombok.RequiredArgsConstructor;
@@ -104,6 +108,22 @@ public class StockBasicServiceImpl extends ServiceImpl<StockBasicMapper, StockBa
 		}
 		log.info("从 tushare 同步完成, market={}, 共处理 {} 条", market, entities.size());
 		return inserted;
+	}
+
+	/**
+	 * 股票下拉选项分页查询（精简 tsCode/name）
+	 * <p>
+	 * 前端下拉 remote 搜索 + 滚动到底自动加载下一页；keyword 按代码/名称模糊匹配
+	 */
+	@Override
+	public IPage<StockOptionVO> options(String keyword, long current, long size) {
+		boolean hasKw = StrUtil.isNotBlank(keyword);
+		Page<StockBasicEntity> page = page(new Page<>(Math.max(1, current), Math.max(1, size)),
+				Wrappers.<StockBasicEntity>lambdaQuery()
+						.and(hasKw, w -> w.like(StockBasicEntity::getTsCode, keyword)
+								.or().like(StockBasicEntity::getName, keyword))
+						.orderByAsc(StockBasicEntity::getTsCode));
+		return page.convert(e -> BeanUtil.copyProperties(e, StockOptionVO.class));
 	}
 
 	/**

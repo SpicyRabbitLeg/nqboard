@@ -5,6 +5,7 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mx.nqboard.common.core.util.R;
@@ -13,6 +14,7 @@ import com.mx.nqboard.common.security.annotation.HasPermission;
 import com.mx.nqboard.common.security.annotation.Inner;
 import com.mx.nqboard.quanta.api.entity.StockBasicEntity;
 import com.mx.nqboard.quanta.api.vo.StockBasicExportVO;
+import com.mx.nqboard.quanta.api.vo.StockOptionVO;
 import com.mx.nqboard.quanta.service.StockBasicService;
 import com.pig4cloud.plugin.excel.annotation.ResponseExcel;
 import io.swagger.v3.oas.annotations.Operation;
@@ -124,6 +126,23 @@ public class StockBasicController {
                 stockBasicService.list(Wrappers.lambdaQuery(stockBasic)
                         .in(ArrayUtil.isNotEmpty(ids), StockBasicEntity::getId, ids)),
                 StockBasicExportVO.class);
+    }
+
+    /**
+     * 股票下拉选项分页查询（精简 tsCode/name）
+     * <p>
+     * 前端下拉 remote 搜索 + 滚动到底自动加载下一页；keyword 按代码/名称模糊匹配
+     * @param keyword 关键字，可空（空则查询全部）
+     * @param current 页码，从 1 开始
+     * @param size 每页条数
+     * @return 下拉选项分页结果
+     */
+    @Operation(summary = "股票下拉选项", description = "精简返回股票代码/名称，支持代码或名称模糊搜索，分页返回")
+    @GetMapping("/options")
+    public R<IPage<StockOptionVO>> options(@RequestParam(value = "keyword", required = false) String keyword,
+                                           @RequestParam(value = "current", defaultValue = "1") long current,
+                                           @RequestParam(value = "size", defaultValue = "50") long size) {
+        return R.ok(stockBasicService.options(keyword, current, size));
     }
 
     /**
