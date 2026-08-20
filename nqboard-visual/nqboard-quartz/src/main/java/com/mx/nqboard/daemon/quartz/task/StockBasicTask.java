@@ -2,8 +2,7 @@ package com.mx.nqboard.daemon.quartz.task;
 
 import com.mx.nqboard.common.core.util.RetOps;
 import com.mx.nqboard.daemon.quartz.constants.NqBoardQuartzEnum;
-import com.mx.nqboard.quanta.api.feign.RemoteStockBasicService;
-import com.mx.nqboard.quanta.api.feign.RemoteStockDailyService;
+import com.mx.nqboard.quanta.api.feign.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -22,6 +21,14 @@ public class StockBasicTask {
 	private final RemoteStockBasicService remoteStockBasicService;
 
 	private final RemoteStockDailyService remoteStockDailyService;
+
+	private final RemoteStockConsWeightService remoteStockConsWeightService;
+
+	private final RemoteStockMotHolderService remoteStockMotHolderService;
+
+	private final RemoteStockMotHolderCountService remoteStockMotHolderCountService;
+
+	private final RemoteStockTopListService remoteStockTopListService;
 
 	/**
 	 * 股票基础信息同步调度入口（无参，同步默认市场：主板）
@@ -44,14 +51,14 @@ public class StockBasicTask {
 	}
 
 	/**
-	 * 股票日线信息同步调度入口（入参：）
+	 * 股票日线信息同步调度入口（入参：市场类型、是否全量同步）
 	 *
 	 * @return 任务执行状态：0 成功 / 1 失败
 	 */
 	public String syncDaily() {
 		log.info("[股票日线信息定时任务] 开始同步");
 		try {
-			Integer count = RetOps.of(remoteStockDailyService.syncFromTushare("全部",false))
+			Integer count = RetOps.of(remoteStockDailyService.syncFromTushare("全部",true))
 					.getData()
 					.orElse(0);
 			log.info("[股票日线信息定时任务] 同步完成, 成功处理 {} 条", count);
@@ -59,6 +66,88 @@ public class StockBasicTask {
 		}
 		catch (Exception e) {
 			log.error("[股票日线信息定时任务] 同步失败, 异常:{}", e.getMessage(), e);
+			return NqBoardQuartzEnum.JOB_LOG_STATUS_FAIL.getType();
+		}
+	}
+
+	/**
+	 * 指数成分股权重同步调度入口（入参：）
+	 *
+	 * @return 任务执行状态：0 成功 / 1 失败
+	 */
+	public String syncConsWeight() {
+		log.info("[指数成分股权重定时任务] 开始同步");
+		try {
+			Integer count = RetOps.of(remoteStockConsWeightService.syncFromCsindex(null))
+					.getData()
+					.orElse(0);
+			log.info("[指数成分股权重定时任务] 同步完成, 成功处理 {} 条", count);
+			return NqBoardQuartzEnum.JOB_LOG_STATUS_SUCCESS.getType();
+		}
+		catch (Exception e) {
+			log.error("[指数成分股权重定时任务] 同步失败, 异常:{}", e.getMessage(), e);
+			return NqBoardQuartzEnum.JOB_LOG_STATUS_FAIL.getType();
+		}
+	}
+
+
+	/**
+	 * 股东增减持同步调度入口（入参：市场类型、是否全量同步）
+	 *
+	 * @return 任务执行状态：0 成功 / 1 失败
+	 */
+	public String syncMotHolder() {
+		log.info("[股东增减持重定时任务] 开始同步");
+		try {
+			Integer count = RetOps.of(remoteStockMotHolderService.syncFromTushare("全部",true))
+					.getData()
+					.orElse(0);
+			log.info("[股东增减持重定时任务] 同步完成, 成功处理 {} 条", count);
+			return NqBoardQuartzEnum.JOB_LOG_STATUS_SUCCESS.getType();
+		}
+		catch (Exception e) {
+			log.error("[股东增减持重定时任务] 同步失败, 异常:{}", e.getMessage(), e);
+			return NqBoardQuartzEnum.JOB_LOG_STATUS_FAIL.getType();
+		}
+	}
+
+
+	/**
+	 * 同步股东户数同步调度入口（入参：市场类型、是否全量同步）
+	 *
+	 * @return 任务执行状态：0 成功 / 1 失败
+	 */
+	public String syncMotHolderCount() {
+		log.info("[同步股东户数重定时任务] 开始同步");
+		try {
+			Integer count = RetOps.of(remoteStockMotHolderCountService.syncFromTushare("全部",true))
+					.getData()
+					.orElse(0);
+			log.info("[同步股东户数重定时任务] 同步完成, 成功处理 {} 条", count);
+			return NqBoardQuartzEnum.JOB_LOG_STATUS_SUCCESS.getType();
+		}
+		catch (Exception e) {
+			log.error("[同步股东户数重定时任务] 同步失败, 异常:{}", e.getMessage(), e);
+			return NqBoardQuartzEnum.JOB_LOG_STATUS_FAIL.getType();
+		}
+	}
+
+	/**
+	 * 龙虎榜每日明细同步调度入口（入参：指定交易日期、是否全量同步）
+	 *
+	 * @return 任务执行状态：0 成功 / 1 失败
+	 */
+	public String syncTopList() {
+		log.info("[龙虎榜定时任务] 开始同步");
+		try {
+			Integer count = RetOps.of(remoteStockTopListService.syncFromTushare(null, true))
+					.getData()
+					.orElse(0);
+			log.info("[龙虎榜定时任务] 同步完成, 成功处理 {} 条", count);
+			return NqBoardQuartzEnum.JOB_LOG_STATUS_SUCCESS.getType();
+		}
+		catch (Exception e) {
+			log.error("[龙虎榜定时任务] 同步失败, 异常:{}", e.getMessage(), e);
 			return NqBoardQuartzEnum.JOB_LOG_STATUS_FAIL.getType();
 		}
 	}

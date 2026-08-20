@@ -1,2 +1,6 @@
 com.mx.nqboard.quanta.api.feign.RemoteStockBasicService
 com.mx.nqboard.quanta.api.feign.RemoteStockDailyService
+com.mx.nqboard.quanta.api.feign.RemoteStockConsWeightService
+com.mx.nqboard.quanta.api.feign.RemoteStockMotHolderService
+com.mx.nqboard.quanta.api.feign.RemoteStockMotHolderCountService
+com.mx.nqboard.quanta.api.feign.RemoteStockTopListService

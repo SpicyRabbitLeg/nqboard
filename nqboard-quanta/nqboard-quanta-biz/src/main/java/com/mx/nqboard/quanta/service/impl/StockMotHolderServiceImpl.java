@@ -1,6 +1,5 @@
 package com.mx.nqboard.quanta.service.impl;
 
-import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpRequest;
@@ -8,19 +7,18 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mx.nqboard.quanta.api.entity.StockBasicEntity;
-import com.mx.nqboard.quanta.api.entity.StockDailyEntity;
-import com.mx.nqboard.quanta.api.vo.StockDailyKlineVO;
+import com.mx.nqboard.quanta.api.entity.StockMotHolderEntity;
 import com.mx.nqboard.quanta.mapper.StockBasicMapper;
-import com.mx.nqboard.quanta.mapper.StockDailyMapper;
-import com.mx.nqboard.quanta.service.StockDailyService;
+import com.mx.nqboard.quanta.mapper.StockMotHolderMapper;
+import com.mx.nqboard.quanta.service.StockMotHolderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -32,7 +30,7 @@ import java.util.stream.Collectors;
 
 /**
  * <p>
- * Tushare日线行情 服务实现类
+ * Tushare 股东增减持表 服务实现类
  * </p>
  *
  * @author SpicyRabbitLeg
@@ -40,11 +38,11 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class StockDailyServiceImpl extends ServiceImpl<StockDailyMapper, StockDailyEntity>
-		implements StockDailyService {
+public class StockMotHolderServiceImpl extends ServiceImpl<StockMotHolderMapper, StockMotHolderEntity>
+		implements StockMotHolderService {
 
 	private static final String TUSHARE_URL = "https://api.tushare.pro";
-	private static final String API_NAME_DAILY = "daily";
+	private static final String API_NAME_MOT_HOLDER = "stk_holdertrade";
 
 	/**
 	 * 全量同步起始日期：2024-01-01
@@ -66,11 +64,11 @@ public class StockDailyServiceImpl extends ServiceImpl<StockDailyMapper, StockDa
 	/**
 	 * 相邻股票请求间隔（毫秒）
 	 * <p>
-	 * daily 接口限频 500 次/分钟（120ms/次），直接写死，留安全余量
+	 * stk_holdertrade 接口限频 100 次/分钟（600ms/次），不能与日线共用节奏，故直接写死，留安全余量
 	 */
-	private static final long REQUEST_INTERVAL_MS = 200L;
+	private static final long REQUEST_INTERVAL_MS = 800L;
 
-	private final StockDailyMapper stockDailyMapper;
+	private final StockMotHolderMapper stockMotHolderMapper;
 
 	private final StockBasicMapper stockBasicMapper;
 
@@ -81,13 +79,13 @@ public class StockDailyServiceImpl extends ServiceImpl<StockDailyMapper, StockDa
 	private String token;
 
 	/**
-	 * 日线同步市场过滤（yml 配置 tushare.daily.market）
+	 * 复用日线同步市场过滤配置（yml 配置 tushare.daily.market）
 	 */
 	@Value("${tushare.daily.market:全部}")
 	private String syncMarket;
 
 	/**
-	 * 是否全量同步（yml 配置 tushare.daily.full）
+	 * 复用日线全量同步开关（yml 配置 tushare.daily.full）
 	 */
 	@Value("${tushare.daily.full:false}")
 	private boolean syncFull;
@@ -102,33 +100,17 @@ public class StockDailyServiceImpl extends ServiceImpl<StockDailyMapper, StockDa
 	}
 
 	/**
-	 * 查询K线数据：按股票代码返回最新 limit 根日线，按交易日期正序
-	 */
-	@Override
-	public List<StockDailyKlineVO> kline(String tsCode, Integer limit) {
-		int size = limit != null && limit > 0 ? limit : 2000;
-		Page<StockDailyEntity> page = page(new Page<>(1, size),
-				Wrappers.<StockDailyEntity>lambdaQuery()
-						.eq(StockDailyEntity::getTsCode, tsCode)
-						.orderByDesc(StockDailyEntity::getTradeDate));
-		List<StockDailyEntity> records = page.getRecords();
-		// 倒序翻成正序，供前端K线图按时间轴从左到右渲染
-		Collections.reverse(records);
-		return BeanUtil.copyToList(records, StockDailyKlineVO.class);
-	}
-
-	/**
-	 * 从 tushare 同步股票日线行情
+	 * 从 tushare 同步股东增减持
 	 * <p>
-	 * 流程：读取 stock_basic 全量股票代码（按市场过滤）→ 逐股票调用 tushare daily 接口
-	 * → 按唯一键 (ts_code, trade_date) 批量插入/更新
+	 * 流程：读取 stock_basic 全量股票代码（按市场过滤）→ 逐股票调用 tushare stk_holdertrade 接口
+	 * → 按唯一键 (ts_code, ann_date, holder_name) 批量插入/更新
 	 */
 	@Override
 	public int syncFromTushare(String market, Boolean full) {
 		if (StrUtil.isBlank(token)) {
 			throw new IllegalStateException("tushare token 未配置，请在 Nacos 配置或环境变量中设置 tushare.token");
 		}
-		// 入参优先，未传则取 yml 配置
+		// 入参优先，未传则取 yml 配置（复用日线配置项）
 		String syncMarket = StrUtil.blankToDefault(market, this.syncMarket);
 		boolean syncFull = full != null ? full : this.syncFull;
 
@@ -136,7 +118,7 @@ public class StockDailyServiceImpl extends ServiceImpl<StockDailyMapper, StockDa
 		LocalDate startDate = syncFull ? FULL_SYNC_START : endDate;
 		String start = startDate.format(BASIC_DATE);
 		String end = endDate.format(BASIC_DATE);
-		log.info("开始从 tushare 同步日线行情, market={}, full={}, 区间: {} ~ {}", syncMarket, syncFull, start, end);
+		log.info("开始从 tushare 同步股东增减持, market={}, full={}, 区间: {} ~ {}", syncMarket, syncFull, start, end);
 
 		// 1. 从 stock_basic 获取待同步的股票代码（按市场过滤）
 		List<StockBasicEntity> basics = stockBasicMapper.selectList(Wrappers.<StockBasicEntity>lambdaQuery()
@@ -149,22 +131,22 @@ public class StockDailyServiceImpl extends ServiceImpl<StockDailyMapper, StockDa
 				.filter(StrUtil::isNotBlank).distinct().toList();
 		log.info("待同步股票数: {}，市场过滤: {}", tsCodes.size(), syncMarket);
 
-		// 2. 逐股票拉取日线并落库
+		// 2. 逐股票拉取股东增减持并落库
 		int total = 0;
 		int failCount = 0;
 		for (int i = 0; i < tsCodes.size(); i++) {
 			String tsCode = tsCodes.get(i);
 			try {
-				List<StockDailyEntity> rows = fetchDaily(tsCode, start, end);
+				List<StockMotHolderEntity> rows = fetchHolders(tsCode, start, end);
 				int affected = upsertByUniqueKey(tsCode, rows);
 				total += affected;
 				if ((i + 1) % 200 == 0 || i == tsCodes.size() - 1) {
-					log.info("日线同步进度: {}/{}, 累计影响 {} 行, 失败 {} 只", i + 1, tsCodes.size(), total, failCount);
+					log.info("股东增减持同步进度: {}/{}, 累计影响 {} 行, 失败 {} 只", i + 1, tsCodes.size(), total, failCount);
 				}
 			}
 			catch (Exception e) {
 				failCount++;
-				log.error("同步 {} 日线失败: {}", tsCode, e.getMessage());
+				log.error("同步 {} 股东增减持失败: {}", tsCode, e.getMessage());
 			}
 			if (REQUEST_INTERVAL_MS > 0) {
 				try {
@@ -172,22 +154,24 @@ public class StockDailyServiceImpl extends ServiceImpl<StockDailyMapper, StockDa
 				}
 				catch (InterruptedException ie) {
 					Thread.currentThread().interrupt();
-					log.warn("日线同步被中断");
+					log.warn("股东增减持同步被中断");
 					break;
 				}
 			}
 		}
-		log.info("从 tushare 同步日线行情完成, market={}, full={}, 股票数={}, 累计影响 {} 行, 失败 {} 只",
+		log.info("从 tushare 同步股东增减持完成, market={}, full={}, 股票数={}, 累计影响 {} 行, 失败 {} 只",
 				syncMarket, syncFull, tsCodes.size(), total, failCount);
 		return total;
 	}
 
 	/**
-	 * 调用 tushare daily 接口拉取单只股票日线
+	 * 调用 tushare stk_holdertrade 接口拉取单只股票股东增减持
+	 * <p>
+	 * start_date/end_date 为公告日期范围：全量=20240101 至今天，增量=仅今天
 	 */
-	private List<StockDailyEntity> fetchDaily(String tsCode, String start, String end) {
+	private List<StockMotHolderEntity> fetchHolders(String tsCode, String start, String end) {
 		Map<String, Object> params = new HashMap<>(4);
-		params.put("api_name", API_NAME_DAILY);
+		params.put("api_name", API_NAME_MOT_HOLDER);
 		params.put("token", token);
 		params.put("params", Map.of("ts_code", tsCode, "start_date", start, "end_date", end));
 
@@ -199,7 +183,7 @@ public class StockDailyServiceImpl extends ServiceImpl<StockDailyMapper, StockDa
 		JSONObject body = JSON.parseObject(respBody);
 		if (body == null || body.getIntValue("code") != 0) {
 			String msg = body != null ? body.getString("msg") : "空响应";
-			throw new IllegalStateException("tushare daily 接口调用失败: " + msg);
+			throw new IllegalStateException("tushare stk_holdertrade 接口调用失败: " + msg);
 		}
 
 		JSONObject data = body.getJSONObject("data");
@@ -211,10 +195,11 @@ public class StockDailyServiceImpl extends ServiceImpl<StockDailyMapper, StockDa
 		if (items == null || items.isEmpty()) {
 			return Collections.emptyList();
 		}
-		List<StockDailyEntity> list = new ArrayList<>(items.size());
+		List<StockMotHolderEntity> list = new ArrayList<>(items.size());
 		for (int i = 0; i < items.size(); i++) {
-			StockDailyEntity entity = mapRow(fields, items.getJSONArray(i));
-			if (entity != null && StrUtil.isNotBlank(entity.getTsCode()) && StrUtil.isNotBlank(entity.getTradeDate())) {
+			StockMotHolderEntity entity = mapRow(fields, items.getJSONArray(i));
+			if (entity != null && StrUtil.isNotBlank(entity.getTsCode()) && StrUtil.isNotBlank(entity.getAnnDate())
+					&& StrUtil.isNotBlank(entity.getHolderName())) {
 				list.add(entity);
 			}
 		}
@@ -222,25 +207,25 @@ public class StockDailyServiceImpl extends ServiceImpl<StockDailyMapper, StockDa
 	}
 
 	/**
-	 * 按唯一键 (ts_code, trade_date) 批量插入/更新
+	 * 按唯一键 (ts_code, ann_date, holder_name) 批量插入/更新
 	 * <p>
-	 * 先查该股票已有交易日期，区间内已存在的记录走 update（保留原 id），其余走批量插入，
-	 * 避免全量重跑时对唯一索引 uk_ts_trade 的冲突
+	 * 先查该股票已有记录，已存在的走 update（保留原 id），其余走批量插入，
+	 * 避免全量重跑时对唯一索引 uk_mot_holder_unique 的冲突
 	 */
-	private int upsertByUniqueKey(String tsCode, List<StockDailyEntity> rows) {
+	private int upsertByUniqueKey(String tsCode, List<StockMotHolderEntity> rows) {
 		if (CollUtil.isEmpty(rows)) {
 			return 0;
 		}
-		List<StockDailyEntity> existList = list(Wrappers.<StockDailyEntity>lambdaQuery()
-				.select(StockDailyEntity::getId, StockDailyEntity::getTradeDate)
-				.eq(StockDailyEntity::getTsCode, tsCode));
-		Map<String, StockDailyEntity> existMap = existList.stream()
-				.collect(Collectors.toMap(StockDailyEntity::getTradeDate, e -> e));
+		List<StockMotHolderEntity> existList = list(Wrappers.<StockMotHolderEntity>lambdaQuery()
+				.select(StockMotHolderEntity::getId, StockMotHolderEntity::getAnnDate, StockMotHolderEntity::getHolderName)
+				.eq(StockMotHolderEntity::getTsCode, tsCode));
+		Map<String, StockMotHolderEntity> existMap = existList.stream()
+				.collect(Collectors.toMap(e -> e.getAnnDate() + "|" + e.getHolderName(), e -> e));
 
-		List<StockDailyEntity> toInsert = new ArrayList<>();
-		List<StockDailyEntity> toUpdate = new ArrayList<>();
-		for (StockDailyEntity row : rows) {
-			StockDailyEntity exist = existMap.get(row.getTradeDate());
+		List<StockMotHolderEntity> toInsert = new ArrayList<>();
+		List<StockMotHolderEntity> toUpdate = new ArrayList<>();
+		for (StockMotHolderEntity row : rows) {
+			StockMotHolderEntity exist = existMap.get(row.getAnnDate() + "|" + row.getHolderName());
 			if (exist == null) {
 				toInsert.add(row);
 			}
@@ -261,23 +246,24 @@ public class StockDailyServiceImpl extends ServiceImpl<StockDailyMapper, StockDa
 	/**
 	 * 按 fields 顺序把 items 行映射为实体
 	 */
-	private StockDailyEntity mapRow(List<String> fields, JSONArray item) {
-		StockDailyEntity entity = new StockDailyEntity();
+	private StockMotHolderEntity mapRow(List<String> fields, JSONArray item) {
+		StockMotHolderEntity entity = new StockMotHolderEntity();
 		for (int i = 0; i < fields.size(); i++) {
 			switch (fields.get(i)) {
 				case "ts_code" -> entity.setTsCode(strVal(item, i));
-				case "trade_date" -> entity.setTradeDate(strVal(item, i));
-				case "open" -> entity.setOpen(floatVal(item, i));
-				case "high" -> entity.setHigh(floatVal(item, i));
-				case "low" -> entity.setLow(floatVal(item, i));
-				case "close" -> entity.setClose(floatVal(item, i));
-				case "pre_close" -> entity.setPreClose(floatVal(item, i));
-				case "change" -> entity.setChange(floatVal(item, i));
-				case "pct_chg" -> entity.setPctChg(floatVal(item, i));
-				case "vol" -> entity.setVol(floatVal(item, i));
-				case "amount" -> entity.setAmount(floatVal(item, i));
-				case "ah_vol" -> entity.setAhVol(floatVal(item, i));
-				case "ah_amount" -> entity.setAhAmount(floatVal(item, i));
+				case "ann_date" -> entity.setAnnDate(strVal(item, i));
+				case "holder_name" -> entity.setHolderName(strVal(item, i));
+				case "holder_type" -> entity.setHolderType(strVal(item, i));
+				// tushare 原字段 in_de，落库列名 in_des
+				case "in_de" -> entity.setInDes(strVal(item, i));
+				case "change_vol" -> entity.setChangeVol(decimalVal(item, i));
+				case "change_ratio" -> entity.setChangeRatio(decimalVal(item, i));
+				case "after_share" -> entity.setAfterShare(decimalVal(item, i));
+				case "after_ratio" -> entity.setAfterRatio(decimalVal(item, i));
+				case "avg_price" -> entity.setAvgPrice(decimalVal(item, i));
+				case "total_share" -> entity.setTotalShare(decimalVal(item, i));
+				case "begin_date" -> entity.setBeginDate(strVal(item, i));
+				case "close_date" -> entity.setCloseDate(strVal(item, i));
 				default -> log.debug("忽略未知字段: {}", fields.get(i));
 			}
 		}
@@ -293,14 +279,14 @@ public class StockDailyServiceImpl extends ServiceImpl<StockDailyMapper, StockDa
 	}
 
 	/**
-	 * 浮点取值，JSON null / "null" / 空串 转为 null
+	 * 高精度数值取值（decimal 列），JSON null / "null" / 空串 转为 null
 	 */
-	private Float floatVal(JSONArray item, int i) {
+	private BigDecimal decimalVal(JSONArray item, int i) {
 		String s = item.getString(i);
 		if (StrUtil.isBlank(s) || "null".equals(s)) {
 			return null;
 		}
-		return Float.parseFloat(s.trim());
+		return new BigDecimal(s.trim());
 	}
 
 	/**
