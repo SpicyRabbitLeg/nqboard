@@ -39,3 +39,16 @@ jasypt:
 sms:
   is-print: false # 是否打印日志
   config-type: yaml # 配置类型，yaml
+
+
+# Tushare 数据同步配置（同名配置可在 Nacos 中覆盖）
+tushare:
+  # token 属敏感信息，禁止硬编码
+  token: xxxxxx
+  daily:
+    # 日线同步市场过滤：全部 / 主板 / 创业板 / 科创板（留空等价于"全部"）
+    market: 全部
+    # 是否全量获取：true = 2024-01-01 至今天；false = 仅增量获取今天
+    full: true
+    # 相邻股票请求间隔（毫秒），防止触发 tushare 频率限制，可按积分档位调整
+    delay-ms: 200
