@@ -157,12 +157,12 @@ public class StockScreenResultServiceImpl extends ServiceImpl<StockScreenResultM
 			if (universeCodes != null && !universeCodes.contains(tsCode)) {
 				continue;
 			}
-			// 日线（最新 lookback 根，升序）
+			// 日线（最新 lookback 根，降序：bars[0] 为最新一根）
 			List<StockDailyEntity> bars = loadBars(tsCode, tradeDate);
 			if (CollUtil.isEmpty(bars)) {
 				continue;
 			}
-			StockDailyEntity lastBar = bars.get(bars.size() - 1);
+			StockDailyEntity lastBar = bars.get(0);
 			// 信号日无行情（停牌）跳过
 			if (!tradeDate.equals(lastBar.getTradeDate())) {
 				continue;
@@ -366,7 +366,7 @@ public class StockScreenResultServiceImpl extends ServiceImpl<StockScreenResultM
 	}
 
 	/**
-	 * 加载单只股票信号日前 lookback 根日线（倒序查询后返回升序）
+	 * 加载单只股票信号日前 lookback 根日线（倒序：最新一根在前，使用方需自行 reverse 升序）
 	 */
 	private List<StockDailyEntity> loadBars(String tsCode, String tradeDate) {
 		List<StockDailyEntity> bars = stockDailyMapper.selectList(Wrappers.<StockDailyEntity>lambdaQuery()

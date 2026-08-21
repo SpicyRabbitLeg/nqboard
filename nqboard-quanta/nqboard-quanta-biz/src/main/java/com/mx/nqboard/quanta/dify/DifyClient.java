@@ -59,6 +59,12 @@ public class DifyClient {
 	private int retry;
 
 	/**
+	 * 重试间隔（毫秒）：模型侧 429 限流多为并发/频率限制，退避后重试
+	 */
+	@Value("${dify.retry-backoff-ms:20000}")
+	private long retryBackoffMs;
+
+	/**
 	 * 是否启用（未配置 key 时自动 false）
 	 */
 	@Value("${dify.enabled:true}")
@@ -102,6 +108,16 @@ public class DifyClient {
 			catch (Exception e) {
 				last = e;
 				log.warn("Dify workflow 调用失败(第 {}/{} 次) {}: {}", attempt, retry + 1, tsCode, e.getMessage());
+				// 退避后重试（最后一次失败无需等待）
+				if (attempt <= retry && retryBackoffMs > 0) {
+					try {
+						Thread.sleep(retryBackoffMs);
+					}
+					catch (InterruptedException ie) {
+						Thread.currentThread().interrupt();
+						break;
+					}
+				}
 			}
 		}
 		throw new IllegalStateException("Dify workflow 调用失败: " + (last != null ? last.getMessage() : "unknown"), last);

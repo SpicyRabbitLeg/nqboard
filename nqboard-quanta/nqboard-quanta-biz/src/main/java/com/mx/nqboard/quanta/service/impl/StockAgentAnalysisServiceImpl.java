@@ -84,6 +84,12 @@ public class StockAgentAnalysisServiceImpl extends ServiceImpl<StockAgentAnalysi
 	@Value("${dify.daily-max-calls:10}")
 	private int dailyMaxCalls;
 
+	/**
+	 * 相邻候选调用间隔（毫秒）：控制模型侧请求频率，避免触发 429 限流
+	 */
+	@Value("${dify.call-interval-ms:10000}")
+	private long callIntervalMs;
+
 	@Override
 	public int analyze() {
 		StockCandidateEntity latest = stockCandidateService.getOne(
@@ -157,6 +163,16 @@ public class StockAgentAnalysisServiceImpl extends ServiceImpl<StockAgentAnalysi
 			}
 			catch (Exception e) {
 				log.error("LLM 分析 {} 异常（跳过，不影响其他候选）", candidate.getTsCode(), e);
+			}
+			// 相邻候选间隔，控制模型侧请求频率（最后一个不等待）
+			if (i < limit - 1 && callIntervalMs > 0 && difyAvailable) {
+				try {
+					Thread.sleep(callIntervalMs);
+				}
+				catch (InterruptedException ie) {
+					Thread.currentThread().interrupt();
+					break;
+				}
 			}
 		}
 		log.info("LLM分析完成: 基准日={}, 候选={}, 处理={}, 模式={}", tradeDate, candidates.size(), processed,

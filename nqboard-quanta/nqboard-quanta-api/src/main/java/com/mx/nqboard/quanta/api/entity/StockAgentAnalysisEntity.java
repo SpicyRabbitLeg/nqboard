@@ -94,6 +94,7 @@ public class StockAgentAnalysisEntity extends Model<StockAgentAnalysisEntity> {
 	 * bullish/bearish/neutral/n/a
 	 */
 	@Schema(description = "信号 bullish/bearish/neutral/n/a")
+	@TableField("`signal`")
 	private String signal;
 
 	/**
