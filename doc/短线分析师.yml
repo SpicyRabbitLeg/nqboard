@@ -1,0 +1,970 @@
+app:
+  description: AI股票分析
+  icon: 🤖
+  icon_background: '#FFEAD5'
+  icon_type: emoji
+  mode: workflow
+  name: 短线分析师
+  use_icon_as_answer_icon: false
+dependencies:
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/deepseek:0.0.20@850efe73fb62bbe7ab2229116086596596297a77174fb86f73e1363b99a24116
+    version: null
+kind: app
+version: 0.7.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload: {}
+    retriever_resource:
+      enabled: true
+    sensitive_word_avoidance:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        isInIteration: false
+        isInLoop: false
+        iteration_id: null
+        loop_id: null
+        sourceType: start
+        targetType: http-request
+      id: 1787277410731-source-1787277468362-target
+      selected: false
+      source: '1787277410731'
+      sourceHandle: source
+      target: '1787277468362'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        iteration_id: null
+        loop_id: null
+        sourceType: start
+        targetType: http-request
+      id: 1787277410731-source-1787283258127-target
+      source: '1787277410731'
+      sourceHandle: source
+      target: '1787283258127'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        iteration_id: null
+        loop_id: null
+        sourceType: start
+        targetType: http-request
+      id: 1787277410731-source-1787293587407-target
+      source: '1787277410731'
+      sourceHandle: source
+      target: '1787293587407'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        iteration_id: null
+        loop_id: null
+        sourceType: start
+        targetType: http-request
+      id: 1787277410731-source-1787293590627-target
+      source: '1787277410731'
+      sourceHandle: source
+      target: '1787293590627'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        iteration_id: null
+        loop_id: null
+        sourceType: start
+        targetType: http-request
+      id: 1787277410731-source-1787293592850-target
+      source: '1787277410731'
+      sourceHandle: source
+      target: '1787293592850'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        iteration_id: null
+        loop_id: null
+        sourceType: start
+        targetType: http-request
+      id: 1787277410731-source-1787293600685-target
+      source: '1787277410731'
+      sourceHandle: source
+      target: '1787293600685'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        iteration_id: null
+        loop_id: null
+        sourceType: http-request
+        targetType: llm
+      id: 1787277468362-source-1787293837931-target
+      source: '1787277468362'
+      sourceHandle: source
+      target: '1787293837931'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        iteration_id: null
+        loop_id: null
+        sourceType: http-request
+        targetType: llm
+      id: 1787283258127-source-1787293893855-target
+      source: '1787283258127'
+      sourceHandle: source
+      target: '1787293893855'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        iteration_id: null
+        loop_id: null
+        sourceType: http-request
+        targetType: llm
+      id: 1787293587407-source-1787293969053-target
+      source: '1787293587407'
+      sourceHandle: source
+      target: '1787293969053'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        iteration_id: null
+        loop_id: null
+        sourceType: http-request
+        targetType: llm
+      id: 1787293590627-source-1787294007019-target
+      source: '1787293590627'
+      sourceHandle: source
+      target: '1787294007019'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        iteration_id: null
+        loop_id: null
+        sourceType: http-request
+        targetType: llm
+      id: 1787293592850-source-1787294033934-target
+      source: '1787293592850'
+      sourceHandle: source
+      target: '1787294033934'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        iteration_id: null
+        loop_id: null
+        sourceType: llm
+        targetType: code
+      id: 1787293837931-source-1787294342796-target
+      source: '1787293837931'
+      sourceHandle: source
+      target: '1787294342796'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        iteration_id: null
+        loop_id: null
+        sourceType: llm
+        targetType: code
+      id: 1787293893855-source-1787294342796-target
+      source: '1787293893855'
+      sourceHandle: source
+      target: '1787294342796'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        iteration_id: null
+        loop_id: null
+        sourceType: llm
+        targetType: code
+      id: 1787293969053-source-1787294342796-target
+      source: '1787293969053'
+      sourceHandle: source
+      target: '1787294342796'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        iteration_id: null
+        loop_id: null
+        sourceType: llm
+        targetType: code
+      id: 1787294007019-source-1787294342796-target
+      source: '1787294007019'
+      sourceHandle: source
+      target: '1787294342796'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        iteration_id: null
+        loop_id: null
+        sourceType: llm
+        targetType: code
+      id: 1787294033934-source-1787294342796-target
+      source: '1787294033934'
+      sourceHandle: source
+      target: '1787294342796'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        iteration_id: null
+        loop_id: null
+        sourceType: code
+        targetType: end
+      id: 1787294342796-source-1787331355618-target
+      source: '1787294342796'
+      sourceHandle: source
+      target: '1787331355618'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        selected: false
+        title: 用户输入
+        type: start
+        variables:
+        - default: ''
+          hint: ''
+          label: ts_code
+          options: []
+          placeholder: ''
+          required: true
+          type: text-input
+          variable: ts_code
+        - default: ''
+          hint: ''
+          label: trade_date
+          options: []
+          placeholder: ''
+          required: true
+          type: text-input
+          variable: trade_date
+        - default: ''
+          hint: ''
+          label: screen_score
+          options: []
+          placeholder: ''
+          required: false
+          type: text-input
+          variable: screen_score
+        - default: ''
+          hint: ''
+          label: metrics
+          options: []
+          placeholder: ''
+          required: false
+          type: text-input
+          variable: metrics
+      height: 187
+      id: '1787277410731'
+      position:
+        x: 80
+        y: 282
+      positionAbsolute:
+        x: 80
+        y: 282
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 0
+    - data:
+        authorization:
+          config: null
+          type: no-auth
+        body:
+          data: []
+          type: none
+        headers: ''
+        method: get
+        params: 'tsCode:{{#1787277410731.ts_code#}}
+
+          date:{{#1787277410731.trade_date#}}'
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 100
+        selected: false
+        ssl_verify: true
+        timeout:
+          max_connect_timeout: 0
+          max_read_timeout: 0
+          max_write_timeout: 0
+        title: 取数-技术面
+        type: http-request
+        url: http://192.168.1.3:9999/admin/dify/technicals
+        variables: []
+      height: 138
+      id: '1787277468362'
+      position:
+        x: 392
+        y: 55
+      positionAbsolute:
+        x: 392
+        y: 55
+      selected: true
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 0
+    - data:
+        authorization:
+          config: null
+          type: no-auth
+        body:
+          data: []
+          type: none
+        headers: ''
+        method: get
+        params: 'tsCode:{{#1787277410731.ts_code#}}
+
+          days:5'
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 100
+        selected: false
+        ssl_verify: true
+        timeout:
+          max_connect_timeout: 0
+          max_read_timeout: 0
+          max_write_timeout: 0
+        title: 取数-龙虎榜
+        type: http-request
+        url: http://192.168.1.3:9999/admin/dify/dragon-tiger
+        variables: []
+      height: 138
+      id: '1787283258127'
+      position:
+        x: 392
+        y: 232
+      positionAbsolute:
+        x: 392
+        y: 232
+      selected: true
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 0
+    - data:
+        authorization:
+          config: null
+          type: no-auth
+        body:
+          data: []
+          type: none
+        headers: ''
+        method: get
+        params: 'tsCode:{{#1787277410731.ts_code#}}
+
+          days:10'
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 100
+        selected: false
+        ssl_verify: true
+        timeout:
+          max_connect_timeout: 0
+          max_read_timeout: 0
+          max_write_timeout: 0
+        title: 取数-资金流
+        type: http-request
+        url: http://192.168.1.3:9999/admin/dify/money-flow
+        variables: []
+      height: 138
+      id: '1787293587407'
+      position:
+        x: 392
+        y: 402.03559549363104
+      positionAbsolute:
+        x: 392
+        y: 402.03559549363104
+      selected: true
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 0
+    - data:
+        authorization:
+          config: null
+          type: no-auth
+        body:
+          data: []
+          type: none
+        headers: ''
+        method: get
+        params: 'tsCode:{{#1787277410731.ts_code#}}
+
+          days:7
+
+          type:all'
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 100
+        selected: false
+        ssl_verify: true
+        timeout:
+          max_connect_timeout: 0
+          max_read_timeout: 0
+          max_write_timeout: 0
+        title: 取数-新闻
+        type: http-request
+        url: http://192.168.1.3:9999/admin/dify/news
+        variables: []
+      height: 138
+      id: '1787293590627'
+      position:
+        x: 398.0938539430729
+        y: 575.2686292913984
+      positionAbsolute:
+        x: 398.0938539430729
+        y: 575.2686292913984
+      selected: true
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 0
+    - data:
+        authorization:
+          config: null
+          type: no-auth
+        body:
+          data: []
+          type: none
+        headers: ''
+        method: get
+        params: tsCode:{{#1787277410731.ts_code#}}
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 100
+        selected: false
+        ssl_verify: true
+        timeout:
+          max_connect_timeout: 0
+          max_read_timeout: 0
+          max_write_timeout: 0
+        title: 取数-板块
+        type: http-request
+        url: http://192.168.1.3:9999/admin/dify/sector
+        variables: []
+      height: 138
+      id: '1787293592850'
+      position:
+        x: 407.6699101393302
+        y: 760.6893709753116
+      positionAbsolute:
+        x: 407.6699101393302
+        y: 760.6893709753116
+      selected: true
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 0
+    - data:
+        authorization:
+          config: null
+          type: no-auth
+        body:
+          data: []
+          type: none
+        headers: ''
+        method: get
+        params: date:{{#1787277410731.trade_date#}}
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 100
+        selected: false
+        ssl_verify: true
+        timeout:
+          max_connect_timeout: 0
+          max_read_timeout: 0
+          max_write_timeout: 0
+        title: 取数-大盘
+        type: http-request
+        url: http://192.168.1.3:9999/admin/dify/market-env
+        variables: []
+      height: 138
+      id: '1787293600685'
+      position:
+        x: 407.6699101393302
+        y: 933.0518542097828
+      positionAbsolute:
+        x: 407.6699101393302
+        y: 933.0518542097828
+      selected: true
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 0
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        model:
+          completion_params: {}
+          mode: chat
+          name: deepseek-v4-flash
+          provider: langgenius/deepseek/deepseek
+        prompt_template:
+        - id: 36f4b1af-0a6e-47f6-9766-f73e030f1e1d
+          role: system
+          text: '你是A股短线技术面分析师，持有期 3-5 个交易日。你收到的数据包含一套已由规则引擎计算好的
+
+            技术特征向量（momentum_5d/20d、vol_ratio 量比、rsi6、ema_align、macd_gold_cross、
+
+            breakout_up、close_position、volatility20、consecutive_limit_up 等）与规则打分。
+
+
+            判断框架：
+
+            - mom5 在 1%~8% 且量比 1.2~3.0 为健康启动；mom5>8% 追高风险大
+
+            - mom20>25% 或 ma_ratio>10% 为已过度拉伸，警惕回调
+
+            - rsi6>70 偏热，25~40 反弹区，40~70 健康区
+
+            - breakout_up=true 且量能温和为突破启动；配合巨量(量比>4)警惕出货
+
+            - 连板(consecutive_limit_up>=2)且仍封板难买入，风险大
+
+
+            规则打分(screen_score/pattern)是重要参考但允许你推翻：若特征间相互矛盾（如突破但
+
+            量能背离），给出更保守的结论。
+
+
+            输出要求：只输出如下 JSON，不要任何其他文字、不要 markdown 代码块：
+
+            {"key":"technical","signal":"bullish|bearish|neutral|n/a","confidence":0-100整数,"reasoning":"≤120字的中文结论，引用具体数据"}
+
+
+            若数据 _meta.complete=false 或数据明显缺失，confidence 不超过 40 或 signal 输出 n/a。'
+        - id: 83479a82-8f51-4741-b0b1-598582362678
+          role: user
+          text: 数据：{{#1787277468362.body#}}
+        reasoning_format: separated
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 1000
+        selected: false
+        title: 技术面分析师
+        type: llm
+        vision:
+          enabled: false
+      height: 118
+      id: '1787293837931'
+      position:
+        x: 694
+        y: 55
+      positionAbsolute:
+        x: 694
+        y: 55
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 0
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        model:
+          completion_params: {}
+          mode: chat
+          name: deepseek-v4-flash
+          provider: langgenius/deepseek/deepseek
+        prompt_template:
+        - id: 16b25f62-f6bf-4dbe-a33c-488a1ee7d956
+          role: system
+          text: '你是A股龙虎榜分析师，持有期 3-5 个交易日。数据为该股近5个交易日的上榜记录
+
+            （净买额 net_amount_yuan、买卖额、上榜理由 reason）。
+
+
+            判断框架：
+
+            - 5日内>=2次上榜且净买为正 -> 游资接力，短线情绪强
+
+            - 1次上榜净买为正且买额/卖额>1.3 -> 偏多
+
+            - 净买为负 -> 席位出货，警惕
+
+            - 无上榜记录 -> neutral，置信度低（与基本面无关）
+
+
+            输出要求：只输出 JSON，不要任何其他文字：
+
+            {"key":"dragon_tiger","signal":"bullish|bearish|neutral|n/a","confidence":0-100整数,"reasoning":"≤120字中文结论，引用净买额"}
+
+            无数据时 signal=neutral 且 confidence<=40。'
+        - id: 60f616fa-9b89-42fe-8bdf-dcaf1711b3a2
+          role: user
+          text: 数据：{{#1787283258127.body#}}
+        reasoning_format: separated
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 1000
+        selected: false
+        title: 龙虎榜分析师
+        type: llm
+        vision:
+          enabled: false
+      height: 118
+      id: '1787293893855'
+      position:
+        x: 694
+        y: 232
+      positionAbsolute:
+        x: 694
+        y: 232
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 0
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        model:
+          completion_params: {}
+          mode: chat
+          name: deepseek-v4-flash
+          provider: langgenius/deepseek/deepseek
+        prompt_template:
+        - id: cb3171f1-b1c8-41b2-b3f0-84bb38915399
+          role: system
+          text: '你是A股主力资金流分析师，持有期 3-5 个交易日。数据为该股近10个交易日的主力净流入额
+
+            （main_net_inflow_yuan，元）与占比（main_net_pct）。
+
+
+            判断框架：
+
+            - 连续>=2日净流入且3日累计为正 -> 资金持续进场
+
+            - 单日巨额净流入(占成交额比>10%)但次日净流出 -> 一日游资金，警惕
+
+            - 连续3日以上净流出 -> 主力撤退
+
+            - 超大单(super_large_net)主导的净流入质量高于大单
+
+
+            输出要求：只输出 JSON，不要任何其他文字：
+
+            {"key":"money_flow","signal":"bullish|bearish|neutral|n/a","confidence":0-100整数,"reasoning":"≤120字中文结论，给出关键金额"}
+
+            数据缺失时 confidence<=40 或 signal=n/a。'
+        - id: 278a5296-3f88-44b8-b002-25805e47ffcf
+          role: user
+          text: 数据： {{#1787293587407.body#}}
+        reasoning_format: separated
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 1000
+        selected: false
+        title: 资金流分析师
+        type: llm
+        vision:
+          enabled: false
+      height: 118
+      id: '1787293969053'
+      position:
+        x: 694
+        y: 402.03559549363104
+      positionAbsolute:
+        x: 694
+        y: 402.03559549363104
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 0
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        model:
+          completion_params: {}
+          mode: chat
+          name: deepseek-v4-flash
+          provider: langgenius/deepseek/deepseek
+        prompt_template:
+        - id: f5464bcf-eaf4-4578-af9a-327227b7d25b
+          role: system
+          text: "你是A股舆情分析师，持有期 3-5 个交易日。数据为该股近7天的公告（ann）与媒体新闻（media）\n标题及摘要。\n\n判断框架：\n\
+            - 业绩预告大幅预增/重大订单/回购增持 -> 利好\n- 股东减持/立案调查/监管函/业绩预亏/商誉减值 -> 利空\n- 定增/配股等再融资\
+            \ -> 中性偏空（摊薄）\n- 政策利好（行业补贴/规划提及所属行业）-> 政策面利好\n- 仅有常规公告（董监事会决议等）-> neutral\n\
+            - 标题党或无实质内容的媒体稿 -> 忽略\n\n输出要求：只输出 JSON，不要任何其他文字，news 与 policy 两个结论并列：\n\
+            {\"agents\":[\n  {\"key\":\"news\",\"signal\":\"bullish|bearish|neutral|n/a\"\
+            ,\"confidence\":0-100整数,\"reasoning\":\"≤120字中文\"},\n  {\"key\":\"policy\"\
+            ,\"signal\":\"bullish|bearish|neutral|n/a\",\"confidence\":0-100整数,\"\
+            reasoning\":\"≤120字中文\"}\n]}\n无相关新闻时两个都输出 neutral 且 confidence<=40。"
+        - id: a76cdb84-1098-4f0c-b1e8-39d149824fb5
+          role: user
+          text: 数据： {{#1787293590627.body#}}
+        reasoning_format: separated
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 1000
+        selected: false
+        title: 新闻与政策分析师
+        type: llm
+        vision:
+          enabled: false
+      height: 118
+      id: '1787294007019'
+      position:
+        x: 700.0938539430729
+        y: 575.2686292913984
+      positionAbsolute:
+        x: 700.0938539430729
+        y: 575.2686292913984
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 0
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        model:
+          completion_params: {}
+          mode: chat
+          name: deepseek-v4-flash
+          provider: langgenius/deepseek/deepseek
+        prompt_template:
+        - id: d66f302b-cac6-43e0-86e4-9ff66f464598
+          role: system
+          text: '你是A股行业板块轮动分析师，持有期 3-5 个交易日。数据为该股所属行业板块近10个交易日的
+
+            逐日涨跌幅（pct_chg）。
+
+
+            判断框架：
+
+            - 板块当日涨幅>=2% 强共振（短线资金聚集），>=1% 中共振
+
+            - 板块当日跌幅>=1% 反共振（板块拖累个股）
+
+            - 近5日板块累计涨幅>8% 板块可能过热，警惕高位分歧
+
+            - 板块连续多日缩量阴跌为弱势板块
+
+
+            禁止：不要把个股自身涨跌当作板块证据，只依据板块数据判断。
+
+
+            输出要求：只输出 JSON，不要任何其他文字：
+
+            {"key":"sector","signal":"bullish|bearish|neutral|n/a","confidence":0-100整数,"reasoning":"≤120字中文结论"}
+
+            数据缺失时 confidence<=40 或 signal=n/a。'
+        - id: b4315dd5-d474-414f-b097-64d63c9ee157
+          role: user
+          text: 数据：{{#1787293592850.body#}}
+        reasoning_format: separated
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 1000
+        selected: false
+        title: 板块分析师
+        type: llm
+        vision:
+          enabled: false
+      height: 118
+      id: '1787294033934'
+      position:
+        x: 709.6699101393302
+        y: 760.6893709753116
+      positionAbsolute:
+        x: 709.6699101393302
+        y: 760.6893709753116
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 0
+    - data:
+        code: "function main({ technical, sector, money_flow, dragon_tiger, news })\
+          \ {\n  const signals = { bullish: 1, bearish: -1, neutral: 0 };\n  const\
+          \ agents = [];\n  const extract = (raw, key) => {\n    try {\n      let\
+          \ s = String(raw).trim();\n      const m = s.match(/\\{[\\s\\S]*\\}/);\n\
+          \      if (m) s = m[0];\n      return JSON.parse(s);\n    } catch (e) {\
+          \ return null; }\n  };\n\n  for (const [key, raw] of [['technical', technical],\
+          \ ['sector', sector],\n      ['money_flow', money_flow], ['dragon_tiger',\
+          \ dragon_tiger]]) {\n    const parsed = extract(raw, key);\n    if (parsed\
+          \ && parsed.key) agents.push({\n      key: parsed.key || key,\n      signal:\
+          \ String(parsed.signal || 'n/a').toLowerCase(),\n      confidence: Number(parsed.confidence)\
+          \ || 40,\n      reasoning: String(parsed.reasoning || '').slice(0, 200),\n\
+          \    });\n  }\n\n  const newsParsed = extract(news, 'news');\n  if (newsParsed\
+          \ && Array.isArray(newsParsed.agents)) {\n    for (const a of newsParsed.agents)\
+          \ {\n      agents.push({\n        key: a.key,\n        signal: String(a.signal\
+          \ || 'n/a').toLowerCase(),\n        confidence: Number(a.confidence) ||\
+          \ 40,\n        reasoning: String(a.reasoning || '').slice(0, 200),\n   \
+          \   });\n    }\n  }\n\n  const weights = { technical: 0.30, sector: 0.15,\
+          \ money_flow: 0.15,\n    dragon_tiger: 0.10, news: 0.10, policy: 0.10 };\n\
+          \  let score = 0, totalWeight = 0;\n  const reasons = [];\n  for (const\
+          \ a of agents) {\n    const w = weights[a.key];\n    if (!w || a.signal\
+          \ === 'n/a' || !a.signal) continue;\n    score += w * (signals[a.signal]\
+          \ || 0) * (Math.min(100, Math.max(0, a.confidence)) / 100);\n    totalWeight\
+          \ += w;\n    if (a.signal === 'bullish' && a.confidence >= 65) {\n     \
+          \ reasons.push(({ technical: '技术面偏多', sector: '板块共振', money_flow: '主力净流入',\n\
+          \        dragon_tiger: '龙虎榜净买', news: '舆情偏多', policy: '政策偏多' })[a.key] ||\
+          \ a.key);\n    }\n  }\n\n  const weighted = totalWeight > 0 ? +(score /\
+          \ totalWeight).toFixed(4) : 0;\n  const bullishCount = agents.filter(a =>\
+          \ a.signal === 'bullish').length;\n  const strongBearish = agents.some(a\
+          \ => a.signal === 'bearish' && a.confidence >= 70);\n  let action = 'watch';\n\
+          \  if (strongBearish && weighted < 0) action = 'avoid';\n  else if (weighted\
+          \ > 0 && bullishCount >= 2) action = 'entry_ok';\n  const confidence = Math.min(95,\
+          \ Math.round(55 + Math.abs(weighted) * 45));\n\n  return {\n    result:\
+          \ JSON.stringify({\n      action, confidence, weighted_score: weighted,\n\
+          \      agents, reasons, risk_flags: [],\n    }),\n  };\n}"
+        code_language: javascript
+        outputs:
+          result:
+            children: null
+            type: string
+        selected: false
+        title: 代码执行
+        type: code
+        variables:
+        - value_selector:
+          - '1787293837931'
+          - text
+          value_type: string
+          variable: technical
+        - value_selector:
+          - '1787294033934'
+          - text
+          value_type: string
+          variable: sector
+        - value_selector:
+          - '1787293969053'
+          - text
+          value_type: string
+          variable: money_flow
+        - value_selector:
+          - '1787293893855'
+          - text
+          value_type: string
+          variable: dragon_tiger
+        - value_selector:
+          - '1787294007019'
+          - text
+          value_type: string
+          variable: news
+      height: 52
+      id: '1787294342796'
+      position:
+        x: 1101.5144004792612
+        y: 459.9342237305513
+      positionAbsolute:
+        x: 1101.5144004792612
+        y: 459.9342237305513
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+      zIndex: 0
+    - data:
+        outputs:
+        - value_selector:
+          - '1787294342796'
+          - result
+          value_type: string
+          variable: result
+        selected: false
+        title: 输出
+        type: end
+      height: 52
+      id: '1787331355618'
+      position:
+        x: 1403.5144004792612
+        y: 459.9342237305513
+      positionAbsolute:
+        x: 1403.5144004792612
+        y: 459.9342237305513
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    viewport:
+      x: -239.60359199991183
+      y: 197.4040782819764
+      zoom: 0.5743491774985192
+  rag_pipeline_variables: []
