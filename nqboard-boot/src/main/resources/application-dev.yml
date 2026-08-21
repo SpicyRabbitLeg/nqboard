@@ -4,7 +4,7 @@ spring:
   data:
     redis:
       database: 9
-      host: 127.0.0.1
+      host: 192.168.1.3
       port: 6379
       password:
   # 数据库相关配置
@@ -12,7 +12,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: root
     password: root
-    url: jdbc:mysql://127.0.0.1:3306/nqboard?characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=GMT%2B8&allowMultiQueries=true&nullCatalogMeansCurrent=true
+    url: jdbc:mysql://192.168.1.3:3306/nqboard?characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=GMT%2B8&allowMultiQueries=true&nullCatalogMeansCurrent=true
 
 # 本地文件系统
 file:
@@ -27,6 +27,13 @@ security:
   # 跳过验证码校验的客户端
   ignore-clients:
     - test
+  # 资源服务器直接放行的URL（无OAuth2鉴权，鉴权由接口自身承担）
+  oauth2:
+    ignore:
+      urls:
+        # Dify Workflow 数据供给接口（鉴权由 X-Dify-Token 静态Token承担，见 dify.tools-token）
+        - /dify/**
+        - /dify/openapi.json
 
 # 配置文件加密根密码
 jasypt:
@@ -57,3 +64,80 @@ csindex:
   indexes: 000300,000016,000905,000852,000500,000922
   # 权重文件下载地址模板，{} 替换为指数代码
   url: https://oss-ch.csindex.com.cn/static/html/csindex/public/uploads/file/autofile/closeweight/{}closeweight.xls
+
+# 行业板块日线同步配置（东财）
+industry-daily:
+  # 相邻板块请求间隔（毫秒）：板块约86个，push2his CDN 对高频请求会临时封锁
+  request-interval-ms: 3000
+  # 是否全量同步：true=全部历史；false=仅今天（首次部署需手动执行一次全量）
+  full: false
+
+# 限售解禁同步配置（tushare share_float）
+restricted-release:
+  # 全量回补天数（从今天往回推 N 天逐个公告日拉取）
+  lookback-days: 90
+
+# Dify Workflow 接入配置（LLM 分析层）
+dify:
+  # 是否启用（false 或 key 未配置时自动走规则降级模式，流水线不中断）
+  enabled: true
+  # Dify API 地址（注意带 /v1）
+  base-url: https://api.dify.ai/v1
+  # 短线分析 Workflow 的 API Key（Dify 应用访问 API 页获取）
+  workflow-key: ''
+  # Dify 回调 nqboard 取数接口的静态 Token（请求头 X-Dify-Token；为空放行便于本地调试）
+  tools-token: ''
+  # 单次 workflow 请求超时（毫秒）
+  timeout-ms: 60000
+  # 失败重试次数
+  retry: 2
+  # 每日 LLM 调用上限（成本护栏）
+  daily-max-calls: 10
+
+# 盘后流水线配置
+quanta:
+  pipeline:
+    # 数据就绪检查：股票日线当日最低覆盖率（低于该值视为数据未同步完成，阻断下游步骤）
+    readiness-min-coverage: 0.95
+  # 短线筛选打分配置（三层算法：硬门 -> 入场模板 -> 质量加分）
+  screen:
+    # 股票池范围：all=全A / hs300_csi500=沪深300+中证500成分 / hs300 / csi500
+    universe: hs300_csi500
+    # Stage0 当日最低成交额（元），默认1亿
+    min-amount: 100000000
+    # Stage0 最低上市天数（过滤次新）
+    min-listing-days: 60
+    # Stage0 剔除板块（逗号分隔：科创板,北交所,创业板）
+    exclude-boards: 科创板,北交所
+    # H4 近60日日均成交额下限（元），默认8000万
+    min-avg-amount-60d: 80000000
+    # H8 大盘门：沪深300 5日收益低于该值当日不产生新候选
+    market-min-ret-5d: -0.03
+    # 入池线：综合打分下限（模板分+加分，满分100）
+    min-score: 65
+    # 每日入候选池最大数量
+    top-n: 3
+  # 候选池 Gate 硬门配置
+  candidate:
+    # H9：解禁前瞻天数（日历日）
+    restricted-release-days: 7
+    # H9：解禁占总股本比例下限（%）
+    restricted-release-min-ratio: 5
+    # H10：止损出局冷却天数（日历日，约10个交易日）
+    cooldown-days: 14
+  # 命中率追踪配置（P7 试运行观察）
+  hit-rate:
+    # 命中率回看信号日数（每日流水线刷新该窗口内全部信号日的前向收益，幂等）
+    lookback-days: 15
+  # 模拟盘配置（T+1，与回测成交假设一致）
+  sim:
+    # 模拟账户初始资金（元）
+    capital: 100000
+    # 最大并发持仓数
+    max-positions: 4
+    # 单仓位最大资金占比
+    max-position-pct: 0.25
+    # 买入成本率（佣金）
+    cost-buy: 0.0003
+    # 卖出成本率（佣金+印花税）
+    cost-sell: 0.0008
