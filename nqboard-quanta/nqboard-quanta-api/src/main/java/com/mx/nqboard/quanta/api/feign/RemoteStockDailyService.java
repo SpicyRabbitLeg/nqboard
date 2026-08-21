@@ -30,4 +30,14 @@ public interface RemoteStockDailyService {
 	R<Integer> syncFromTushare(@RequestParam(value = "market", required = false) String market,
 			@RequestParam(value = "full", required = false) Boolean full);
 
+	/**
+	 * 从 tushare 回补复权因子（按交易日批量，只补 NULL 的交易日）
+	 * <p>
+	 * 仅供系统内部调用（如 Quartz 定时任务 / 日线同步后自动触发），配合 provider 端 {@code @Inner} 放行
+	 * @return 影响行数
+	 */
+	@NoToken
+	@PostMapping("/stockDaily/syncAdjFactor")
+	R<Integer> syncAdjFactorFromTushare();
+
 }

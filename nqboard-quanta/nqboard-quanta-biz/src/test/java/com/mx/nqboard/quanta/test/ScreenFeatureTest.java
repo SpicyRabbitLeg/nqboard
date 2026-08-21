@@ -32,8 +32,11 @@ public class ScreenFeatureTest {
 		testRsi();
 		testConsecutiveLimitUp();
 		testBreakoutAndClosePosition();
+		testVolRatioToday();
+		testAdjFactorNeutralizesExRightsGap();
 		testPatternMatch();
 		testHardGates();
+		testPatternGateExemption();
 		testScorer();
 		System.out.println();
 		if (failures == 0) {
@@ -43,6 +46,76 @@ public class ScreenFeatureTest {
 			System.out.println("===== 失败 " + failures + " 项 =====");
 			System.exit(1);
 		}
+	}
+
+	/**
+	 * 当日量比 = 当日量 / 前5日均量（区别于 5日/20日 中期量比）
+	 */
+	static void testVolRatioToday() {
+		List<StockDailyEntity> bars = new ArrayList<>();
+		for (int i = 1; i <= 39; i++) {
+			bars.add(bar(String.format("%08d", 20260101L + i), 9.9, 10.1, 9.9, 10, 1000, 10000));
+		}
+		// 最后一根放量 3000：当日量比 = 3000/1000 = 3.0（前5日均量=1000）
+		bars.add(bar("20260210", 9.9, 10.1, 9.9, 10, 3000, 30000));
+		ScreenFeatures f = new ScreenFeatureCalculator().calculate(bars, "600000.SH", 0.10);
+		check("当日量比=3.0", Math.abs(f.getVolRatioToday() - 3.0) < 1e-9,
+				"volRatioToday=" + f.getVolRatioToday());
+	}
+
+	/**
+	 * 复权因子消除除权跳空：10送10 后价格减半，前复权 mom5 不应出现 -50% 假深跌
+	 */
+	static void testAdjFactorNeutralizesExRightsGap() {
+		List<StockDailyEntity> bars = new ArrayList<>();
+		for (int i = 1; i <= 39; i++) {
+			bars.add(barAdj(String.format("%08d", 20260101L + i), 9.9, 10.1, 9.9, 10, 1000, 10000, 1f));
+		}
+		// 除权日：10送10，价格减半、因子翻倍（复权后真实价格连续）
+		bars.add(barAdj("20260210", 4.95, 5.05, 4.95, 5, 2000, 20000, 2f));
+		ScreenFeatures f = new ScreenFeatureCalculator().calculate(bars, "600000.SH", 0.10);
+		// 前复权后最后一根 == 原价 5 元，历史一根 == 10*1/2 = 5 元 -> mom5 == 0（无假跳空）
+		check("除权日mom5无假跳空", Math.abs(f.getMom5()) < 1e-9, "mom5=" + f.getMom5());
+		check("复权后收盘=原价", Math.abs(f.getClose() - 5.0) < 1e-9, "close=" + f.getClose());
+	}
+
+	/**
+	 * 硬门按模板豁免：超跌反转豁免 H1/H2；回踩低吸仅要求 EMA20 上行（允许收盘短暂跌破 EMA20）
+	 */
+	static void testPatternGateExemption() {
+		UniverseFilter filter = new UniverseFilter();
+		// 超跌票：EMA20 下行 + 5日低点贴20日低点 -> 统一硬门必拒，豁免后应通过其余门
+		ScreenFeatures oversold = new ScreenFeatures();
+		oversold.setClose(9);
+		oversold.setEma20(10);
+		oversold.setEma20SlopeUp(false);
+		oversold.setLow5(8.0);
+		oversold.setLow20(8.0);
+		oversold.setVolatility20(0.35);
+		oversold.setAvgAmount60Yuan(100_000_000);
+		oversold.setVolRatioToday(1.5);
+		oversold.setPctChg(3);
+		oversold.setClosePosition(0.8);
+		check("超跌模板豁免H1/H2", filter.hardGateRejects(oversold, ScreenPatternEnum.OVERSOLD).isEmpty(),
+				"rejects=" + filter.hardGateRejects(oversold, ScreenPatternEnum.OVERSOLD));
+		check("非模板口径仍拒超跌票", !filter.hardGateRejects(oversold, null).isEmpty(),
+				"rejects=" + filter.hardGateRejects(oversold, null));
+		// 回踩票：收盘略破 EMA20（spread -1%）但 EMA20 上行
+		ScreenFeatures pullback = new ScreenFeatures();
+		pullback.setClose(19.8);
+		pullback.setEma20(20);
+		pullback.setEma20SlopeUp(true);
+		pullback.setLow5(19.0);
+		pullback.setLow20(18.0);
+		pullback.setVolatility20(0.35);
+		pullback.setAvgAmount60Yuan(100_000_000);
+		pullback.setVolRatioToday(0.6);
+		pullback.setPctChg(-1);
+		pullback.setClosePosition(0.6);
+		check("回踩模板允许破EMA20", filter.hardGateRejects(pullback, ScreenPatternEnum.PULLBACK).isEmpty(),
+				"rejects=" + filter.hardGateRejects(pullback, ScreenPatternEnum.PULLBACK));
+		check("统一口径拒破位票", filter.hardGateRejects(pullback, null).contains("H1:趋势之下"),
+				"rejects=" + filter.hardGateRejects(pullback, null));
 	}
 
 	/**
@@ -157,8 +230,8 @@ public class ScreenFeatureTest {
 		healthy.setVolRatio(1.5);
 		healthy.setPctChg(3);
 		healthy.setClosePosition(0.8);
-		check("健康特征过硬门", filter.hardGateRejects(healthy).isEmpty(),
-				"rejects=" + filter.hardGateRejects(healthy));
+		check("健康特征过硬门", filter.hardGateRejects(healthy, null).isEmpty(),
+				"rejects=" + filter.hardGateRejects(healthy, null));
 
 		// 下跌中继（低5 < 低20*1.02）+ 尾盘回落
 		ScreenFeatures bad = new ScreenFeatures();
@@ -172,7 +245,7 @@ public class ScreenFeatureTest {
 		bad.setVolRatio(1.5);
 		bad.setPctChg(3);
 		bad.setClosePosition(0.3);
-		List<String> rejects = filter.hardGateRejects(bad);
+		List<String> rejects = filter.hardGateRejects(bad, null);
 		check("下跌中继+尾盘回落被拒", rejects.size() == 2 && rejects.contains("H2:下跌中继") && rejects.contains("H6:尾盘回落"),
 				"rejects=" + rejects);
 	}
@@ -261,6 +334,13 @@ public class ScreenFeatureTest {
 		e.setVol((float) vol);
 		e.setAmount((float) amount);
 		e.setPctChg(0f);
+		return e;
+	}
+
+	private static StockDailyEntity barAdj(String tradeDate, double open, double high, double low, double close,
+			double vol, double amount, float adjFactor) {
+		StockDailyEntity e = bar(tradeDate, open, high, low, close, vol, amount);
+		e.setAdjFactor(adjFactor);
 		return e;
 	}
 

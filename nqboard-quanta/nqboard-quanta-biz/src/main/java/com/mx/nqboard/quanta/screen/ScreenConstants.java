@@ -52,7 +52,7 @@ public final class ScreenConstants {
 	public static final double H4_MIN_AVG_AMOUNT_60D = 80_000_000d;
 
 	/**
-	 * H5：巨量滞涨否决——量比超过该值且涨幅不足该值（%）视为出货嫌疑
+	 * H5：巨量滞涨否决——当日量比（当日量/前5日均量）超过该值且涨幅不足该值（%）视为出货嫌疑
 	 */
 	public static final double H5_VOL_RATIO = 4.0;
 
@@ -164,7 +164,7 @@ public final class ScreenConstants {
 	public static final double OVERSOLD_MOM5 = -0.12;
 
 	/**
-	 * 模板D 超跌反转：反转需量能确认的量比下限
+	 * 模板D 超跌反转：反转需当日放量确认的当日量比下限（当日量/前5日均量）
 	 */
 	public static final double OVERSOLD_VOL_RATIO_MIN = 1.2;
 
@@ -202,7 +202,7 @@ public final class ScreenConstants {
 	public static final double FLOW_PENALTY = -10;
 
 	/**
-	 * 龙虎榜：近5个交易日净买 加分
+	 * 龙虎榜：近5个交易日（按交易日口径）净买 加分
 	 */
 	public static final double DRAGON_BONUS = 8;
 

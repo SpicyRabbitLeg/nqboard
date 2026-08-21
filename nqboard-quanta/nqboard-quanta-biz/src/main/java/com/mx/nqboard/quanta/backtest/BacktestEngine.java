@@ -381,8 +381,10 @@ public class BacktestEngine {
 		if (f == null) {
 			return null;
 		}
+		// 模板匹配先于硬门（H1/H2 按模板差异化豁免，与实盘口径一致）
+		ScreenPatternEnum pattern = screenScorer.matchPattern(f);
 		// 硬门
-		if (!universeFilter.hardGateRejects(f).isEmpty()) {
+		if (!universeFilter.hardGateRejects(f, pattern).isEmpty()) {
 			return null;
 		}
 		// 上下文

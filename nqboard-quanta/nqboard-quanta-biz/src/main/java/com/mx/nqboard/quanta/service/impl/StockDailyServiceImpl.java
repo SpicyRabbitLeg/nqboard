@@ -47,9 +47,25 @@ public class StockDailyServiceImpl extends ServiceImpl<StockDailyMapper, StockDa
 	private static final String API_NAME_DAILY = "daily";
 
 	/**
+	 * 单请求最大重试次数（网络抖动/限频退避重试）
+	 */
+	private static final int MAX_RETRY = 3;
+
+	/**
+	 * 重试基础退避间隔（毫秒），第 n 次重试等待 base * n
+	 */
+	private static final long RETRY_BASE_DELAY_MS = 1000L;
+
+	/**
 	 * 全量同步起始日期：2026-01-01
 	 */
 	private static final LocalDate FULL_SYNC_START = LocalDate.of(2026, 1, 1);
+
+	/**
+	 * 增量同步自愈回看天数（日历日）：增量起点 = 表内最新交易日 - N 天，
+	 * 单日任务失败后下次运行自动回补，无需人工重跑全量
+	 */
+	private static final int INCREMENTAL_SELF_HEAL_DAYS = 7;
 
 	private static final DateTimeFormatter BASIC_DATE = DateTimeFormatter.BASIC_ISO_DATE;
 
@@ -133,7 +149,15 @@ public class StockDailyServiceImpl extends ServiceImpl<StockDailyMapper, StockDa
 		boolean syncFull = full != null ? full : this.syncFull;
 
 		LocalDate endDate = LocalDate.now();
-		LocalDate startDate = syncFull ? FULL_SYNC_START : endDate;
+		// 增量起点自愈：表内最新交易日前推 N 天（单日漏跑自动回补）；表为空则退化为全量起点
+		LocalDate startDate;
+		if (syncFull) {
+			startDate = FULL_SYNC_START;
+		}
+		else {
+			LocalDate latest = latestTradeDate();
+			startDate = latest != null ? latest.minusDays(INCREMENTAL_SELF_HEAL_DAYS) : FULL_SYNC_START;
+		}
 		String start = startDate.format(BASIC_DATE);
 		String end = endDate.format(BASIC_DATE);
 		log.info("开始从 tushare 同步日线行情, market={}, full={}, 区间: {} ~ {}", syncMarket, syncFull, start, end);
@@ -179,30 +203,189 @@ public class StockDailyServiceImpl extends ServiceImpl<StockDailyMapper, StockDa
 		}
 		log.info("从 tushare 同步日线行情完成, market={}, full={}, 股票数={}, 累计影响 {} 行, 失败 {} 只",
 				syncMarket, syncFull, tsCodes.size(), total, failCount);
+		// 复权因子回补（按交易日批量，独立失败不影响日线同步结果）
+		try {
+			int adjCount = syncAdjFactorFromTushare();
+			log.info("复权因子回补完成, 影响 {} 行", adjCount);
+		}
+		catch (Exception e) {
+			log.error("复权因子回补失败（不影响日线同步结果，指标计算将按因子缺失=1 降级）: {}", e.getMessage());
+		}
 		return total;
 	}
 
 	/**
-	 * 调用 tushare daily 接口拉取单只股票日线
+	 * 表内最新交易日（自愈起点基准），空表返回 null
 	 */
-	private List<StockDailyEntity> fetchDaily(String tsCode, String start, String end) {
+	private LocalDate latestTradeDate() {
+		List<Object> dates = stockDailyMapper.selectObjs(Wrappers.<StockDailyEntity>query()
+				.select("DISTINCT trade_date")
+				.last("order by trade_date desc limit 1"));
+		if (CollUtil.isEmpty(dates) || dates.get(0) == null) {
+			return null;
+		}
+		String d = String.valueOf(dates.get(0)).replace("-", "");
+		return d.length() == 8 ? LocalDate.parse(d, BASIC_DATE) : null;
+	}
+
+	/**
+	 * 从 tushare 同步复权因子（adj_factor，按交易日批量：一次调用返回全市场当日因子）
+	 * <p>
+	 * 只回补 adj_factor 为 NULL 的交易日（每日增量仅 1 次调用；历史初始化按交易日逐日回补）。
+	 * 指标计算用前复权口径，消除除权除息日跳空造成的假突破/假超跌。
+	 * </p>
+	 * @return 影响行数
+	 */
+	@Override
+	public int syncAdjFactorFromTushare() {
+		if (StrUtil.isBlank(token)) {
+			throw new IllegalStateException("tushare token 未配置，请在 Nacos 配置或环境变量中设置 tushare.token");
+		}
+		// 待回补交易日：该日存在日线且存在 adj_factor 为空的记录
+		List<Object> dates = stockDailyMapper.selectObjs(Wrappers.<StockDailyEntity>query()
+				.select("DISTINCT trade_date")
+				.isNull("adj_factor")
+				.last("order by trade_date asc"));
+		if (CollUtil.isEmpty(dates)) {
+			return 0;
+		}
+		log.info("开始回补复权因子, 待回补交易日数: {}", dates.size());
+		int total = 0;
+		int failCount = 0;
+		for (int i = 0; i < dates.size(); i++) {
+			String tradeDate = String.valueOf(dates.get(i)).replace("-", "");
+			try {
+				total += upsertAdjFactor(tradeDate, fetchAdjFactor(tradeDate));
+			}
+			catch (Exception e) {
+				failCount++;
+				log.error("回补 {} 复权因子失败: {}", tradeDate, e.getMessage());
+			}
+			if (REQUEST_INTERVAL_MS > 0) {
+				try {
+					Thread.sleep(REQUEST_INTERVAL_MS);
+				}
+				catch (InterruptedException ie) {
+					Thread.currentThread().interrupt();
+					log.warn("复权因子回补被中断");
+					break;
+				}
+			}
+		}
+		log.info("复权因子回补结束, 影响行数={}, 失败交易日数={}", total, failCount);
+		return total;
+	}
+
+	/**
+	 * 调用 tushare adj_factor 接口拉取单个交易日的全市场复权因子
+	 */
+	private Map<String, Float> fetchAdjFactor(String tradeDate) {
+		JSONObject data = postTushare("adj_factor", Map.of("trade_date", tradeDate));
+		if (data == null) {
+			return Collections.emptyMap();
+		}
+		List<String> fields = data.getJSONArray("fields").toJavaList(String.class);
+		JSONArray items = data.getJSONArray("items");
+		if (items == null || items.isEmpty()) {
+			return Collections.emptyMap();
+		}
+		int codeIdx = fields.indexOf("ts_code");
+		int factorIdx = fields.indexOf("adj_factor");
+		if (codeIdx < 0 || factorIdx < 0) {
+			return Collections.emptyMap();
+		}
+		Map<String, Float> factorByTs = new HashMap<>(items.size());
+		for (int i = 0; i < items.size(); i++) {
+			JSONArray item = items.getJSONArray(i);
+			String tsCode = strVal(item, codeIdx);
+			Float factor = floatVal(item, factorIdx);
+			if (StrUtil.isNotBlank(tsCode) && factor != null) {
+				factorByTs.put(tsCode, factor);
+			}
+		}
+		return factorByTs;
+	}
+
+	/**
+	 * 按交易日批量更新复权因子（只更新当日 adj_factor 为空的行）
+	 */
+	private int upsertAdjFactor(String tradeDate, Map<String, Float> factorByTs) {
+		if (factorByTs.isEmpty()) {
+			return 0;
+		}
+		List<StockDailyEntity> rows = list(Wrappers.<StockDailyEntity>lambdaQuery()
+				.select(StockDailyEntity::getId, StockDailyEntity::getTsCode)
+				.eq(StockDailyEntity::getTradeDate, tradeDate)
+				.isNull(StockDailyEntity::getAdjFactor));
+		List<StockDailyEntity> toUpdate = new ArrayList<>();
+		for (StockDailyEntity row : rows) {
+			Float factor = factorByTs.get(row.getTsCode());
+			if (factor != null) {
+				row.setAdjFactor(factor);
+				toUpdate.add(row);
+			}
+		}
+		if (!toUpdate.isEmpty()) {
+			updateBatchById(toUpdate, BATCH_SIZE);
+		}
+		return toUpdate.size();
+	}
+
+	/**
+	 * tushare 通用 POST 请求（15s 超时 + 3 次退避重试），返回 data 节点
+	 */
+	private JSONObject postTushare(String apiName, Map<String, Object> tsParams) {
+		Exception last = null;
+		for (int attempt = 1; attempt <= MAX_RETRY; attempt++) {
+			try {
+				return doPostTushare(apiName, tsParams);
+			}
+			catch (Exception e) {
+				last = e;
+				log.warn("tushare {} 接口调用失败(第 {}/{} 次): {}", apiName, attempt, MAX_RETRY, e.getMessage());
+				if (attempt < MAX_RETRY) {
+					try {
+						Thread.sleep(RETRY_BASE_DELAY_MS * attempt);
+					}
+					catch (InterruptedException ie) {
+						Thread.currentThread().interrupt();
+						break;
+					}
+				}
+			}
+		}
+		throw new IllegalStateException("tushare " + apiName + " 接口请求失败: "
+				+ (last != null ? last.getMessage() : "unknown"), last);
+	}
+
+	/**
+	 * tushare 单次 POST 请求
+	 */
+	private JSONObject doPostTushare(String apiName, Map<String, Object> tsParams) {
 		Map<String, Object> params = new HashMap<>(4);
-		params.put("api_name", API_NAME_DAILY);
+		params.put("api_name", apiName);
 		params.put("token", token);
-		params.put("params", Map.of("ts_code", tsCode, "start_date", start, "end_date", end));
+		params.put("params", tsParams);
 
 		String respBody = HttpRequest.post(TUSHARE_URL)
 				.header("Content-Type", "application/json")
 				.body(JSON.toJSONString(params))
+				.timeout(15000)
 				.execute()
 				.body();
 		JSONObject body = JSON.parseObject(respBody);
 		if (body == null || body.getIntValue("code") != 0) {
 			String msg = body != null ? body.getString("msg") : "空响应";
-			throw new IllegalStateException("tushare daily 接口调用失败: " + msg);
+			throw new IllegalStateException("tushare " + apiName + " 接口调用失败: " + msg);
 		}
+		return body.getJSONObject("data");
+	}
 
-		JSONObject data = body.getJSONObject("data");
+	/**
+	 * 调用 tushare daily 接口拉取单只股票日线（带超时与重试）
+	 */
+	private List<StockDailyEntity> fetchDaily(String tsCode, String start, String end) {
+		JSONObject data = postTushare(API_NAME_DAILY, Map.of("ts_code", tsCode, "start_date", start, "end_date", end));
 		if (data == null) {
 			return Collections.emptyList();
 		}
@@ -284,6 +467,7 @@ public class StockDailyServiceImpl extends ServiceImpl<StockDailyMapper, StockDa
 				case "amount" -> entity.setAmount(floatVal(item, i));
 				case "ah_vol" -> entity.setAhVol(floatVal(item, i));
 				case "ah_amount" -> entity.setAhAmount(floatVal(item, i));
+				case "adj_factor" -> entity.setAdjFactor(floatVal(item, i));
 				default -> log.debug("忽略未知字段: {}", fields.get(i));
 			}
 		}

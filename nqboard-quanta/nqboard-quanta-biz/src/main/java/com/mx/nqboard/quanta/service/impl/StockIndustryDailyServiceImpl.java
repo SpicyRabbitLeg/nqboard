@@ -192,7 +192,16 @@ public class StockIndustryDailyServiceImpl extends ServiceImpl<StockIndustryDail
 	@Override
 	public int syncFromEastMoney(Boolean full) {
 		boolean syncFull = full != null ? full : this.syncFull;
-		String beg = syncFull ? LocalDate.of(2026, 1, 1).format(BASIC_DATE) : LocalDate.now().format(BASIC_DATE);
+		// 增量起点自愈：表内最新交易日前推 7 天（单日漏跑自动回补）；表为空则退化为全量起点
+		String beg;
+		if (syncFull) {
+			beg = LocalDate.of(2026, 1, 1).format(BASIC_DATE);
+		}
+		else {
+			LocalDate latest = latestTradeDate();
+			LocalDate start = latest != null ? latest.minusDays(7) : LocalDate.of(2026, 1, 1);
+			beg = start.format(BASIC_DATE);
+		}
 
 		List<Map<String, String>> boards = fetchBoardList();
 		if (CollUtil.isEmpty(boards)) {
@@ -630,6 +639,20 @@ public class StockIndustryDailyServiceImpl extends ServiceImpl<StockIndustryDail
 	/**
 	 * 按唯一键 (board_code, trade_date) 批量插入/更新
 	 */
+	/**
+	 * 表内最新交易日（自愈起点基准），空表返回 null
+	 */
+	private LocalDate latestTradeDate() {
+		List<Object> dates = stockIndustryDailyMapper.selectObjs(Wrappers.<StockIndustryDailyEntity>query()
+				.select("DISTINCT trade_date")
+				.last("order by trade_date desc limit 1"));
+		if (CollUtil.isEmpty(dates) || dates.get(0) == null) {
+			return null;
+		}
+		String d = String.valueOf(dates.get(0)).replace("-", "");
+		return d.length() == 8 ? LocalDate.parse(d, BASIC_DATE) : null;
+	}
+
 	private int upsertByUniqueKey(String boardCode, List<StockIndustryDailyEntity> rows) {
 		if (CollUtil.isEmpty(rows)) {
 			return 0;

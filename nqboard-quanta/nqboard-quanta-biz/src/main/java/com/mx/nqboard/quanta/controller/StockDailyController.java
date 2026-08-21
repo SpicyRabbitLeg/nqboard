@@ -156,4 +156,18 @@ public class StockDailyController {
                                       @RequestParam(value = "full", required = false) Boolean full) {
         return R.ok(stockDailyService.syncFromTushare(market, full));
     }
+
+    /**
+     * 从 tushare 回补复权因子（按交易日批量，只补 NULL 的交易日）
+     * <p>
+     * 系统内部接口：供 RemoteStockDailyService Feign 调用（Quartz 定时任务），故使用 {@code @Inner} 免鉴权
+     * @return 影响行数
+     */
+    @Inner
+    @Operation(summary = "回补复权因子", description = "从 tushare adj_factor 接口按交易日批量回补复权因子")
+    @SysLog("从 tushare 回补复权因子")
+    @PostMapping("/syncAdjFactor")
+    public R<Integer> syncAdjFactorFromTushare() {
+        return R.ok(stockDailyService.syncAdjFactorFromTushare());
+    }
 }

@@ -67,6 +67,11 @@ public class StockIndexDailyServiceImpl extends ServiceImpl<StockIndexDailyMappe
 	private static final int MAX_RETRY = 3;
 
 	/**
+	 * 增量同步自愈回看天数（日历日）：增量起点 = 表内最新交易日 - N 天，漏跑自动回补
+	 */
+	private static final int INCREMENTAL_SELF_HEAL_DAYS = 7;
+
+	/**
 	 * 重试基础退避间隔（毫秒），第 n 次重试等待 base * n
 	 */
 	private static final long RETRY_BASE_DELAY_MS = 2000L;
@@ -107,7 +112,16 @@ public class StockIndexDailyServiceImpl extends ServiceImpl<StockIndexDailyMappe
 			throw new IllegalStateException("index.daily.indexes 未配置，请在 yml 中配置待同步的指数代码列表");
 		}
 		boolean syncFull = full != null ? full : this.syncFull;
-		String beg = syncFull ? LocalDate.of(2026, 1, 1).format(BASIC_DATE) : LocalDate.now().format(BASIC_DATE);
+		// 增量起点自愈：表内最新交易日前推 N 天（单日漏跑自动回补）；表为空则退化为全量起点
+		String beg;
+		if (syncFull) {
+			beg = LocalDate.of(2026, 1, 1).format(BASIC_DATE);
+		}
+		else {
+			LocalDate latest = latestTradeDate();
+			LocalDate start = latest != null ? latest.minusDays(INCREMENTAL_SELF_HEAL_DAYS) : LocalDate.of(2026, 1, 1);
+			beg = start.format(BASIC_DATE);
+		}
 		log.info("开始从 东方财富 同步指数日线, full={}, beg={}", syncFull, beg);
 
 		String[] codes = indexes.split(",");
@@ -301,6 +315,20 @@ public class StockIndexDailyServiceImpl extends ServiceImpl<StockIndexDailyMappe
 			list.add(entity);
 		}
 		return list;
+	}
+
+	/**
+	 * 表内最新交易日（自愈起点基准），空表返回 null
+	 */
+	private LocalDate latestTradeDate() {
+		List<Object> dates = stockIndexDailyMapper.selectObjs(Wrappers.<StockIndexDailyEntity>query()
+				.select("DISTINCT trade_date")
+				.last("order by trade_date desc limit 1"));
+		if (CollUtil.isEmpty(dates) || dates.get(0) == null) {
+			return null;
+		}
+		String d = String.valueOf(dates.get(0)).replace("-", "");
+		return d.length() == 8 ? LocalDate.parse(d, BASIC_DATE) : null;
 	}
 
 	/**

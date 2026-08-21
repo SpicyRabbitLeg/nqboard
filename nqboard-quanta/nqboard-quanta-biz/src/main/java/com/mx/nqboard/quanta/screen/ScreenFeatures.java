@@ -141,9 +141,14 @@ public class ScreenFeatures {
 	private double mom20;
 
 	/**
-	 * 量比（5日均量/20日均量）
+	 * 量比（5日均量/20日均量，中期量能趋势）
 	 */
 	private double volRatio;
+
+	/**
+	 * 当日量比（当日成交量/前5日均量，短线爆发力度）
+	 */
+	private double volRatioToday;
 
 	/**
 	 * 20日最高价

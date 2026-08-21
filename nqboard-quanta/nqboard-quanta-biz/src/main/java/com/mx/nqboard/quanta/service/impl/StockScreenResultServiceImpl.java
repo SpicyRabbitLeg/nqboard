@@ -25,6 +25,7 @@ import com.mx.nqboard.quanta.screen.MarketRegimeCalculator;
 import com.mx.nqboard.quanta.screen.ScreenConstants;
 import com.mx.nqboard.quanta.screen.ScreenFeatureCalculator;
 import com.mx.nqboard.quanta.screen.ScreenFeatures;
+import com.mx.nqboard.quanta.screen.ScreenPatternEnum;
 import com.mx.nqboard.quanta.screen.ScreenScorer;
 import com.mx.nqboard.quanta.screen.UniverseFilter;
 import com.mx.nqboard.quanta.service.StockScreenResultService;
@@ -34,8 +35,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -63,17 +62,15 @@ import java.util.stream.Collectors;
 public class StockScreenResultServiceImpl extends ServiceImpl<StockScreenResultMapper, StockScreenResultEntity>
 		implements StockScreenResultService {
 
-	private static final DateTimeFormatter BASIC_DATE = DateTimeFormatter.BASIC_ISO_DATE;
-
 	/**
 	 * 大盘基准指数
 	 */
 	private static final String BENCHMARK_INDEX = "sh000300";
 
 	/**
-	 * 龙虎榜回看天数（日历日，覆盖5个交易日）
+	 * 龙虎榜回看交易日数
 	 */
-	private static final int DRAGON_LOOKBACK_DAYS = 14;
+	private static final int DRAGON_LOOKBACK_TRADE_DAYS = 5;
 
 	private final StockScreenResultMapper stockScreenResultMapper;
 
@@ -180,8 +177,10 @@ public class StockScreenResultServiceImpl extends ServiceImpl<StockScreenResultM
 				insufficientBars++;
 				continue;
 			}
-			// Stage 0.5 硬门
-			List<String> hardRejects = universeFilter.hardGateRejects(features);
+			// 模板匹配（先于硬门：H1/H2 按模板差异化豁免）
+			ScreenPatternEnum pattern = screenScorer.matchPattern(features);
+			// Stage 0.5 硬门（按模板豁免口径）
+			List<String> hardRejects = universeFilter.hardGateRejects(features, pattern);
 			// 上下文
 			ScreenScorer.ScreenContext ctx = buildContext(tsCode, features, industryNameByTs, sectorPctByBoard,
 					flowByTs, dragonNetByTs, regime);
@@ -193,6 +192,9 @@ public class StockScreenResultServiceImpl extends ServiceImpl<StockScreenResultM
 			entity.setTsCode(tsCode);
 			entity.setName(basic.getName());
 			entity.setMetrics(JSON.toJSONString(score.metrics()));
+			if (pattern != null) {
+				entity.setPattern(pattern.getCode());
+			}
 			if (!hardRejects.isEmpty()) {
 				entity.setPassed("0");
 				entity.setRejectReason(String.join(";", hardRejects));
@@ -283,13 +285,18 @@ public class StockScreenResultServiceImpl extends ServiceImpl<StockScreenResultM
 
 	/**
 	 * 加载近3个交易日的资金流（按 ts_code 分组，日期降序）
+	 * <p>
+	 * 时点校验：窗口首日必须等于信号日，否则视为资金流数据未就绪/过期，
+	 * 返回空 Map（上下文降级为 0 分），避免把 [t-1, t-2, t-3] 错当含信号日的 3 日流入打分。
+	 * </p>
 	 */
 	private Map<String, List<StockMoneyFlowEntity>> loadMoneyFlow(String tradeDate) {
 		List<Object> dates = stockMoneyFlowMapper.selectObjs(Wrappers.<StockMoneyFlowEntity>query()
 				.select("DISTINCT trade_date")
 				.le("trade_date", tradeDate)
 				.last("order by trade_date desc limit 3"));
-		if (CollUtil.isEmpty(dates)) {
+		if (CollUtil.isEmpty(dates) || !tradeDate.equals(String.valueOf(dates.get(0)))) {
+			log.warn("资金流数据未就绪（最新交易日 != 信号日 {}），上下文资金流/板块共振降级为 0 分", tradeDate);
 			return new HashMap<>();
 		}
 		List<String> dateList = dates.stream().map(String::valueOf).toList();
@@ -350,13 +357,19 @@ public class StockScreenResultServiceImpl extends ServiceImpl<StockScreenResultM
 	}
 
 	/**
-	 * 加载龙虎榜窗口内净买额合计（按 ts_code）
+	 * 加载龙虎榜近5个交易日（按交易日口径，非日历日）净买额合计（按 ts_code）
 	 */
 	private Map<String, Double> loadDragonNet(String tradeDate) {
-		String startDate = LocalDate.parse(toIsoDate(tradeDate)).minusDays(DRAGON_LOOKBACK_DAYS).format(BASIC_DATE);
+		List<Object> dates = stockTopListMapper.selectObjs(Wrappers.<StockTopListEntity>query()
+				.select("DISTINCT trade_date")
+				.le("trade_date", tradeDate)
+				.last("order by trade_date desc limit " + DRAGON_LOOKBACK_TRADE_DAYS));
+		if (CollUtil.isEmpty(dates)) {
+			return new HashMap<>();
+		}
+		List<String> dateList = dates.stream().map(String::valueOf).toList();
 		List<StockTopListEntity> rows = stockTopListMapper.selectList(Wrappers.<StockTopListEntity>lambdaQuery()
-				.ge(StockTopListEntity::getTradeDate, startDate)
-				.le(StockTopListEntity::getTradeDate, tradeDate)
+				.in(StockTopListEntity::getTradeDate, dateList)
 				.isNotNull(StockTopListEntity::getNetAmount));
 		Map<String, Double> netByTs = new HashMap<>();
 		for (StockTopListEntity row : rows) {

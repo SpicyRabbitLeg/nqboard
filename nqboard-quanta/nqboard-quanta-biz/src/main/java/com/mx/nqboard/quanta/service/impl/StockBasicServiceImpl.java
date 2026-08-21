@@ -42,8 +42,18 @@ public class StockBasicServiceImpl extends ServiceImpl<StockBasicMapper, StockBa
 	private static final String API_NAME_STOCK_BASIC = "stock_basic";
 
 	/**
+	 * 单请求最大重试次数（网络抖动退避重试）
+	 */
+	private static final int MAX_RETRY = 3;
+
+	/**
+	 * 重试基础退避间隔（毫秒）
+	 */
+	private static final long RETRY_BASE_DELAY_MS = 1000L;
+
+	/**
 	 * 默认同步市场
-	 * 仅主板（去掉创业板/科创板）
+	 * 仅主板（去掉创业板/科创板；策略定位只做主板 10cm）
 	 */
 	private static final String DEFAULT_MARKET = "主板";
 
@@ -79,12 +89,37 @@ public class StockBasicServiceImpl extends ServiceImpl<StockBasicMapper, StockBa
 		params.put("params", Map.of("market", syncMarket));
 
 		log.info("开始从 tushare 同步股票基础信息, market={}", syncMarket);
-		// hutool 发起 JSON POST 请求
-		String respBody = HttpRequest.post(TUSHARE_URL)
-				.header("Content-Type", "application/json")
-				.body(JSON.toJSONString(params))
-				.execute()
-				.body();
+		// hutool 发起 JSON POST 请求（15s 超时 + 3 次退避重试）
+		String respBody = null;
+		Exception last = null;
+		for (int attempt = 1; attempt <= MAX_RETRY; attempt++) {
+			try {
+				respBody = HttpRequest.post(TUSHARE_URL)
+						.header("Content-Type", "application/json")
+						.body(JSON.toJSONString(params))
+						.timeout(15000)
+						.execute()
+						.body();
+				last = null;
+				break;
+			}
+			catch (Exception e) {
+				last = e;
+				log.warn("tushare stock_basic 接口调用失败(第 {}/{} 次): {}", attempt, MAX_RETRY, e.getMessage());
+				if (attempt < MAX_RETRY) {
+					try {
+						Thread.sleep(RETRY_BASE_DELAY_MS * attempt);
+					}
+					catch (InterruptedException ie) {
+						Thread.currentThread().interrupt();
+						break;
+					}
+				}
+			}
+		}
+		if (last != null) {
+			throw new IllegalStateException("tushare stock_basic 接口请求失败: " + last.getMessage(), last);
+		}
 		JSONObject body = JSON.parseObject(respBody);
 		if (body == null || body.getIntValue("code") != 0) {
 			String msg = body != null ? body.getString("msg") : "空响应";

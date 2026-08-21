@@ -115,21 +115,46 @@ public class UniverseFilter {
 				return "一字板";
 			}
 		}
+		// 涨停附近剔除（T+1 追高负期望：涨停/贴涨停收盘的票次日溢价差且易炸板）
+		if (lastBar.getPctChg() != null) {
+			double limitRatio = ScreenFeatureCalculator.limitRatio(basic.getMarket(), basic.getName());
+			if (lastBar.getPctChg().doubleValue() >= limitRatio * 100 - ScreenConstants.STAGE0_LIMIT_UP_MARGIN_PCT) {
+				return "涨停附近";
+			}
+		}
 		return null;
 	}
 
 	/**
 	 * Stage 0.5 硬性否决门 H1-H6：返回失败的门列表（空列表=通过）
+	 * <p>
+	 * H1/H2 按入场模板差异化豁免：回踩低吸（B）允许收盘短暂跌破 EMA20（仅要求 EMA20 上行）；
+	 * 超跌反转（D）豁免 H1/H2（深跌票必然 EMA20 下行+5日新低，统一硬门下该模板不可能存活）。
+	 * </p>
+	 * @param f 特征向量
+	 * @param pattern 命中的入场模板（可为 null，null 时按最严格口径执行）
 	 */
-	public List<String> hardGateRejects(ScreenFeatures f) {
+	public List<String> hardGateRejects(ScreenFeatures f, ScreenPatternEnum pattern) {
 		List<String> rejects = new ArrayList<>();
-		// H1：趋势之上（close>MA20 且 EMA20 上行）
-		double ma20Approx = f.getEma20();
-		if (!(f.getClose() > ma20Approx && f.isEma20SlopeUp())) {
-			rejects.add("H1:趋势之下");
+		boolean pullback = pattern == ScreenPatternEnum.PULLBACK;
+		boolean oversold = pattern == ScreenPatternEnum.OVERSOLD;
+		// H1：趋势之上（close>EMA20 且 EMA20 上行）；回踩模板仅要求 EMA20 上行；超跌模板豁免
+		if (oversold) {
+			// 豁免
 		}
-		// H2：非下跌中继（5日低点高于20日低点2%）
-		if (f.getLow20() > 0 && f.getLow5() <= f.getLow20() * ScreenConstants.H2_LOW_BUFFER) {
+		else if (pullback) {
+			if (!f.isEma20SlopeUp()) {
+				rejects.add("H1:EMA20下行");
+			}
+		}
+		else {
+			double ma20Approx = f.getEma20();
+			if (!(f.getClose() > ma20Approx && f.isEma20SlopeUp())) {
+				rejects.add("H1:趋势之下");
+			}
+		}
+		// H2：非下跌中继（5日低点高于20日低点2%）；超跌模板豁免（定义即深跌）
+		if (!oversold && f.getLow20() > 0 && f.getLow5() <= f.getLow20() * ScreenConstants.H2_LOW_BUFFER) {
 			rejects.add("H2:下跌中继");
 		}
 		// H3：波动率适中
@@ -140,8 +165,8 @@ public class UniverseFilter {
 		if (f.getAvgAmount60Yuan() < minAvgAmount60d) {
 			rejects.add("H4:均额不足");
 		}
-		// H5：非巨量滞涨
-		if (f.getVolRatio() > ScreenConstants.H5_VOL_RATIO && f.getPctChg() < ScreenConstants.H5_MAX_PCT_CHG) {
+		// H5：非巨量滞涨（当日量比口径：当日爆量而涨幅不足=出货嫌疑）
+		if (f.getVolRatioToday() > ScreenConstants.H5_VOL_RATIO && f.getPctChg() < ScreenConstants.H5_MAX_PCT_CHG) {
 			rejects.add("H5:巨量滞涨");
 		}
 		// H6：收盘位于振幅上半区

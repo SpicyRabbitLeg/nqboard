@@ -151,4 +151,10 @@ public class StockDailyEntity extends Model<StockDailyEntity> {
 	 */
 	@Schema(description = "盘后成交额 （千元）")
 	private Float ahAmount;
+
+	/**
+	 * 复权因子（tushare adj_factor，用于指标计算的前复权换算，缺失按 1 处理）
+	 */
+	@Schema(description = "复权因子")
+	private Float adjFactor;
 }

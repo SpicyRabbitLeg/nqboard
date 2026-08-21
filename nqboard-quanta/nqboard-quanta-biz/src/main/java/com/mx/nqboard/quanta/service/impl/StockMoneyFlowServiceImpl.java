@@ -113,6 +113,15 @@ public class StockMoneyFlowServiceImpl extends ServiceImpl<StockMoneyFlowMapper,
 			log.warn("资金流同步跳过：无法解析最新交易日（指数日线无数据且当日为非交易日）");
 			return 0;
 		}
+		// 错日覆盖保护：工作日时指数日线最新日应等于今天，否则说明指数同步未完成/失败，
+		// 当日快照若按过期日期落库会覆盖既有正确数据，跳过等待下次重跑（快照接口无法回补历史）
+		LocalDate today = LocalDate.now();
+		boolean weekend = today.getDayOfWeek() == DayOfWeek.SATURDAY || today.getDayOfWeek() == DayOfWeek.SUNDAY;
+		if (!weekend && !today.format(BASIC_DATE).equals(tradeDate)) {
+			log.warn("资金流同步跳过：指数日线最新交易日({}) != 今天({})，指数同步未完成，避免当日快照覆盖历史数据，"
+					+ "请确认指数日线任务已成功执行后再重跑本任务", tradeDate, today.format(BASIC_DATE));
+			return 0;
+		}
 		log.info("开始从 东方财富 同步个股主力资金流, tradeDate={}", tradeDate);
 
 		List<StockMoneyFlowEntity> rows;

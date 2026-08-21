@@ -59,6 +59,7 @@ CREATE TABLE `stock_daily`
     `amount`      float       DEFAULT NULL COMMENT '成交额 （千元）',
     `ah_vol`      float       DEFAULT NULL COMMENT '盘后成交量 （手）',
     `ah_amount`   float       DEFAULT NULL COMMENT '盘后成交额 （千元）',
+    `adj_factor`  float       DEFAULT NULL COMMENT '复权因子（tushare adj_factor，用于指标前复权换算，缺失按1处理）',
     `create_by`   varchar(64) DEFAULT NULL COMMENT '创建人',
     `update_by`   varchar(64) DEFAULT NULL COMMENT '修改人',
     `create_time` datetime    DEFAULT NULL COMMENT '创建时间',

@@ -199,14 +199,14 @@ public class ScreenScorer {
 	}
 
 	/**
-	 * 模板D 超跌反转：RSI超卖或深跌 + 当日收阳且收盘在上半区 + 量能确认
+	 * 模板D 超跌反转：RSI超卖或深跌 + 当日收阳且收盘在上半区 + 当日放量确认
 	 */
 	private boolean isOversold(ScreenFeatures f) {
 		boolean oversold = f.getRsi6() <= ScreenConstants.OVERSOLD_RSI || f.getMom5() <= ScreenConstants.OVERSOLD_MOM5;
 		return oversold
 				&& f.getPctChg() > 0
 				&& f.getClosePosition() >= ScreenConstants.H6_MIN_CLOSE_POSITION
-				&& f.getVolRatio() >= ScreenConstants.OVERSOLD_VOL_RATIO_MIN;
+				&& f.getVolRatioToday() >= ScreenConstants.OVERSOLD_VOL_RATIO_MIN;
 	}
 
 	private Map<String, Object> buildMetrics(ScreenFeatures f, ScreenContext ctx) {
@@ -216,6 +216,7 @@ public class ScreenScorer {
 		metrics.put("mom5", round(f.getMom5()));
 		metrics.put("mom20", round(f.getMom20()));
 		metrics.put("volRatio", round(f.getVolRatio()));
+		metrics.put("volRatioToday", round(f.getVolRatioToday()));
 		metrics.put("rsi6", round(f.getRsi6()));
 		metrics.put("maRatio", round(f.getMaRatio()));
 		metrics.put("emaAlign", f.getEmaAlign());

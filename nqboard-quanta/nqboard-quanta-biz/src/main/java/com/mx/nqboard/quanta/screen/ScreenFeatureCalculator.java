@@ -34,6 +34,10 @@ public class ScreenFeatureCalculator {
 
 	/**
 	 * 计算特征向量
+	 * <p>
+	 * 价格类指标统一采用前复权价格（按最新复权因子归一）计算，消除除权除息日跳空
+	 * 造成的假突破/假超跌/假止损；价格缺失因子时按 1 处理（轻微失真优于不复权）。
+	 * </p>
 	 * @param bars 日线（按交易日升序，最新在最后），至少 {@link ScreenConstants#MIN_BARS} 根
 	 * @param limitRatio 涨停率（主板0.10/创业科创0.20）
 	 * @return 特征向量，数据不足返回 null
@@ -49,6 +53,12 @@ public class ScreenFeatureCalculator {
 		double[] low = new double[n];
 		double[] volume = new double[n];
 		double[] amount = new double[n];
+		double[] adjClose = new double[n];
+		double[] adjOpen = new double[n];
+		double[] adjHigh = new double[n];
+		double[] adjLow = new double[n];
+		// 前复权基准：最新一根的复权因子（缺失按1）
+		double lastFactor = val(bars.get(n - 1).getAdjFactor(), 1d);
 		for (int i = 0; i < n; i++) {
 			StockDailyEntity bar = bars.get(i);
 			close[i] = val(bar.getClose());
@@ -57,31 +67,37 @@ public class ScreenFeatureCalculator {
 			low[i] = val(bar.getLow());
 			volume[i] = val(bar.getVol());
 			amount[i] = val(bar.getAmount());
+			// 前复权：历史价 * 当日因子 / 最新因子（最新一根复权后 == 原价）
+			double factor = val(bar.getAdjFactor(), 1d) / (lastFactor > 0 ? lastFactor : 1d);
+			adjClose[i] = close[i] * factor;
+			adjOpen[i] = open[i] * factor;
+			adjHigh[i] = high[i] * factor;
+			adjLow[i] = low[i] * factor;
 		}
 
 		ScreenFeatures f = new ScreenFeatures();
 		f.setTsCode(tsCode);
 		f.setBarCount(n);
-		f.setClose(close[n - 1]);
-		f.setOpen(open[n - 1]);
-		f.setHigh(high[n - 1]);
-		f.setLow(low[n - 1]);
-		f.setPrevClose(close[n - 2]);
+		f.setClose(adjClose[n - 1]);
+		f.setOpen(adjOpen[n - 1]);
+		f.setHigh(adjHigh[n - 1]);
+		f.setLow(adjLow[n - 1]);
+		f.setPrevClose(adjClose[n - 2]);
 		f.setPctChg(val(bars.get(n - 1).getPctChg()));
-		// tushare amount 单位千元
+		// tushare amount 单位千元（复权不影响成交额）
 		f.setAmountYuan(amount[n - 1] * 1000);
 		f.setOneWordBoard(open[n - 1] == high[n - 1] && high[n - 1] == low[n - 1] && low[n - 1] == close[n - 1]);
 
-		// --- 涨停相关 ---
+		// --- 涨停相关（前复权口径，与 pctChg 语义一致） ---
 		double limitUpPrice = f.getPrevClose() * (1 + limitRatio);
 		f.setNearLimitUp(f.getPctChg() >= limitRatio * 100 - ScreenConstants.STAGE0_LIMIT_UP_MARGIN_PCT);
 		f.setLimitUpDistancePct(f.getClose() > 0 ? (limitUpPrice - f.getClose()) / f.getClose() : 0);
-		f.setConsecutiveLimitUp(consecutiveLimitUp(close, limitRatio));
+		f.setConsecutiveLimitUp(consecutiveLimitUp(adjClose, limitRatio));
 
 		// --- EMA ---
-		double[] ema5 = ewm(close, 5);
-		double[] ema10 = ewm(close, 10);
-		double[] ema20 = ewm(close, 20);
+		double[] ema5 = ewm(adjClose, 5);
+		double[] ema10 = ewm(adjClose, 10);
+		double[] ema20 = ewm(adjClose, 20);
 		f.setEma5(ema5[n - 1]);
 		f.setEma10(ema10[n - 1]);
 		f.setEma20(ema20[n - 1]);
@@ -91,8 +107,8 @@ public class ScreenFeatureCalculator {
 		f.setEmaSpread(ema20[n - 1] > 0 ? f.getClose() / ema20[n - 1] - 1 : 0);
 
 		// --- MACD(12,26,9) ---
-		double[] ema12 = ewm(close, 12);
-		double[] ema26 = ewm(close, 26);
+		double[] ema12 = ewm(adjClose, 12);
+		double[] ema26 = ewm(adjClose, 26);
 		double[] dif = new double[n];
 		for (int i = 0; i < n; i++) {
 			dif[i] = ema12[i] - ema26[i];
@@ -105,31 +121,40 @@ public class ScreenFeatureCalculator {
 		f.setDifNorm(f.getClose() > 0 ? dif[n - 1] / f.getClose() : 0);
 
 		// --- RSI6（简单滚动均值法，对齐 Python 实现） ---
-		f.setRsi6(rsi(close, 6));
+		f.setRsi6(rsi(adjClose, 6));
 
 		// --- 动量 ---
-		f.setMom5(n >= 6 && close[n - 6] > 0 ? close[n - 1] / close[n - 6] - 1 : 0);
-		f.setMom20(n >= 21 && close[n - 21] > 0 ? close[n - 1] / close[n - 21] - 1 : 0);
+		f.setMom5(n >= 6 && adjClose[n - 6] > 0 ? adjClose[n - 1] / adjClose[n - 6] - 1 : 0);
+		f.setMom20(n >= 21 && adjClose[n - 21] > 0 ? adjClose[n - 1] / adjClose[n - 21] - 1 : 0);
 
-		// --- 量比（5日均量/20日均量） ---
+		// --- 量比（5日均量/20日均量，中期量能趋势） ---
 		double volShort = avg(volume, n - 5, n);
 		double volLong = avg(volume, n - Math.min(20, n), n);
 		f.setVolRatio(volLong > 0 ? volShort / volLong : 1.0);
 
+		// --- 当日量比（当日成交量/前5日均量，短线爆发力度） ---
+		if (n >= 6) {
+			double prevAvg5 = avg(volume, n - 6, n - 1);
+			f.setVolRatioToday(prevAvg5 > 0 ? volume[n - 1] / prevAvg5 : 1.0);
+		}
+		else {
+			f.setVolRatioToday(1.0);
+		}
+
 		// --- 20日突破 ---
-		double high20 = max(high, n - Math.min(20, n), n);
+		double high20 = max(adjHigh, n - Math.min(20, n), n);
 		f.setHigh20(high20);
 		f.setBreakoutUp(high20 > 0 && f.getClose() >= 0.995 * high20);
 
 		// --- MA5/MA20 乖离 ---
-		double ma5 = avg(close, n - 5, n);
-		double ma20 = avg(close, n - Math.min(20, n), n);
+		double ma5 = avg(adjClose, n - 5, n);
+		double ma20 = avg(adjClose, n - Math.min(20, n), n);
 		f.setMaRatio(ma20 > 0 ? ma5 / ma20 - 1 : 0);
 
 		// --- 20日年化波动率 ---
-		f.setVolatility20(volatility(close, 20));
+		f.setVolatility20(volatility(adjClose, 20));
 
-		// --- 收盘位置（当日振幅上半区判定） ---
+		// --- 收盘位置（当日振幅上半区判定，复权因子单日恒定不影响） ---
 		double range = f.getHigh() - f.getLow();
 		f.setClosePosition(range > 0 ? (f.getClose() - f.getLow()) / range : 1.0);
 
@@ -137,9 +162,9 @@ public class ScreenFeatureCalculator {
 		int avgWindow = Math.min(60, n);
 		f.setAvgAmount60Yuan(avg(amount, n - avgWindow, n) * 1000);
 
-		// --- 低点比较（H2 下跌中继判定） ---
-		f.setLow5(min(low, n - 5, n));
-		f.setLow20(min(low, n - Math.min(20, n), n));
+		// --- 低点比较（H2 下跌中继判定，前复权口径） ---
+		f.setLow5(min(adjLow, n - 5, n));
+		f.setLow20(min(adjLow, n - Math.min(20, n), n));
 
 		return f;
 	}
@@ -266,6 +291,13 @@ public class ScreenFeatureCalculator {
 
 	private double val(Number value) {
 		return value != null ? value.doubleValue() : 0d;
+	}
+
+	/**
+	 * 数值取值，null/非正数返回默认值（复权因子缺失按 1）
+	 */
+	private double val(Number value, double defaultValue) {
+		return value != null && value.doubleValue() > 0 ? value.doubleValue() : defaultValue;
 	}
 
 	/**

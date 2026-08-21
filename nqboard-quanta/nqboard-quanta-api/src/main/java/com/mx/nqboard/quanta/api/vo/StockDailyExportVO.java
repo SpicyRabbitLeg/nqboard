@@ -119,4 +119,11 @@ public class StockDailyExportVO {
     @Schema(description = "盘后成交额 （千元）")
     @ExcelProperty("盘后成交额（千元）")
     private Float ahAmount;
+
+    /**
+     * 复权因子（tushare adj_factor，用于指标前复权换算）
+     */
+    @Schema(description = "复权因子")
+    @ExcelProperty("复权因子")
+    private Float adjFactor;
 }

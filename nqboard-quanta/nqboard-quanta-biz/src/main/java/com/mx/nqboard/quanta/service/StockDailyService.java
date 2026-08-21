@@ -51,4 +51,14 @@ public interface StockDailyService extends IService<StockDailyEntity> {
 	 */
 	int syncFromTushare(String market, Boolean full);
 
+	/**
+	 * 从 tushare 回补复权因子（adj_factor，按交易日批量，只补 NULL 的交易日）
+	 * <p>
+	 * 日线同步完成后自动执行；也可独立调用（如历史数据初始化后手动回补）。
+	 * 指标计算依赖复权因子做前复权换算，缺失时按 1 处理（轻微失真）。
+	 * </p>
+	 * @return 影响行数
+	 */
+	int syncAdjFactorFromTushare();
+
 }

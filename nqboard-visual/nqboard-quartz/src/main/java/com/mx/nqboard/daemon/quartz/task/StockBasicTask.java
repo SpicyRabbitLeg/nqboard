@@ -39,7 +39,10 @@ public class StockBasicTask {
 	private final RemoteStockRestrictedReleaseService remoteStockRestrictedReleaseService;
 
 	/**
-	 * 股票基础信息同步调度入口（无参，同步默认市场：主板）
+	 * 股票基础信息同步调度入口（无参，同步默认市场：仅主板，不含创业板/科创板）
+	 * <p>
+	 * 策略定位只做主板：universe 中混入的创业板成分股会在股票池阶段被静默跳过（符合预期）。
+	 * </p>
 	 *
 	 * @return 任务执行状态：0 成功 / 1 失败
 	 */
@@ -58,7 +61,7 @@ public class StockBasicTask {
 	}
 
 	/**
-	 * 股票日线信息同步调度入口（当前固定全量拉取，市场=主板）
+	 * 股票日线信息同步调度入口（增量 + 自愈回看 7 天，市场=仅主板，与基础信息口径一致）
 	 *
 	 * @return 任务执行状态：0 成功 / 1 失败
 	 */
