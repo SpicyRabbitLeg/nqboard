@@ -142,6 +142,7 @@ public class StockCandidateEntity extends Model<StockCandidateEntity> {
 	/**
 	 * 沪深300 5日收益
 	 */
+	@TableField("market_ret_5d")
 	@Schema(description = "沪深300 5日收益")
 	private java.math.BigDecimal marketRet5d;
 

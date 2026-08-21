@@ -141,18 +141,21 @@ public class StockCandidateHitEntity extends Model<StockCandidateHitEntity> {
 	/**
 	 * 入场日收盘收益（gross）
 	 */
+	@TableField("fwd_1d")
 	@Schema(description = "入场日收盘收益")
 	private BigDecimal fwd1d;
 
 	/**
 	 * 入场后第3个交易日收盘收益（gross）
 	 */
+	@TableField("fwd_3d")
 	@Schema(description = "第3日收盘收益")
 	private BigDecimal fwd3d;
 
 	/**
 	 * 入场后第5个交易日收盘收益（gross）
 	 */
+	@TableField("fwd_5d")
 	@Schema(description = "第5日收盘收益")
 	private BigDecimal fwd5d;
 
