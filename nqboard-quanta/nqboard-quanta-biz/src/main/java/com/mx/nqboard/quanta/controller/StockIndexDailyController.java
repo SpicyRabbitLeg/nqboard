@@ -130,7 +130,7 @@ public class StockIndexDailyController {
      * 从 东方财富 同步指数日线K线（支持全量/增量）
      * <p>
      * 系统内部接口：供 RemoteStockIndexDailyService Feign 调用（Quartz 定时任务），故使用 {@code @Inner} 免鉴权
-     * @param full 是否全量同步：true=全部历史；false=仅今天；为空时取 yml 配置 tushare.daily.full
+     * @param full 是否全量同步：true=从2026-08-01起；false=仅今天；为空时取 yml 配置 tushare.daily.full
      * @return 同步成功的条数
      */
     @Inner

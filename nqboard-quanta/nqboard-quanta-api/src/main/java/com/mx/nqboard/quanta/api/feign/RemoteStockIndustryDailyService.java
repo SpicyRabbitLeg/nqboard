@@ -21,7 +21,7 @@ public interface RemoteStockIndustryDailyService {
 	 * 从 东方财富 同步行业板块日线K线（先拉板块列表，再逐板块拉K线）
 	 * <p>
 	 * 仅供系统内部调用（如 Quartz 定时任务），发起方无需带 token，配合 provider 端 {@code @Inner} 放行
-	 * @param full 是否全量同步：true=全部历史；false=仅今天；为空时取 yml 配置
+	 * @param full 是否全量同步：true=从2026-08-01起；false=仅今天；为空时取 yml 配置
 	 * @return 同步成功的条数
 	 */
 	@NoToken

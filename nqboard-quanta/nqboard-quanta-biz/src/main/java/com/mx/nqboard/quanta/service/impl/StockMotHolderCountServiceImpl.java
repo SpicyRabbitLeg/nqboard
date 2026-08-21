@@ -44,9 +44,9 @@ public class StockMotHolderCountServiceImpl extends ServiceImpl<StockMotHolderCo
 	private static final String API_NAME_HOLDER_NUMBER = "stk_holdernumber";
 
 	/**
-	 * 全量同步起始日期：2024-01-01
+	 * 全量同步起始日期：2026-08-01
 	 */
-	private static final LocalDate FULL_SYNC_START = LocalDate.of(2024, 1, 1);
+	private static final LocalDate FULL_SYNC_START = LocalDate.of(2026, 8, 1);
 
 	private static final DateTimeFormatter BASIC_DATE = DateTimeFormatter.BASIC_ISO_DATE;
 
@@ -166,7 +166,7 @@ public class StockMotHolderCountServiceImpl extends ServiceImpl<StockMotHolderCo
 	/**
 	 * 调用 tushare stk_holdernumber 接口拉取单只股票股东户数
 	 * <p>
-	 * start_date/end_date 为公告日期范围：全量=20240101 至今天，增量=仅今天
+	 * start_date/end_date 为公告日期范围：全量=20260801 至今天，增量=仅今天
 	 */
 	private List<StockMotHolderCountEntity> fetchHolderCount(String tsCode, String start, String end) {
 		Map<String, Object> params = new HashMap<>(4);

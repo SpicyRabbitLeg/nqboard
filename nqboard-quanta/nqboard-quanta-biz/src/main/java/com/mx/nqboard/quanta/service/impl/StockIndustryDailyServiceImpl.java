@@ -102,7 +102,7 @@ public class StockIndustryDailyServiceImpl extends ServiceImpl<StockIndustryDail
 	@Override
 	public int syncFromEastMoney(Boolean full) {
 		boolean syncFull = full != null ? full : this.syncFull;
-		String beg = syncFull ? "0" : LocalDate.now().format(BASIC_DATE);
+		String beg = syncFull ? LocalDate.of(2026, 8, 1).format(BASIC_DATE) : LocalDate.now().format(BASIC_DATE);
 
 		List<Map<String, String>> boards = fetchBoardList();
 		if (CollUtil.isEmpty(boards)) {

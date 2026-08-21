@@ -32,7 +32,7 @@ public interface StockIndustryDailyService extends IService<StockIndustryDailyEn
 	 * 流程：拉取行业板块列表（clist，fs=m:90+t:2）-> 逐板块调用 push2his kline
 	 * 接口（secid=90.BKxxxx）-> 按唯一键 (board_code, trade_date) 批量插入/更新。
 	 * 请求间隔与重试因接口限制已在实现类中处理（间隔可由 yml 配置）。
-	 * @param full 是否全量同步：true=全部历史；false=仅今天；为空取 yml 配置
+	 * @param full 是否全量同步：true=从2026-08-01起；false=仅今天；为空取 yml 配置
 	 * @return 同步成功的条数
 	 */
 	int syncFromEastMoney(Boolean full);

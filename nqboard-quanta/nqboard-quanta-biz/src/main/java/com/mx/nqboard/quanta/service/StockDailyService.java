@@ -46,7 +46,7 @@ public interface StockDailyService extends IService<StockDailyEntity> {
 	 * 流程：读取 stock_basic 全量股票代码（按市场过滤）→ 逐股票调用 tushare daily 接口
 	 * → 按唯一键 (ts_code, trade_date) 批量插入/更新
 	 * @param market 市场类型：主板/创业板/科创板，为空取 yml 配置 tushare.daily.market
-	 * @param full 是否全量同步：true=2024-01-01 至今天；false=仅增量获取今天；为空取 yml 配置 tushare.daily.full
+	 * @param full 是否全量同步：true=2026-08-01 至今天；false=仅增量获取今天；为空取 yml 配置 tushare.daily.full
 	 * @return 同步成功的条数
 	 */
 	int syncFromTushare(String market, Boolean full);

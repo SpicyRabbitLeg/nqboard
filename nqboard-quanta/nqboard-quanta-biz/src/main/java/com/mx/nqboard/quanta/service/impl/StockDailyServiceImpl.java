@@ -47,9 +47,9 @@ public class StockDailyServiceImpl extends ServiceImpl<StockDailyMapper, StockDa
 	private static final String API_NAME_DAILY = "daily";
 
 	/**
-	 * 全量同步起始日期：2024-01-01
+	 * 全量同步起始日期：2026-08-01
 	 */
-	private static final LocalDate FULL_SYNC_START = LocalDate.of(2024, 1, 1);
+	private static final LocalDate FULL_SYNC_START = LocalDate.of(2026, 8, 1);
 
 	private static final DateTimeFormatter BASIC_DATE = DateTimeFormatter.BASIC_ISO_DATE;
 

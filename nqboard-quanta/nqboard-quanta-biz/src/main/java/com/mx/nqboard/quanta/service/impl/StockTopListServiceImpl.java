@@ -44,9 +44,9 @@ public class StockTopListServiceImpl extends ServiceImpl<StockTopListMapper, Sto
 	private static final String API_NAME_TOP_LIST = "top_list";
 
 	/**
-	 * 全量同步起始日期：2024-01-01
+	 * 全量同步起始日期：2026-08-01
 	 */
-	private static final LocalDate FULL_SYNC_START = LocalDate.of(2024, 1, 1);
+	private static final LocalDate FULL_SYNC_START = LocalDate.of(2026, 8, 1);
 
 	private static final DateTimeFormatter BASIC_DATE = DateTimeFormatter.BASIC_ISO_DATE;
 
@@ -115,7 +115,7 @@ public class StockTopListServiceImpl extends ServiceImpl<StockTopListMapper, Sto
 				dates.add(d.format(BASIC_DATE));
 			}
 		}
-		log.info("待同步日期数: {}（全量约 600 个自然日/约 400 个交易日）", dates.size());
+		log.info("待同步日期数: {}（按全量起始日期计算）", dates.size());
 
 		int total = 0;
 		int failCount = 0;

@@ -94,7 +94,7 @@ public class StockIndexDailyServiceImpl extends ServiceImpl<StockIndexDailyMappe
 	/**
 	 * 从 东方财富 同步指数日线K线
 	 * <p>
-	 * 全量：beg=0 拉全部历史；增量：beg=今天，仅当天起
+	 * 全量：beg=20260801 从 2026-08-01 起；增量：beg=今天，仅当天起
 	 */
 	@Override
 	public int syncFromEastMoney(Boolean full) {
@@ -102,7 +102,7 @@ public class StockIndexDailyServiceImpl extends ServiceImpl<StockIndexDailyMappe
 			throw new IllegalStateException("index.daily.indexes 未配置，请在 yml 中配置待同步的指数代码列表");
 		}
 		boolean syncFull = full != null ? full : this.syncFull;
-		String beg = syncFull ? "0" : LocalDate.now().format(BASIC_DATE);
+		String beg = syncFull ? LocalDate.of(2026, 8, 1).format(BASIC_DATE) : LocalDate.now().format(BASIC_DATE);
 		log.info("开始从 东方财富 同步指数日线, full={}, beg={}", syncFull, beg);
 
 		String[] codes = indexes.split(",");

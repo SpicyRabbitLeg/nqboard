@@ -22,7 +22,7 @@ public interface RemoteStockMotHolderCountService {
 	 * <p>
 	 * 仅供系统内部调用（如 Quartz 定时任务），发起方无需带 token，配合 provider 端 {@code @Inner} 放行
 	 * @param market 市场类型：主板/创业板/科创板，为空时取 yml 配置 tushare.daily.market
-	 * @param full 是否全量同步：true=2024-01-01 至今天；false=仅增量获取今天；为空时取 yml 配置 tushare.daily.full
+	 * @param full 是否全量同步：true=2026-08-01 至今天；false=仅增量获取今天；为空时取 yml 配置 tushare.daily.full
 	 * @return 同步成功的条数
 	 */
 	@NoToken

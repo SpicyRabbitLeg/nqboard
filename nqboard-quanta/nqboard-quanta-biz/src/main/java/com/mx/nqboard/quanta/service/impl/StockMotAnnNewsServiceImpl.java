@@ -81,9 +81,9 @@ public class StockMotAnnNewsServiceImpl extends ServiceImpl<StockMotAnnNewsMappe
 	private static final String CNINFO_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36";
 
 	/**
-	 * 全量同步起始日期：2024-01-01
+	 * 全量同步起始日期：2026-08-01
 	 */
-	private static final LocalDate FULL_SYNC_START = LocalDate.of(2024, 1, 1);
+	private static final LocalDate FULL_SYNC_START = LocalDate.of(2026, 8, 1);
 
 	/**
 	 * 东方财富连续失败降级阈值：连续失败达到该次数后自动降级到巨潮资讯（防止 IP 被封影响主链路）

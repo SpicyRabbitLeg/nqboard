@@ -58,14 +58,14 @@ public class StockBasicTask {
 	}
 
 	/**
-	 * 股票日线信息同步调度入口（入参：市场类型、是否全量同步）
+	 * 股票日线信息同步调度入口（当前固定全量拉取，市场=主板）
 	 *
 	 * @return 任务执行状态：0 成功 / 1 失败
 	 */
 	public String syncDaily() {
 		log.info("[股票日线信息定时任务] 开始同步");
 		try {
-			Integer count = RetOps.of(remoteStockDailyService.syncFromTushare("全部", true))
+			Integer count = RetOps.of(remoteStockDailyService.syncFromTushare("主板", true))
 					.getData()
 					.orElse(0);
 			log.info("[股票日线信息定时任务] 同步完成, 成功处理 {} 条", count);
@@ -97,14 +97,14 @@ public class StockBasicTask {
 
 
 	/**
-	 * 股东增减持同步调度入口（入参：市场类型、是否全量同步）
+	 * 股东增减持同步调度入口（当前固定全量拉取，市场=主板）
 	 *
 	 * @return 任务执行状态：0 成功 / 1 失败
 	 */
 	public String syncMotHolder() {
 		log.info("[股东增减持重定时任务] 开始同步");
 		try {
-			Integer count = RetOps.of(remoteStockMotHolderService.syncFromTushare("全部", true))
+			Integer count = RetOps.of(remoteStockMotHolderService.syncFromTushare("主板", true))
 					.getData()
 					.orElse(0);
 			log.info("[股东增减持重定时任务] 同步完成, 成功处理 {} 条", count);
@@ -117,14 +117,14 @@ public class StockBasicTask {
 
 
 	/**
-	 * 同步股东户数同步调度入口（入参：市场类型、是否全量同步）
+	 * 同步股东户数同步调度入口（当前固定全量拉取，市场=主板）
 	 *
 	 * @return 任务执行状态：0 成功 / 1 失败
 	 */
 	public String syncMotHolderCount() {
 		log.info("[同步股东户数重定时任务] 开始同步");
 		try {
-			Integer count = RetOps.of(remoteStockMotHolderCountService.syncFromTushare("全部", true))
+			Integer count = RetOps.of(remoteStockMotHolderCountService.syncFromTushare("主板", true))
 					.getData()
 					.orElse(0);
 			log.info("[同步股东户数重定时任务] 同步完成, 成功处理 {} 条", count);
@@ -136,7 +136,7 @@ public class StockBasicTask {
 	}
 
 	/**
-	 * 龙虎榜每日明细同步调度入口（入参：指定交易日期、是否全量同步）
+	 * 龙虎榜每日明细同步调度入口（当前固定全量拉取）
 	 *
 	 * @return 任务执行状态：0 成功 / 1 失败
 	 */
@@ -155,7 +155,7 @@ public class StockBasicTask {
 	}
 
 	/**
-	 * 指数日线K线同步调度入口（无参，按 yml 配置 tushare.daily.full 决定全量/增量，默认增量=仅今天）
+	 * 指数日线K线同步调度入口（一次性全量拉取，从 2026-08-01 起）
 	 *
 	 * @return 任务执行状态：0 成功 / 1 失败
 	 */
@@ -193,7 +193,7 @@ public class StockBasicTask {
 	}
 
 	/**
-	 * 行业板块日线同步调度入口（东财板块K线，全量=true 单板块一次请求，建议 17:40 后执行；
+	 * 行业板块日线同步调度入口（东财板块K线，当前固定全量拉取，建议 17:40 后执行；
 	 * 约 86 个板块 × 3 秒间隔，全量约 5 分钟）
 	 *
 	 * @return 任务执行状态：0 成功 / 1 失败
@@ -213,7 +213,7 @@ public class StockBasicTask {
 	}
 
 	/**
-	 * 限售解禁同步调度入口（tushare share_float，全量=true 回补90天逐日拉取约45秒，
+	 * 限售解禁同步调度入口（tushare share_float，当前固定全量回补90天逐日拉取约45秒，
 	 * 兼具漏跑自愈能力，建议 18:00 后执行）
 	 *
 	 * @return 任务执行状态：0 成功 / 1 失败
