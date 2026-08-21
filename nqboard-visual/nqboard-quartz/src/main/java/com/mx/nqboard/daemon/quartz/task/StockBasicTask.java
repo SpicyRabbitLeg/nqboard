@@ -38,6 +38,15 @@ public class StockBasicTask {
 
 	private final RemoteStockRestrictedReleaseService remoteStockRestrictedReleaseService;
 
+	private final RemoteTradeCalService remoteTradeCalService;
+
+	/**
+	 * 交易日闸门：今日非交易日返回 false（交易日历由 quanta 持久化，Feign 调用失败时放行，避免依赖故障阻断数据同步）
+	 */
+	private boolean isTradeDay() {
+		return RetOps.of(remoteTradeCalService.isOpenToday()).getData().orElse(true);
+	}
+
 	/**
 	 * 股票基础信息同步调度入口（无参，同步默认市场：仅主板，不含创业板/科创板）
 	 * <p>
@@ -49,6 +58,10 @@ public class StockBasicTask {
 	public String sync() {
 		log.info("[股票基础信息定时任务] 开始同步");
 		try {
+			if (!isTradeDay()) {
+				log.info("[股票基础信息定时任务] 今日非交易日，跳过执行");
+				return NqBoardQuartzEnum.JOB_LOG_STATUS_SUCCESS.getType();
+			}
 			Integer count = RetOps.of(remoteStockBasicService.syncFromTushare("主板"))
 					.getData()
 					.orElse(0);
@@ -68,6 +81,10 @@ public class StockBasicTask {
 	public String syncDaily() {
 		log.info("[股票日线信息定时任务] 开始同步");
 		try {
+			if (!isTradeDay()) {
+				log.info("[股票日线信息定时任务] 今日非交易日，跳过执行");
+				return NqBoardQuartzEnum.JOB_LOG_STATUS_SUCCESS.getType();
+			}
 			Integer count = RetOps.of(remoteStockDailyService.syncFromTushare("主板", false))
 					.getData()
 					.orElse(0);
@@ -87,6 +104,10 @@ public class StockBasicTask {
 	public String syncConsWeight() {
 		log.info("[指数成分股权重定时任务] 开始同步");
 		try {
+			if (!isTradeDay()) {
+				log.info("[指数成分股权重定时任务] 今日非交易日，跳过执行");
+				return NqBoardQuartzEnum.JOB_LOG_STATUS_SUCCESS.getType();
+			}
 			Integer count = RetOps.of(remoteStockConsWeightService.syncFromCsindex(null))
 					.getData()
 					.orElse(0);
@@ -107,6 +128,10 @@ public class StockBasicTask {
 	public String syncMotHolder() {
 		log.info("[股东增减持重定时任务] 开始同步");
 		try {
+			if (!isTradeDay()) {
+				log.info("[股东增减持重定时任务] 今日非交易日，跳过执行");
+				return NqBoardQuartzEnum.JOB_LOG_STATUS_SUCCESS.getType();
+			}
 			Integer count = RetOps.of(remoteStockMotHolderService.syncFromTushare("主板", false))
 					.getData()
 					.orElse(0);
@@ -127,6 +152,10 @@ public class StockBasicTask {
 	public String syncMotHolderCount() {
 		log.info("[同步股东户数重定时任务] 开始同步");
 		try {
+			if (!isTradeDay()) {
+				log.info("[同步股东户数重定时任务] 今日非交易日，跳过执行");
+				return NqBoardQuartzEnum.JOB_LOG_STATUS_SUCCESS.getType();
+			}
 			Integer count = RetOps.of(remoteStockMotHolderCountService.syncFromTushare("主板", false))
 					.getData()
 					.orElse(0);
@@ -146,6 +175,10 @@ public class StockBasicTask {
 	public String syncTopList() {
 		log.info("[龙虎榜定时任务] 开始同步");
 		try {
+			if (!isTradeDay()) {
+				log.info("[龙虎榜定时任务] 今日非交易日，跳过执行");
+				return NqBoardQuartzEnum.JOB_LOG_STATUS_SUCCESS.getType();
+			}
 			Integer count = RetOps.of(remoteStockTopListService.syncFromTushare(null, false))
 					.getData()
 					.orElse(0);
@@ -165,6 +198,10 @@ public class StockBasicTask {
 	public String syncIndexDaily() {
 		log.info("[指数日线定时任务] 开始同步");
 		try {
+			if (!isTradeDay()) {
+				log.info("[指数日线定时任务] 今日非交易日，跳过执行");
+				return NqBoardQuartzEnum.JOB_LOG_STATUS_SUCCESS.getType();
+			}
 			Integer count = RetOps.of(remoteStockIndexDailyService.syncFromEastMoney(false))
 					.getData()
 					.orElse(0);
@@ -184,6 +221,10 @@ public class StockBasicTask {
 	public String syncMoneyFlow() {
 		log.info("[主力资金流定时任务] 开始同步");
 		try {
+			if (!isTradeDay()) {
+				log.info("[主力资金流定时任务] 今日非交易日，跳过执行");
+				return NqBoardQuartzEnum.JOB_LOG_STATUS_SUCCESS.getType();
+			}
 			Integer count = RetOps.of(remoteStockMoneyFlowService.syncFromEastMoney(false))
 					.getData()
 					.orElse(0);
@@ -204,6 +245,10 @@ public class StockBasicTask {
 	public String syncIndustryDaily() {
 		log.info("[行业板块日线定时任务] 开始同步");
 		try {
+			if (!isTradeDay()) {
+				log.info("[行业板块日线定时任务] 今日非交易日，跳过执行");
+				return NqBoardQuartzEnum.JOB_LOG_STATUS_SUCCESS.getType();
+			}
 			Integer count = RetOps.of(remoteStockIndustryDailyService.syncFromEastMoney(false))
 					.getData()
 					.orElse(0);
@@ -224,6 +269,10 @@ public class StockBasicTask {
 	public String syncRestrictedRelease() {
 		log.info("[限售解禁定时任务] 开始同步");
 		try {
+			if (!isTradeDay()) {
+				log.info("[限售解禁定时任务] 今日非交易日，跳过执行");
+				return NqBoardQuartzEnum.JOB_LOG_STATUS_SUCCESS.getType();
+			}
 			Integer count = RetOps.of(remoteStockRestrictedReleaseService.syncFromTushare(false))
 					.getData()
 					.orElse(0);
@@ -231,6 +280,26 @@ public class StockBasicTask {
 			return NqBoardQuartzEnum.JOB_LOG_STATUS_SUCCESS.getType();
 		} catch (Exception e) {
 			log.error("[限售解禁定时任务] 同步失败, 异常:{}", e.getMessage(), e);
+			return NqBoardQuartzEnum.JOB_LOG_STATUS_FAIL.getType();
+		}
+	}
+
+	/**
+	 * 交易日历同步调度入口（每日开盘前执行，刷新节假日/调休日历；不受交易日闸门限制，
+	 * 休市日也需要更新日历以便次日判断）
+	 *
+	 * @return 任务执行状态：0 成功 / 1 失败
+	 */
+	public String syncTradeCal() {
+		log.info("[交易日历定时任务] 开始同步");
+		try {
+			Integer count = RetOps.of(remoteTradeCalService.syncFromTushare())
+					.getData()
+					.orElse(0);
+			log.info("[交易日历定时任务] 同步完成, 成功处理 {} 条", count);
+			return NqBoardQuartzEnum.JOB_LOG_STATUS_SUCCESS.getType();
+		} catch (Exception e) {
+			log.error("[交易日历定时任务] 同步失败, 异常:{}", e.getMessage(), e);
 			return NqBoardQuartzEnum.JOB_LOG_STATUS_FAIL.getType();
 		}
 	}

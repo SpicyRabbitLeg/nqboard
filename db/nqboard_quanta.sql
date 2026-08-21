@@ -608,6 +608,29 @@ CREATE TABLE `stock_candidate_hit`
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='候选池信号命中率追踪';
 
 -- ----------------------------
+-- Table structure for trade_cal
+-- ----------------------------
+DROP TABLE IF EXISTS `trade_cal`;
+CREATE TABLE `trade_cal`
+(
+    `id`            bigint      NOT NULL COMMENT '主键（雪花ID）',
+    `exchange`      varchar(16) NOT NULL COMMENT '交易所 SSE上交所 SZSE深交所',
+    `cal_date`      varchar(8)  NOT NULL COMMENT '日历日期 YYYYMMDD',
+    `is_open`       char(1)     DEFAULT '0' COMMENT '是否交易 0休市 1开市',
+    `pretrade_date` varchar(8)  DEFAULT NULL COMMENT '上一个交易日 YYYYMMDD',
+    `create_by`     varchar(64) DEFAULT NULL COMMENT '创建人',
+    `update_by`     varchar(64) DEFAULT NULL COMMENT '修改人',
+    `create_time`   datetime    DEFAULT NULL COMMENT '创建时间',
+    `update_time`   datetime    DEFAULT NULL COMMENT '修改时间',
+    `del_flag`      char(1)     DEFAULT '0' COMMENT '删除标记,1:已删除,0:正常',
+    `order_num`     int         DEFAULT NULL COMMENT '排序字段',
+    `remark`        varchar(500) DEFAULT NULL COMMENT '备注',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_exchange_cal_date` (`exchange`, `cal_date`),
+    KEY `idx_cal_date` (`cal_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='交易日历（tushare trade_cal）';
+
+-- ----------------------------
 -- Records of lock_table
 -- ----------------------------
 

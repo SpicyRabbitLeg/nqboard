@@ -10,3 +10,4 @@ com.mx.nqboard.quanta.api.feign.RemoteStockIndustryDailyService
 com.mx.nqboard.quanta.api.feign.RemoteStockRestrictedReleaseService
 com.mx.nqboard.quanta.api.feign.RemoteQuantPipelineService
 com.mx.nqboard.quanta.api.feign.RemoteStockScreenResultService
+com.mx.nqboard.quanta.api.feign.RemoteTradeCalService
