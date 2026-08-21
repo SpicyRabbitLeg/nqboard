@@ -16,6 +16,7 @@ import com.mx.nqboard.quanta.api.entity.StockMotHolderCountEntity;
 import com.mx.nqboard.quanta.api.entity.StockMotHolderEntity;
 import com.mx.nqboard.quanta.api.entity.StockScreenResultEntity;
 import com.mx.nqboard.quanta.api.entity.StockTopListEntity;
+import com.mx.nqboard.quanta.service.StockMotAnnNewsService;
 import com.mx.nqboard.quanta.mapper.StockDailyMapper;
 import com.mx.nqboard.quanta.mapper.StockIndexDailyMapper;
 import com.mx.nqboard.quanta.mapper.StockIndustryDailyMapper;
@@ -79,6 +80,7 @@ public class DifyToolsController {
 	private final StockTopListMapper stockTopListMapper;
 
 	private final StockMotAnnNewsMapper stockMotAnnNewsMapper;
+	private final StockMotAnnNewsService stockMotAnnNewsService;
 
 	private final StockMotHolderMapper stockMotHolderMapper;
 
@@ -215,6 +217,16 @@ public class DifyToolsController {
 			wrapper.eq(StockMotAnnNewsEntity::getNewsType, type);
 		}
 		List<StockMotAnnNewsEntity> rows = stockMotAnnNewsMapper.selectList(wrapper);
+		if (rows.isEmpty()) {
+			// 本地没有新闻/公告数据时，先自动同步该股票，再查一次
+			try {
+				stockMotAnnNewsService.syncNews(tsCode, true);
+				rows = stockMotAnnNewsMapper.selectList(wrapper);
+			}
+			catch (Exception ignore) {
+				// 自动同步失败时保留空数据返回，不让 Dify 请求直接失败
+			}
+		}
 		JSONObject resp = new JSONObject(new LinkedHashMap<>());
 		resp.put("ts_code", tsCode);
 		JSONArray data = new JSONArray();
@@ -465,7 +477,11 @@ public class DifyToolsController {
 	}
 
 	private String resolveDate(String date) {
-		return StrUtil.isNotBlank(date) ? date : latestTradeDate();
+		if (StrUtil.isBlank(date)) {
+			return latestTradeDate();
+		}
+		String d = date.trim();
+		return d.length() == 10 && d.charAt(4) == '-' ? d.replace("-", "") : d;
 	}
 
 	private String latestTradeDate() {

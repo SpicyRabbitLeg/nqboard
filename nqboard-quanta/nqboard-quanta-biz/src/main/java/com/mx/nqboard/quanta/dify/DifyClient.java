@@ -156,8 +156,19 @@ public class DifyClient {
 	 */
 	private DifyAnalysisResult parseOutputs(JSONObject outputs, String rawBody) {
 		JSONObject source = outputs;
-		String resultStr = outputs.getString("result");
-		if (StrUtil.isNotBlank(resultStr)) {
+		Object resultRaw = outputs.get("result");
+		String resultStr = null;
+		JSONObject resultObj = null;
+		if (resultRaw instanceof String) {
+			resultStr = (String) resultRaw;
+		}
+		else if (resultRaw instanceof JSONObject) {
+			resultObj = (JSONObject) resultRaw;
+		}
+		if (resultObj != null) {
+			source = resultObj;
+		}
+		else if (StrUtil.isNotBlank(resultStr)) {
 			try {
 				source = JSON.parseObject(resultStr);
 			}
@@ -174,10 +185,37 @@ public class DifyClient {
 		result.setRiskFlags(toStringList(source.getJSONArray("risk_flags")));
 
 		List<DifyAnalysisResult.AgentResult> agents = new ArrayList<>();
-		JSONArray agentArr = source.getJSONArray("agents");
+		Object agentsRaw = source.get("agents");
+		JSONArray agentArr = null;
+		if (agentsRaw instanceof JSONArray) {
+			agentArr = (JSONArray) agentsRaw;
+		}
+		else if (agentsRaw instanceof String) {
+			try {
+				agentArr = JSON.parseArray((String) agentsRaw);
+			}
+			catch (Exception ignore) {
+				agentArr = null;
+			}
+		}
 		if (agentArr != null) {
 			for (int i = 0; i < agentArr.size(); i++) {
-				JSONObject a = agentArr.getJSONObject(i);
+				Object item = agentArr.get(i);
+				JSONObject a;
+				if (item instanceof String) {
+					try {
+						a = JSON.parseObject((String) item);
+					}
+					catch (Exception e) {
+						continue;
+					}
+				}
+				else if (item instanceof JSONObject) {
+					a = (JSONObject) item;
+				}
+				else {
+					continue;
+				}
 				DifyAnalysisResult.AgentResult agent = new DifyAnalysisResult.AgentResult();
 				agent.setKey(a.getString("key"));
 				agent.setSignal(StrUtil.nullToEmpty(a.getString("signal")).toLowerCase());
@@ -185,6 +223,75 @@ public class DifyClient {
 				agent.setReasoning(a.getString("reasoning"));
 				agents.add(agent);
 			}
+		}
+		if (agents.isEmpty()) {
+			// 兼容 Dify 直接输出 {technical, sector, money_flow, dragon_tiger, news:{agents:[...]}} 的形态
+			addAgentIfPresent(source, agents, "technical");
+			addAgentIfPresent(source, agents, "sector");
+			addAgentIfPresent(source, agents, "money_flow");
+			addAgentIfPresent(source, agents, "dragon_tiger");
+			Object newsRaw = source.get("news");
+			if (newsRaw != null) {
+				JSONObject newsObj = null;
+				if (newsRaw instanceof String) {
+					try {
+						newsObj = JSON.parseObject((String) newsRaw);
+					}
+					catch (Exception e) {
+						newsObj = null;
+					}
+				}
+				else if (newsRaw instanceof JSONObject) {
+					newsObj = (JSONObject) newsRaw;
+				}
+				if (newsObj != null) {
+					Object newsAgentsRaw = newsObj.get("agents");
+					JSONArray newsAgents = null;
+					if (newsAgentsRaw instanceof JSONArray) {
+						newsAgents = (JSONArray) newsAgentsRaw;
+					}
+					else if (newsAgentsRaw instanceof String) {
+						try {
+							newsAgents = JSON.parseArray((String) newsAgentsRaw);
+						}
+						catch (Exception ignore) {
+							newsAgents = null;
+						}
+					}
+					if (newsAgents != null) {
+						for (int i = 0; i < newsAgents.size(); i++) {
+							Object newsItem = newsAgents.get(i);
+							JSONObject a;
+							if (newsItem instanceof String) {
+								try {
+									a = JSON.parseObject((String) newsItem);
+								}
+								catch (Exception e) {
+									continue;
+								}
+							}
+							else if (newsItem instanceof JSONObject) {
+								a = (JSONObject) newsItem;
+							}
+							else {
+								continue;
+							}
+							DifyAnalysisResult.AgentResult agent = new DifyAnalysisResult.AgentResult();
+							agent.setKey(a.getString("key"));
+							agent.setSignal(StrUtil.nullToEmpty(a.getString("signal")).toLowerCase());
+							agent.setConfidence(a.getInteger("confidence"));
+							agent.setReasoning(a.getString("reasoning"));
+							agents.add(agent);
+						}
+					}
+				}
+			}
+		}
+		if (agents.isEmpty()) {
+			log.warn("Dify outputs 解析后 agents 为空, resultStr={}, outputs={}, rawBody={}",
+					StrUtil.maxLength(resultStr, 500),
+					StrUtil.maxLength(outputs.toJSONString(), 2000),
+					StrUtil.maxLength(rawBody, 2000));
 		}
 		result.setAgents(agents);
 		JSONObject data = JSON.parseObject(rawBody).getJSONObject("data");
@@ -195,6 +302,35 @@ public class DifyClient {
 		result.setRawOutput(rawBody);
 		return result;
 	}
+
+	private void addAgentIfPresent(JSONObject source, List<DifyAnalysisResult.AgentResult> agents, String key) {
+		Object raw = source.get(key);
+		if (raw == null) {
+			return;
+		}
+		JSONObject obj;
+		if (raw instanceof String) {
+			try {
+				obj = JSON.parseObject((String) raw);
+			}
+			catch (Exception e) {
+				return;
+			}
+		}
+		else if (raw instanceof JSONObject) {
+			obj = (JSONObject) raw;
+		}
+		else {
+			return;
+		}
+		DifyAnalysisResult.AgentResult agent = new DifyAnalysisResult.AgentResult();
+		agent.setKey(StrUtil.blankToDefault(obj.getString("key"), key));
+		agent.setSignal(StrUtil.nullToEmpty(obj.getString("signal")).toLowerCase());
+		agent.setConfidence(obj.getInteger("confidence"));
+		agent.setReasoning(obj.getString("reasoning"));
+		agents.add(agent);
+	}
+
 
 	private List<String> toStringList(JSONArray arr) {
 		List<String> list = new ArrayList<>();

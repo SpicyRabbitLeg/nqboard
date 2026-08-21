@@ -104,7 +104,7 @@ public class StockBasicTask {
 	public String syncMotHolder() {
 		log.info("[股东增减持重定时任务] 开始同步");
 		try {
-			Integer count = RetOps.of(remoteStockMotHolderService.syncFromTushare("主板", true))
+			Integer count = RetOps.of(remoteStockMotHolderService.syncFromTushare("主板", false))
 					.getData()
 					.orElse(0);
 			log.info("[股东增减持重定时任务] 同步完成, 成功处理 {} 条", count);
@@ -124,7 +124,7 @@ public class StockBasicTask {
 	public String syncMotHolderCount() {
 		log.info("[同步股东户数重定时任务] 开始同步");
 		try {
-			Integer count = RetOps.of(remoteStockMotHolderCountService.syncFromTushare("主板", true))
+			Integer count = RetOps.of(remoteStockMotHolderCountService.syncFromTushare("主板", false))
 					.getData()
 					.orElse(0);
 			log.info("[同步股东户数重定时任务] 同步完成, 成功处理 {} 条", count);
@@ -143,7 +143,7 @@ public class StockBasicTask {
 	public String syncTopList() {
 		log.info("[龙虎榜定时任务] 开始同步");
 		try {
-			Integer count = RetOps.of(remoteStockTopListService.syncFromTushare(null, true))
+			Integer count = RetOps.of(remoteStockTopListService.syncFromTushare(null, false))
 					.getData()
 					.orElse(0);
 			log.info("[龙虎榜定时任务] 同步完成, 成功处理 {} 条", count);
@@ -162,7 +162,7 @@ public class StockBasicTask {
 	public String syncIndexDaily() {
 		log.info("[指数日线定时任务] 开始同步");
 		try {
-			Integer count = RetOps.of(remoteStockIndexDailyService.syncFromEastMoney(true))
+			Integer count = RetOps.of(remoteStockIndexDailyService.syncFromEastMoney(false))
 					.getData()
 					.orElse(0);
 			log.info("[指数日线定时任务] 同步完成, 成功处理 {} 条", count);
@@ -181,7 +181,7 @@ public class StockBasicTask {
 	public String syncMoneyFlow() {
 		log.info("[主力资金流定时任务] 开始同步");
 		try {
-			Integer count = RetOps.of(remoteStockMoneyFlowService.syncFromEastMoney(null))
+			Integer count = RetOps.of(remoteStockMoneyFlowService.syncFromEastMoney(false))
 					.getData()
 					.orElse(0);
 			log.info("[主力资金流定时任务] 同步完成, 成功处理 {} 条", count);
@@ -201,7 +201,7 @@ public class StockBasicTask {
 	public String syncIndustryDaily() {
 		log.info("[行业板块日线定时任务] 开始同步");
 		try {
-			Integer count = RetOps.of(remoteStockIndustryDailyService.syncFromEastMoney(true))
+			Integer count = RetOps.of(remoteStockIndustryDailyService.syncFromEastMoney(false))
 					.getData()
 					.orElse(0);
 			log.info("[行业板块日线定时任务] 同步完成, 成功处理 {} 条", count);
@@ -221,7 +221,7 @@ public class StockBasicTask {
 	public String syncRestrictedRelease() {
 		log.info("[限售解禁定时任务] 开始同步");
 		try {
-			Integer count = RetOps.of(remoteStockRestrictedReleaseService.syncFromTushare(true))
+			Integer count = RetOps.of(remoteStockRestrictedReleaseService.syncFromTushare(false))
 					.getData()
 					.orElse(0);
 			log.info("[限售解禁定时任务] 同步完成, 成功处理 {} 条", count);

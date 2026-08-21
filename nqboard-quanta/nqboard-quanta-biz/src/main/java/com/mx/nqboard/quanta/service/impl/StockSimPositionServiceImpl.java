@@ -127,6 +127,10 @@ public class StockSimPositionServiceImpl extends ServiceImpl<StockSimPositionMap
 		// PENDING_BUY 期间 buy_date 记录信号日，成交时更新为实际买入日
 		position.setBuyDate(candidate.getTradeDate());
 		position.setMaxHoldDays(ExitEngine.MAX_HOLD_DAYS);
+		// 待买入阶段还没有实际成交价/数量，但表结构这些字段是 NOT NULL，先填 0 占位
+		position.setBuyPrice(BigDecimal.ZERO);
+		position.setQty(0);
+		position.setCost(BigDecimal.ZERO);
 		position.setStatus("PENDING_BUY");
 		save(position);
 		log.info("创建模拟买入委托: candidateId={}, tsCode={}, 信号日={}，待次日开盘成交", candidateId, candidate.getTsCode(),
