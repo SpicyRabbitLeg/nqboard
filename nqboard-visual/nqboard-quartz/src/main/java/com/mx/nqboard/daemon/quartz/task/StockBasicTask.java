@@ -65,7 +65,7 @@ public class StockBasicTask {
 	public String syncDaily() {
 		log.info("[股票日线信息定时任务] 开始同步");
 		try {
-			Integer count = RetOps.of(remoteStockDailyService.syncFromTushare("主板", true))
+			Integer count = RetOps.of(remoteStockDailyService.syncFromTushare("主板", false))
 					.getData()
 					.orElse(0);
 			log.info("[股票日线信息定时任务] 同步完成, 成功处理 {} 条", count);
