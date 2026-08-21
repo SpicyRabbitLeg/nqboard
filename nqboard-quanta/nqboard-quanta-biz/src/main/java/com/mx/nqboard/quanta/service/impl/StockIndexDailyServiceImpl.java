@@ -44,6 +44,11 @@ public class StockIndexDailyServiceImpl extends ServiceImpl<StockIndexDailyMappe
 	private static final String KLINE_URL = "https://push2his.eastmoney.com/api/qt/stock/kline/get";
 
 	/**
+	 * 新浪财经指数K线接口（东财不可用时的降级数据源）
+	 */
+	private static final String SINA_KLINE_URL = "https://money.finance.sina.com.cn/quotes_service/api/json_v2.php/CN_MarketData.getKLineData";
+
+	/**
 	 * 批量插入/更新每批条数
 	 */
 	private static final int BATCH_SIZE = 500;
@@ -94,7 +99,7 @@ public class StockIndexDailyServiceImpl extends ServiceImpl<StockIndexDailyMappe
 	/**
 	 * 从 东方财富 同步指数日线K线
 	 * <p>
-	 * 全量：beg=20260801 从 2026-08-01 起；增量：beg=今天，仅当天起
+	 * 全量：beg=20260101 从 2026-01-01 起；增量：beg=今天，仅当天起
 	 */
 	@Override
 	public int syncFromEastMoney(Boolean full) {
@@ -102,7 +107,7 @@ public class StockIndexDailyServiceImpl extends ServiceImpl<StockIndexDailyMappe
 			throw new IllegalStateException("index.daily.indexes 未配置，请在 yml 中配置待同步的指数代码列表");
 		}
 		boolean syncFull = full != null ? full : this.syncFull;
-		String beg = syncFull ? LocalDate.of(2026, 8, 1).format(BASIC_DATE) : LocalDate.now().format(BASIC_DATE);
+		String beg = syncFull ? LocalDate.of(2026, 1, 1).format(BASIC_DATE) : LocalDate.now().format(BASIC_DATE);
 		log.info("开始从 东方财富 同步指数日线, full={}, beg={}", syncFull, beg);
 
 		String[] codes = indexes.split(",");
@@ -114,7 +119,7 @@ public class StockIndexDailyServiceImpl extends ServiceImpl<StockIndexDailyMappe
 				continue;
 			}
 			try {
-				List<StockIndexDailyEntity> rows = fetchKline(indexCode, beg);
+				List<StockIndexDailyEntity> rows = fetchKlineWithFallback(indexCode, beg);
 				int affected = upsertByUniqueKey(indexCode, rows);
 				total += affected;
 				log.info("指数 {} 同步完成, 影响 {} 行 ({}/{})", indexCode, affected, i + 1, codes.length);
@@ -134,7 +139,7 @@ public class StockIndexDailyServiceImpl extends ServiceImpl<StockIndexDailyMappe
 				}
 			}
 		}
-		log.info("从 东方财富 同步指数日线完成, 指数数={}, 累计影响 {} 行, 失败 {} 个", codes.length, total, failCount);
+		log.info("指数日线同步完成, 指数数={}, 累计影响 {} 行, 失败 {} 个", codes.length, total, failCount);
 		return total;
 	}
 
@@ -167,6 +172,74 @@ public class StockIndexDailyServiceImpl extends ServiceImpl<StockIndexDailyMappe
 	}
 
 	/**
+	 * 拉取指数K线：优先东财，失败后自动切换新浪财经
+	 */
+	private List<StockIndexDailyEntity> fetchKlineWithFallback(String indexCode, String beg) {
+		try {
+			List<StockIndexDailyEntity> rows = fetchKline(indexCode, beg);
+			if (rows.isEmpty()) {
+				log.warn("东财指数 {} K线为空，尝试新浪财经兜底", indexCode);
+				return fetchSinaKline(indexCode, beg);
+			}
+			return rows;
+		}
+		catch (Exception e) {
+			log.warn("东财指数 {} K线失败，切换到新浪财经兜底: {}", indexCode, e.getMessage());
+			return fetchSinaKline(indexCode, beg);
+		}
+	}
+
+	/**
+	 * 新浪财经指数K线（降级数据源）
+	 */
+	private List<StockIndexDailyEntity> fetchSinaKline(String indexCode, String beg) {
+		Map<String, Object> params = new HashMap<>(8);
+		params.put("symbol", indexCode);
+		params.put("scale", 240);
+		params.put("ma", "no");
+		params.put("datalen", 1023);
+
+		String respBody = HttpRequest.get(SINA_KLINE_URL)
+				.form(params)
+				.header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36")
+				.header("Referer", "https://finance.sina.com.cn")
+				.timeout(15000)
+				.execute()
+				.body();
+		if (StrUtil.isBlank(respBody)) {
+			throw new IllegalStateException("新浪财经指数K线接口响应为空");
+		}
+		JSONArray arr = JSON.parseArray(respBody);
+		if (arr == null || arr.isEmpty()) {
+			return new ArrayList<>();
+		}
+		List<StockIndexDailyEntity> list = new ArrayList<>(arr.size());
+		for (int i = 0; i < arr.size(); i++) {
+			JSONObject item = arr.getJSONObject(i);
+			String day = item.getString("day");
+			if (StrUtil.isBlank(day)) {
+				continue;
+			}
+			String dayBasic = day.replace("-", "");
+			if (dayBasic.compareTo(beg) < 0) {
+				continue;
+			}
+			StockIndexDailyEntity entity = new StockIndexDailyEntity();
+			entity.setIndexCode(indexCode);
+			entity.setTradeDate(dayBasic);
+			entity.setOpen(decimal(item.getString("open")));
+			entity.setClose(decimal(item.getString("close")));
+			entity.setHigh(decimal(item.getString("high")));
+			entity.setLow(decimal(item.getString("low")));
+			entity.setVolume(decimal(item.getString("volume")));
+			entity.setAmount(null);
+			list.add(entity);
+		}
+		return list;
+	}
+
+
+	/**
 	 * 单次调用东财 kline 接口
 	 */
 	private List<StockIndexDailyEntity> doFetchKline(String indexCode, String beg) {
@@ -186,6 +259,10 @@ public class StockIndexDailyServiceImpl extends ServiceImpl<StockIndexDailyMappe
 		String respBody = HttpRequest.get(KLINE_URL)
 				.form(params)
 				.header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36")
+				.header("Referer", "https://quote.eastmoney.com/")
+				.header("Accept", "*/*")
+				.header("Accept-Language", "zh-CN,zh;q=0.9")
+				.header("Connection", "close")
 				.timeout(15000)
 				.execute()
 				.body();
@@ -214,7 +291,7 @@ public class StockIndexDailyServiceImpl extends ServiceImpl<StockIndexDailyMappe
 			}
 			StockIndexDailyEntity entity = new StockIndexDailyEntity();
 			entity.setIndexCode(indexCode);
-			entity.setTradeDate(cols[0].trim());
+			entity.setTradeDate(cols[0].trim().replace("-", ""));
 			entity.setOpen(decimal(cols[1]));
 			entity.setClose(decimal(cols[2]));
 			entity.setHigh(decimal(cols[3]));

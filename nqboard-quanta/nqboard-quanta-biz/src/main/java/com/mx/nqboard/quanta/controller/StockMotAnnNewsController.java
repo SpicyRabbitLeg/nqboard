@@ -133,7 +133,7 @@ public class StockMotAnnNewsController {
      * 数据来源：东方财富（个股公告+媒体新闻），东方财富连续失败 3 次后自动降级到巨潮资讯（公告）。
      * 不做全市场定时同步（防 IP 被封），故不设 {@code @Inner}，走正常鉴权
      * @param tsCode 股票代码，如 002594.SZ
-     * @param full 是否全量同步：true=2026-08-01 至今天；false=仅今天；为空取 yml 配置 tushare.daily.full
+     * @param full 是否全量同步：true=2026-01-01 至今天；false=仅今天；为空取 yml 配置 tushare.daily.full
      * @return 同步成功的条数
      */
     @Operation(summary = "按股票代码同步公告&新闻", description = "东方财富失败自动降级巨潮资讯（单股票接口）")

@@ -46,7 +46,7 @@ public class StockBasicTask {
 	public String sync() {
 		log.info("[股票基础信息定时任务] 开始同步");
 		try {
-			Integer count = RetOps.of(remoteStockBasicService.syncFromTushare(null))
+			Integer count = RetOps.of(remoteStockBasicService.syncFromTushare("主板"))
 					.getData()
 					.orElse(0);
 			log.info("[股票基础信息定时任务] 同步完成, 成功处理 {} 条", count);
@@ -155,7 +155,7 @@ public class StockBasicTask {
 	}
 
 	/**
-	 * 指数日线K线同步调度入口（一次性全量拉取，从 2026-08-01 起）
+	 * 指数日线K线同步调度入口（一次性全量拉取，从 2026-01-01 起）
 	 *
 	 * @return 任务执行状态：0 成功 / 1 失败
 	 */

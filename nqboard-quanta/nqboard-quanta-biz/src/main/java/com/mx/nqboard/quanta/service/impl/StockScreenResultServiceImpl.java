@@ -126,6 +126,7 @@ public class StockScreenResultServiceImpl extends ServiceImpl<StockScreenResultM
 
 	@Override
 	public int screen(String tradeDate) {
+		tradeDate = toBasicDate(tradeDate);
 		// 1. 数据就绪检查
 		checkReadiness(tradeDate);
 
@@ -231,6 +232,7 @@ public class StockScreenResultServiceImpl extends ServiceImpl<StockScreenResultM
 
 	@Override
 	public List<StockScreenResultEntity> topCandidates(String tradeDate, int topN) {
+		tradeDate = toBasicDate(tradeDate);
 		return list(Wrappers.<StockScreenResultEntity>lambdaQuery()
 				.eq(StockScreenResultEntity::getTradeDate, tradeDate)
 				.eq(StockScreenResultEntity::getPassed, "1")
@@ -418,6 +420,7 @@ public class StockScreenResultServiceImpl extends ServiceImpl<StockScreenResultM
 	 * 数据就绪检查：股票日线当日覆盖率
 	 */
 	private void checkReadiness(String tradeDate) {
+		tradeDate = toBasicDate(tradeDate);
 		long basicCount = stockBasicMapper.selectCount(Wrappers.emptyWrapper());
 		long dailyCount = stockDailyMapper.selectCount(Wrappers.<StockDailyEntity>lambdaQuery()
 				.eq(StockDailyEntity::getTradeDate, tradeDate));
@@ -473,5 +476,14 @@ public class StockScreenResultServiceImpl extends ServiceImpl<StockScreenResultM
 				? basicDate.substring(0, 4) + "-" + basicDate.substring(4, 6) + "-" + basicDate.substring(6, 8)
 				: basicDate;
 	}
+
+	private String toBasicDate(String date) {
+		if (StrUtil.isBlank(date)) {
+			return date;
+		}
+		String d = date.trim();
+		return d.length() == 10 && d.charAt(4) == '-' ? d.replace("-", "") : d;
+	}
+
 
 }

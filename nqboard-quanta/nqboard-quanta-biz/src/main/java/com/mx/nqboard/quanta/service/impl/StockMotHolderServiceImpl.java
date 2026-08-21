@@ -45,9 +45,9 @@ public class StockMotHolderServiceImpl extends ServiceImpl<StockMotHolderMapper,
 	private static final String API_NAME_MOT_HOLDER = "stk_holdertrade";
 
 	/**
-	 * 全量同步起始日期：2026-08-01
+	 * 全量同步起始日期：2026-01-01
 	 */
-	private static final LocalDate FULL_SYNC_START = LocalDate.of(2026, 8, 1);
+	private static final LocalDate FULL_SYNC_START = LocalDate.of(2026, 1, 1);
 
 	private static final DateTimeFormatter BASIC_DATE = DateTimeFormatter.BASIC_ISO_DATE;
 
@@ -167,7 +167,7 @@ public class StockMotHolderServiceImpl extends ServiceImpl<StockMotHolderMapper,
 	/**
 	 * 调用 tushare stk_holdertrade 接口拉取单只股票股东增减持
 	 * <p>
-	 * start_date/end_date 为公告日期范围：全量=20260801 至今天，增量=仅今天
+	 * start_date/end_date 为公告日期范围：全量=20260101 至今天，增量=仅今天
 	 */
 	private List<StockMotHolderEntity> fetchHolders(String tsCode, String start, String end) {
 		Map<String, Object> params = new HashMap<>(4);
@@ -216,6 +216,12 @@ public class StockMotHolderServiceImpl extends ServiceImpl<StockMotHolderMapper,
 		if (CollUtil.isEmpty(rows)) {
 			return 0;
 		}
+		// Tushare 返回的数据中可能存在重复记录，先按唯一键 (ann_date + holder_name) 去重，避免唯一键冲突
+		Map<String, StockMotHolderEntity> uniqueRows = new HashMap<>();
+		for (StockMotHolderEntity row : rows) {
+			uniqueRows.putIfAbsent(row.getAnnDate() + "|" + row.getHolderName(), row);
+		}
+		rows = new ArrayList<>(uniqueRows.values());
 		List<StockMotHolderEntity> existList = list(Wrappers.<StockMotHolderEntity>lambdaQuery()
 				.select(StockMotHolderEntity::getId, StockMotHolderEntity::getAnnDate, StockMotHolderEntity::getHolderName)
 				.eq(StockMotHolderEntity::getTsCode, tsCode));

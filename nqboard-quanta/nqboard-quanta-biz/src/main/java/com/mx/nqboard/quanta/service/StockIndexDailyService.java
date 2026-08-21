@@ -33,7 +33,7 @@ public interface StockIndexDailyService extends IService<StockIndexDailyEntity> 
 	 * 数据来源：push2his kline 接口（klt=101 日线，fqt=0 指数不复权）。
 	 * 按 yml 配置的指数列表（index.daily.indexes，如 sh000300）逐个拉取，
 	 * 按唯一键 (index_code, trade_date) 批量插入/更新。请求间隔因接口限制已在实现类中写死。
-	 * @param full 是否全量同步：true=从2026-08-01起；false=仅今天；为空取 yml 配置 tushare.daily.full
+	 * @param full 是否全量同步：true=从2026-01-01起；false=仅今天；为空取 yml 配置 tushare.daily.full
 	 * @return 同步成功的条数
 	 */
 	int syncFromEastMoney(Boolean full);

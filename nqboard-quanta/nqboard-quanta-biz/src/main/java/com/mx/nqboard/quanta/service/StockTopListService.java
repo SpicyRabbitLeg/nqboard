@@ -31,10 +31,10 @@ public interface StockTopListService extends IService<StockTopListEntity> {
 	 * 从 tushare 同步龙虎榜每日明细
 	 * <p>
 	 * top_list 接口按交易日期查询（一次返回当天全部上榜股票），故按日期遍历：
-	 * tradeDate 非空则仅同步该日期；为空时按 full 决定范围（全量=2026-08-01 至今天，跳过周末；增量=仅今天）。
+	 * tradeDate 非空则仅同步该日期；为空时按 full 决定范围（全量=2026-01-01 至今天，跳过周末；增量=仅今天）。
 	 * 按唯一键 (trade_date, ts_code) 批量插入/更新。请求间隔因限频已在实现类中写死。
 	 * @param tradeDate 指定交易日期 YYYYMMDD，可空
-	 * @param full 是否全量同步：true=2026-08-01 至今天；false=仅增量获取今天；为空取 yml 配置 tushare.daily.full
+	 * @param full 是否全量同步：true=2026-01-01 至今天；false=仅增量获取今天；为空取 yml 配置 tushare.daily.full
 	 * @return 同步成功的条数
 	 */
 	int syncFromTushare(String tradeDate, Boolean full);

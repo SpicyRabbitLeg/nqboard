@@ -43,7 +43,7 @@ public class StockBasicServiceImpl extends ServiceImpl<StockBasicMapper, StockBa
 
 	/**
 	 * 默认同步市场
-	 * 			主板,创业板,科创板
+	 * 仅主板（去掉创业板/科创板）
 	 */
 	private static final String DEFAULT_MARKET = "主板";
 
@@ -75,9 +75,10 @@ public class StockBasicServiceImpl extends ServiceImpl<StockBasicMapper, StockBa
 		Map<String, Object> params = new HashMap<>(4);
 		params.put("api_name", API_NAME_STOCK_BASIC);
 		params.put("token", token);
-		params.put("params", Map.of("market", StrUtil.blankToDefault(market, "")));
+		String syncMarket = StrUtil.blankToDefault(market, DEFAULT_MARKET);
+		params.put("params", Map.of("market", syncMarket));
 
-		log.info("开始从 tushare 同步股票基础信息, market={}", market);
+		log.info("开始从 tushare 同步股票基础信息, market={}", syncMarket);
 		// hutool 发起 JSON POST 请求
 		String respBody = HttpRequest.post(TUSHARE_URL)
 				.header("Content-Type", "application/json")

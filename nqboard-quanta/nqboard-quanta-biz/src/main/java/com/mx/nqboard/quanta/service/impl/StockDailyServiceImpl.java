@@ -47,9 +47,9 @@ public class StockDailyServiceImpl extends ServiceImpl<StockDailyMapper, StockDa
 	private static final String API_NAME_DAILY = "daily";
 
 	/**
-	 * 全量同步起始日期：2026-08-01
+	 * 全量同步起始日期：2026-01-01
 	 */
-	private static final LocalDate FULL_SYNC_START = LocalDate.of(2026, 8, 1);
+	private static final LocalDate FULL_SYNC_START = LocalDate.of(2026, 1, 1);
 
 	private static final DateTimeFormatter BASIC_DATE = DateTimeFormatter.BASIC_ISO_DATE;
 
@@ -231,6 +231,12 @@ public class StockDailyServiceImpl extends ServiceImpl<StockDailyMapper, StockDa
 		if (CollUtil.isEmpty(rows)) {
 			return 0;
 		}
+		// Tushare 返回的数据中可能存在重复记录，先按 trade_date 去重，避免唯一键冲突
+		Map<String, StockDailyEntity> uniqueRows = new HashMap<>();
+		for (StockDailyEntity row : rows) {
+			uniqueRows.putIfAbsent(row.getTradeDate(), row);
+		}
+		rows = new ArrayList<>(uniqueRows.values());
 		List<StockDailyEntity> existList = list(Wrappers.<StockDailyEntity>lambdaQuery()
 				.select(StockDailyEntity::getId, StockDailyEntity::getTradeDate)
 				.eq(StockDailyEntity::getTsCode, tsCode));

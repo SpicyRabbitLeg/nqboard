@@ -35,7 +35,7 @@ public interface StockMotHolderService extends IService<StockMotHolderEntity> {
 	 * 复用日线同步配置项：tushare.daily.market / tushare.daily.full；
 	 * 请求间隔因 stk_holdertrade 限频 100 次/分钟，已在实现类中写死（不随日线配置调整）
 	 * @param market 市场类型：主板/创业板/科创板，为空取 yml 配置 tushare.daily.market
-	 * @param full 是否全量同步：true=2026-08-01 至今天；false=仅增量获取今天；为空取 yml 配置 tushare.daily.full
+	 * @param full 是否全量同步：true=2026-01-01 至今天；false=仅增量获取今天；为空取 yml 配置 tushare.daily.full
 	 * @return 同步成功的条数
 	 */
 	int syncFromTushare(String market, Boolean full);

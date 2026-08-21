@@ -132,7 +132,7 @@ public class StockTopListController {
      * <p>
      * 系统内部接口：供 RemoteStockTopListService Feign 调用（Quartz 定时任务），故使用 {@code @Inner} 免鉴权
      * @param tradeDate 指定交易日期 YYYYMMDD（可空；为空时按 full 决定范围）
-     * @param full 是否全量同步：true=2026-08-01 至今天；false=仅增量获取今天；为空时取 yml 配置 tushare.daily.full
+     * @param full 是否全量同步：true=2026-01-01 至今天；false=仅增量获取今天；为空时取 yml 配置 tushare.daily.full
      * @return 同步成功的条数
      */
     @Inner

@@ -25,7 +25,7 @@ public interface StockMotAnnNewsService extends IService<StockMotAnnNewsEntity> 
 	/**
 	 * 按股票代码同步公告&媒体新闻
 	 * @param tsCode 股票代码，如 002594.SZ
-	 * @param full 是否全量同步：true=2026-08-01 至今天；false=仅今天；为空取 yml 配置 tushare.daily.full
+	 * @param full 是否全量同步：true=2026-01-01 至今天；false=仅今天；为空取 yml 配置 tushare.daily.full
 	 * @return 同步成功的条数
 	 */
 	int syncNews(String tsCode, Boolean full);

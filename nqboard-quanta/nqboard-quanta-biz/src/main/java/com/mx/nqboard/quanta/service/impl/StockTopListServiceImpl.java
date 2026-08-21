@@ -44,9 +44,9 @@ public class StockTopListServiceImpl extends ServiceImpl<StockTopListMapper, Sto
 	private static final String API_NAME_TOP_LIST = "top_list";
 
 	/**
-	 * 全量同步起始日期：2026-08-01
+	 * 全量同步起始日期：2026-01-01
 	 */
-	private static final LocalDate FULL_SYNC_START = LocalDate.of(2026, 8, 1);
+	private static final LocalDate FULL_SYNC_START = LocalDate.of(2026, 1, 1);
 
 	private static final DateTimeFormatter BASIC_DATE = DateTimeFormatter.BASIC_ISO_DATE;
 
@@ -198,6 +198,12 @@ public class StockTopListServiceImpl extends ServiceImpl<StockTopListMapper, Sto
 		if (CollUtil.isEmpty(rows)) {
 			return 0;
 		}
+		// Tushare 返回的数据中同一股票同一天可能有多条，先按 ts_code 去重，避免唯一键冲突
+		Map<String, StockTopListEntity> uniqueRows = new HashMap<>();
+		for (StockTopListEntity row : rows) {
+			uniqueRows.putIfAbsent(row.getTsCode(), row);
+		}
+		rows = new ArrayList<>(uniqueRows.values());
 		List<StockTopListEntity> existList = list(Wrappers.<StockTopListEntity>lambdaQuery()
 				.select(StockTopListEntity::getId, StockTopListEntity::getTsCode)
 				.eq(StockTopListEntity::getTradeDate, tradeDate));
