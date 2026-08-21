@@ -774,6 +774,10 @@ CREATE TABLE `sys_job`  (
   UNIQUE INDEX `job_name_group_idx`(`job_name` ASC, `job_group` ASC) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '定时任务调度表' ROW_FORMAT = Dynamic;
 
+INSERT INTO `sys_job` (`job_id`, `job_name`, `job_group`, `job_order`, `job_type`, `execute_path`, `class_name`, `method_name`, `method_params_value`, `cron_expression`, `misfire_policy`, `job_tenant_type`, `job_status`, `job_execute_status`, `create_by`, `create_time`, `remark`)
+VALUES (2090600000000000002, '每周回测校准', 'DEFAULT', '5', '2', NULL, 'stockBacktestTaskService', 'runLatest', NULL, '0 0 10 ? * SAT', '3', '2', '2', '0', 'admin', NOW(), '每周六10:00重跑回测（最新数据校准入池线与模板阈值），任务结果在回测中心页面查看');
+
+
 -- ----------------------------
 -- Records of sys_job
 -- ----------------------------
@@ -1045,6 +1049,13 @@ INSERT INTO `sys_menu` (`menu_id`, `name`, `en_name`, `permission`, `path`, `par
 INSERT INTO `sys_menu` (`menu_id`, `name`, `en_name`, `permission`, `path`, `parent_id`, `icon`, `visible`, `sort_order`, `keep_alive`, `embedded`, `menu_type`, `create_by`, `create_time`, `update_by`, `update_time`, `del_flag`) VALUES (2090519705934204930, '新增', NULL, 'quanta_stockMotAnnNews_add', NULL, 2090441326455226370, NULL, '1', 1, '0', '0', '1', 'admin', '2026-08-21 03:21:53', NULL, NULL, '0');
 INSERT INTO `sys_menu` (`menu_id`, `name`, `en_name`, `permission`, `path`, `parent_id`, `icon`, `visible`, `sort_order`, `keep_alive`, `embedded`, `menu_type`, `create_by`, `create_time`, `update_by`, `update_time`, `del_flag`) VALUES (2090519749311696897, '编辑', NULL, 'quanta_stockMotAnnNews_edit', NULL, 2090441326455226370, NULL, '1', 2, '0', '0', '1', 'admin', '2026-08-21 03:22:03', NULL, NULL, '0');
 INSERT INTO `sys_menu` (`menu_id`, `name`, `en_name`, `permission`, `path`, `parent_id`, `icon`, `visible`, `sort_order`, `keep_alive`, `embedded`, `menu_type`, `create_by`, `create_time`, `update_by`, `update_time`, `del_flag`) VALUES (2090519792601108482, '删除', NULL, 'quanta_stockMotAnnNews_del', NULL, 2090441326455226370, NULL, '1', 3, '0', '0', '1', 'admin', '2026-08-21 03:22:13', NULL, NULL, '0');
+INSERT INTO `sys_menu` (`menu_id`, `name`, `en_name`, `permission`, `path`, `parent_id`, `icon`, `visible`, `sort_order`, `keep_alive`, `embedded`, `menu_type`, `create_by`, `create_time`, `del_flag`) VALUES (2090602000000000001, '候选股票池', 'stockCandidate', NULL, '/quanta/stockCandidate/index', 2090421625264017410, 'iconfont icon-shaixuan', '1', 4, '0', '0', '0', 'admin', NOW(), '0');
+INSERT INTO `sys_menu` (`menu_id`, `name`, `en_name`, `permission`, `path`, `parent_id`, `icon`, `visible`, `sort_order`, `keep_alive`, `embedded`, `menu_type`, `create_by`, `create_time`, `del_flag`) VALUES (2090602000000000002, '模拟持仓', 'stockSimPosition', NULL, '/quanta/stockSimPosition/index', 2090421625264017410, 'iconfont icon-jiaoyi', '1', 5, '0', '0', '0', 'admin', NOW(), '0');
+INSERT INTO `sys_menu` (`menu_id`, `name`, `en_name`, `permission`, `path`, `parent_id`, `icon`, `visible`, `sort_order`, `keep_alive`, `embedded`, `menu_type`, `create_by`, `create_time`, `del_flag`) VALUES (2090602000000000003, '回测中心', 'stockBacktestTask', NULL, '/quanta/stockBacktestTask/index', 2090421625264017410, 'iconfont icon-tubiaozhexiantu', '1', 6, '0', '0', '0', 'admin', NOW(), '0');
+INSERT INTO `sys_menu` (`menu_id`, `name`, `en_name`, `permission`, `path`, `parent_id`, `icon`, `visible`, `sort_order`, `keep_alive`, `embedded`, `menu_type`, `create_by`, `create_time`, `del_flag`) VALUES (2090602000000000004, '流水线监控', 'quantPipeline', NULL, '/quanta/quantPipeline/index', 2090421625264017410, 'iconfont icon-shuju', '1', 7, '0', '0', '0', 'admin', NOW(), '0');
+INSERT INTO `sys_menu` (`menu_id`, `name`, `en_name`, `permission`, `path`, `parent_id`, `icon`, `visible`, `sort_order`, `keep_alive`, `embedded`, `menu_type`, `create_by`, `create_time`, `del_flag`) VALUES (2090602000000000005, '命中率日报', 'hitRate', NULL, '/quanta/hitRate/index', 2090421625264017410, 'iconfont icon-baobiao', '1', 8, '0', '0', '0', 'admin', NOW(), '0');
+
+
 
 -- ----------------------------
 -- Table structure for sys_oauth_client_details

@@ -27,13 +27,6 @@ security:
   # 跳过验证码校验的客户端
   ignore-clients:
     - test
-  # 资源服务器直接放行的URL（无OAuth2鉴权，鉴权由接口自身承担）
-  oauth2:
-    ignore:
-      urls:
-        # Dify Workflow 数据供给接口（鉴权由 X-Dify-Token 静态Token承担，见 dify.tools-token）
-        - /dify/**
-        - /dify/openapi.json
 
 # 配置文件加密根密码
 jasypt:
@@ -82,9 +75,9 @@ dify:
   # 是否启用（false 或 key 未配置时自动走规则降级模式，流水线不中断）
   enabled: true
   # Dify API 地址（注意带 /v1）
-  base-url: https://api.dify.ai/v1
+  base-url: http://192.168.1.3/v1
   # 短线分析 Workflow 的 API Key（Dify 应用访问 API 页获取）
-  workflow-key: ''
+  workflow-key: 'app-VGb1sbmZD6FrsTVVP16UdQEO'
   # Dify 回调 nqboard 取数接口的静态 Token（请求头 X-Dify-Token；为空放行便于本地调试）
   tools-token: ''
   # 单次 workflow 请求超时（毫秒）

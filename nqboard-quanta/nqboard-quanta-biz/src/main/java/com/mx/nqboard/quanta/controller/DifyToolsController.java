@@ -5,6 +5,8 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.mx.nqboard.common.feign.annotation.NoToken;
+import com.mx.nqboard.common.security.annotation.Inner;
 import com.mx.nqboard.quanta.api.entity.StockDailyEntity;
 import com.mx.nqboard.quanta.api.entity.StockIndustryDailyEntity;
 import com.mx.nqboard.quanta.api.entity.StockIndexDailyEntity;
@@ -93,6 +95,7 @@ public class DifyToolsController {
 	/**
 	 * 技术面特征 + 筛选打分（Dify 技术面分析师数据源）
 	 */
+	@Inner(false)
 	@Operation(summary = "技术面特征与打分", description = "特征向量 + 三层筛选打分结果")
 	@GetMapping("/technicals")
 	public String technicals(@RequestParam("tsCode") String tsCode,
@@ -125,6 +128,7 @@ public class DifyToolsController {
 	/**
 	 * 龙虎榜记录（Dify 龙虎榜分析师数据源）
 	 */
+	@Inner(false)
 	@Operation(summary = "龙虎榜记录", description = "近N个交易日上榜记录与净买额")
 	@GetMapping("/dragon-tiger")
 	public String dragonTiger(@RequestParam("tsCode") String tsCode,
@@ -159,6 +163,7 @@ public class DifyToolsController {
 	/**
 	 * 主力资金流（Dify 资金流分析师数据源）
 	 */
+	@Inner(false)
 	@Operation(summary = "主力资金流", description = "近N个交易日主力/超大单净流入")
 	@GetMapping("/money-flow")
 	public String moneyFlow(@RequestParam("tsCode") String tsCode,
@@ -191,6 +196,7 @@ public class DifyToolsController {
 	/**
 	 * 公告与新闻（Dify 新闻/政策分析师数据源）
 	 */
+	@Inner(false)
 	@Operation(summary = "公告与新闻", description = "近N天公告/媒体新闻标题摘要")
 	@GetMapping("/news")
 	public String news(@RequestParam("tsCode") String tsCode,
@@ -228,6 +234,7 @@ public class DifyToolsController {
 	/**
 	 * 行业板块行情（Dify 板块分析师数据源）
 	 */
+	@Inner(false)
 	@Operation(summary = "行业板块行情", description = "所属行业近10个交易日涨跌幅")
 	@GetMapping("/sector")
 	public String sector(@RequestParam("tsCode") String tsCode) {
@@ -269,6 +276,7 @@ public class DifyToolsController {
 	/**
 	 * 股东增减持与股东户数（Dify 附加数据源）
 	 */
+	@Inner(false)
 	@Operation(summary = "股东增减持与户数", description = "高管增减持记录 + 股东户数变化")
 	@GetMapping("/holder")
 	public String holder(@RequestParam("tsCode") String tsCode) {
@@ -316,6 +324,7 @@ public class DifyToolsController {
 	/**
 	 * 大盘环境（沪深300 近期收益）
 	 */
+	@Inner(false)
 	@Operation(summary = "大盘环境", description = "沪深300近5/20日收益")
 	@GetMapping("/market-env")
 	public String marketEnv(@RequestParam(value = "date", required = false) String date) {
@@ -348,6 +357,7 @@ public class DifyToolsController {
 	/**
 	 * 日K线（LLM 需要原始价格序列时的补充数据源）
 	 */
+	@Inner(false)
 	@Operation(summary = "日K线", description = "近N根日线OHLCV")
 	@GetMapping("/kline")
 	public String kline(@RequestParam("tsCode") String tsCode,
@@ -381,6 +391,7 @@ public class DifyToolsController {
 	/**
 	 * OpenAPI 3 规范（直接导入 Dify 自定义工具）
 	 */
+	@Inner(false)
 	@Operation(summary = "OpenAPI规范", description = "输出 OpenAPI 3 JSON，供 Dify 自定义工具导入")
 	@GetMapping(value = "/openapi.json", produces = "application/json")
 	public String openapi() {
@@ -442,7 +453,9 @@ public class DifyToolsController {
 			return; // 未配置时放行（本地调试）
 		}
 		var attrs = org.springframework.web.context.request.RequestContextHolder.getRequestAttributes();
-		if (attrs instanceof org.springframework.web.context.request.ServletRequestAttributes servletAttrs) {
+		if (attrs instanceof org.springframework.web.context.request.ServletRequestAttributes) {
+			org.springframework.web.context.request.ServletRequestAttributes servletAttrs =
+					(org.springframework.web.context.request.ServletRequestAttributes) attrs;
 			String token = servletAttrs.getRequest().getHeader("X-Dify-Token");
 			if (!toolsToken.equals(token)) {
 				throw new org.springframework.web.server.ResponseStatusException(
