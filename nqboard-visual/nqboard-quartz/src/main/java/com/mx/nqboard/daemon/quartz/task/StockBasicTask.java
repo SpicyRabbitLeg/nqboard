@@ -32,6 +32,12 @@ public class StockBasicTask {
 
 	private final RemoteStockIndexDailyService remoteStockIndexDailyService;
 
+	private final RemoteStockMoneyFlowService remoteStockMoneyFlowService;
+
+	private final RemoteStockIndustryDailyService remoteStockIndustryDailyService;
+
+	private final RemoteStockRestrictedReleaseService remoteStockRestrictedReleaseService;
+
 	/**
 	 * 股票基础信息同步调度入口（无参，同步默认市场：主板）
 	 *
@@ -163,6 +169,65 @@ public class StockBasicTask {
 			return NqBoardQuartzEnum.JOB_LOG_STATUS_SUCCESS.getType();
 		} catch (Exception e) {
 			log.error("[指数日线定时任务] 同步失败, 异常:{}", e.getMessage(), e);
+			return NqBoardQuartzEnum.JOB_LOG_STATUS_FAIL.getType();
+		}
+	}
+
+	/**
+	 * 个股主力资金流同步调度入口（东财当日全市场快照，建议 17:30 后执行）
+	 *
+	 * @return 任务执行状态：0 成功 / 1 失败
+	 */
+	public String syncMoneyFlow() {
+		log.info("[主力资金流定时任务] 开始同步");
+		try {
+			Integer count = RetOps.of(remoteStockMoneyFlowService.syncFromEastMoney(null))
+					.getData()
+					.orElse(0);
+			log.info("[主力资金流定时任务] 同步完成, 成功处理 {} 条", count);
+			return NqBoardQuartzEnum.JOB_LOG_STATUS_SUCCESS.getType();
+		} catch (Exception e) {
+			log.error("[主力资金流定时任务] 同步失败, 异常:{}", e.getMessage(), e);
+			return NqBoardQuartzEnum.JOB_LOG_STATUS_FAIL.getType();
+		}
+	}
+
+	/**
+	 * 行业板块日线同步调度入口（东财板块K线，全量=true 单板块一次请求，建议 17:40 后执行；
+	 * 约 86 个板块 × 3 秒间隔，全量约 5 分钟）
+	 *
+	 * @return 任务执行状态：0 成功 / 1 失败
+	 */
+	public String syncIndustryDaily() {
+		log.info("[行业板块日线定时任务] 开始同步");
+		try {
+			Integer count = RetOps.of(remoteStockIndustryDailyService.syncFromEastMoney(true))
+					.getData()
+					.orElse(0);
+			log.info("[行业板块日线定时任务] 同步完成, 成功处理 {} 条", count);
+			return NqBoardQuartzEnum.JOB_LOG_STATUS_SUCCESS.getType();
+		} catch (Exception e) {
+			log.error("[行业板块日线定时任务] 同步失败, 异常:{}", e.getMessage(), e);
+			return NqBoardQuartzEnum.JOB_LOG_STATUS_FAIL.getType();
+		}
+	}
+
+	/**
+	 * 限售解禁同步调度入口（tushare share_float，全量=true 回补90天逐日拉取约45秒，
+	 * 兼具漏跑自愈能力，建议 18:00 后执行）
+	 *
+	 * @return 任务执行状态：0 成功 / 1 失败
+	 */
+	public String syncRestrictedRelease() {
+		log.info("[限售解禁定时任务] 开始同步");
+		try {
+			Integer count = RetOps.of(remoteStockRestrictedReleaseService.syncFromTushare(true))
+					.getData()
+					.orElse(0);
+			log.info("[限售解禁定时任务] 同步完成, 成功处理 {} 条", count);
+			return NqBoardQuartzEnum.JOB_LOG_STATUS_SUCCESS.getType();
+		} catch (Exception e) {
+			log.error("[限售解禁定时任务] 同步失败, 异常:{}", e.getMessage(), e);
 			return NqBoardQuartzEnum.JOB_LOG_STATUS_FAIL.getType();
 		}
 	}

@@ -12,14 +12,6 @@ import com.mx.nqboard.quanta.mapper.StockBasicMapper;
 import com.mx.nqboard.quanta.mapper.StockDailyMapper;
 import com.mx.nqboard.quanta.mapper.StockIndexDailyMapper;
 import com.mx.nqboard.quanta.service.QuantPipelineService;
-import com.mx.nqboard.quanta.service.StockDailyService;
-import com.mx.nqboard.quanta.service.StockIndexDailyService;
-import com.mx.nqboard.quanta.service.StockIndustryDailyService;
-import com.mx.nqboard.quanta.service.StockMoneyFlowService;
-import com.mx.nqboard.quanta.service.StockMotHolderCountService;
-import com.mx.nqboard.quanta.service.StockMotHolderService;
-import com.mx.nqboard.quanta.service.StockRestrictedReleaseService;
-import com.mx.nqboard.quanta.service.StockTopListService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -41,10 +33,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * 盘后数据流水线 服务实现类
  * </p>
  * <p>
- * 编排盘后数据同步各步骤，逐步骤写 quant_pipeline_log（状态/耗时/影响行数/异常），
- * 单步失败不中断流水线。后续阶段（筛选/LLM分析/候选池/持仓跟踪）将以新步骤追加。
- * 注意：公告新闻同步（StockMotAnnNewsService）为逐股票接口，由其独立定时任务执行，
- * 不纳入本流水线。
+ * 盘后信号流水线：只编排信号计算链路（筛选打分 -> 候选池 -> LLM分析 -> 持仓跟踪 ->
+ * 命中率追踪），逐步骤写 quant_pipeline_log（状态/耗时/影响行数/异常），单步失败不中断。
+ * </p>
+ * <p>
+ * 数据同步（指数/日线/龙虎榜/增减持/股东户数/资金流/板块/解禁）由各自独立的
+ * Quartz 定时任务错峰执行（见 nqboard-quartz StockBasicTask），本流水线不包含。
+ * 筛选步骤自带数据就绪检查（日线覆盖率），数据未就绪时该步骤置 FAILED 并给出明确原因。
+ * 公告新闻同步为逐股票接口，同样由独立定时任务执行。
  * </p>
  *
  * @author SpicyRabbitLeg
@@ -60,46 +56,6 @@ public class QuantPipelineServiceImpl extends ServiceImpl<QuantPipelineLogMapper
 	 * 大盘基准指数（用于数据就绪检查）
 	 */
 	private static final String BENCHMARK_INDEX = "sh000300";
-
-	/**
-	 * 步骤编码：指数日线
-	 */
-	public static final String STEP_INDEX_DAILY = "index_daily";
-
-	/**
-	 * 步骤编码：股票日线
-	 */
-	public static final String STEP_STOCK_DAILY = "stock_daily";
-
-	/**
-	 * 步骤编码：龙虎榜
-	 */
-	public static final String STEP_TOP_LIST = "top_list";
-
-	/**
-	 * 步骤编码：股东增减持
-	 */
-	public static final String STEP_MOT_HOLDER = "mot_holder";
-
-	/**
-	 * 步骤编码：股东户数
-	 */
-	public static final String STEP_HOLDER_COUNT = "holder_count";
-
-	/**
-	 * 步骤编码：主力资金流
-	 */
-	public static final String STEP_MONEY_FLOW = "money_flow";
-
-	/**
-	 * 步骤编码：行业板块日线
-	 */
-	public static final String STEP_INDUSTRY_DAILY = "industry_daily";
-
-	/**
-	 * 步骤编码：限售解禁
-	 */
-	public static final String STEP_RESTRICTED_RELEASE = "restricted_release";
 
 	/**
 	 * 步骤编码：筛选打分（Stage 0 粗滤 + 硬门 + 模板打分）
@@ -159,29 +115,15 @@ public class QuantPipelineServiceImpl extends ServiceImpl<QuantPipelineLogMapper
 
 	public QuantPipelineServiceImpl(StockIndexDailyMapper stockIndexDailyMapper,
 			StockDailyMapper stockDailyMapper, StockBasicMapper stockBasicMapper,
-			StockIndexDailyService stockIndexDailyService, StockDailyService stockDailyService,
-			StockTopListService stockTopListService, StockMotHolderService stockMotHolderService,
-			StockMotHolderCountService stockMotHolderCountService,
-			StockMoneyFlowService stockMoneyFlowService,
-			StockIndustryDailyService stockIndustryDailyService,
-			StockRestrictedReleaseService stockRestrictedReleaseService,
 			com.mx.nqboard.quanta.service.StockScreenResultService stockScreenResultService,
 			com.mx.nqboard.quanta.service.StockCandidateService stockCandidateService,
-			com.mx.nqboard.quanta.service.StockSimPositionService stockSimPositionService,
 			com.mx.nqboard.quanta.service.StockAgentAnalysisService stockAgentAnalysisService,
+			com.mx.nqboard.quanta.service.StockSimPositionService stockSimPositionService,
 			com.mx.nqboard.quanta.service.StockCandidateHitService stockCandidateHitService) {
 		this.stockIndexDailyMapper = stockIndexDailyMapper;
 		this.stockDailyMapper = stockDailyMapper;
 		this.stockBasicMapper = stockBasicMapper;
-		// 顺序即执行顺序：指数先行（后续步骤依赖其解析交易日），数据层完成后跑筛选打分
-		register(STEP_INDEX_DAILY, "指数日线同步", stockIndexDailyService::syncFromEastMoney);
-		register(STEP_STOCK_DAILY, "股票日线同步", stockDailyService::syncFromTushare);
-		register(STEP_TOP_LIST, "龙虎榜同步", stockTopListService::syncFromTushare);
-		register(STEP_MOT_HOLDER, "股东增减持同步", stockMotHolderService::syncFromTushare);
-		register(STEP_HOLDER_COUNT, "股东户数同步", stockMotHolderCountService::syncFromTushare);
-		register(STEP_MONEY_FLOW, "主力资金流同步", stockMoneyFlowService::syncFromEastMoney);
-		register(STEP_INDUSTRY_DAILY, "行业板块日线同步", stockIndustryDailyService::syncFromEastMoney);
-		register(STEP_RESTRICTED_RELEASE, "限售解禁同步", stockRestrictedReleaseService::syncFromTushare);
+		// 顺序即执行顺序：数据同步由外部定时任务错峰完成后触发本流水线
 		register(STEP_SCREEN, "筛选打分", stockScreenResultService::screen);
 		register(STEP_CANDIDATE, "候选池刷新", stockCandidateService::refreshCandidates);
 		register(STEP_AGENT_ANALYSIS, "LLM分析", stockAgentAnalysisService::analyze);
