@@ -157,6 +157,7 @@ public class StockBasicController {
     @SysLog("从 tushare 同步股票基础信息")
     @PostMapping("/sync")
     public R<Integer> syncFromTushare(@RequestParam(value = "market", required = false) String market) {
-        return R.ok(stockBasicService.syncFromTushare(market));
+        // 保持 Feign 契约 R<Integer>（影响行数）；成功/失败明细由 @QuantSyncLog 落 quant_sync_log
+        return R.ok(stockBasicService.syncFromTushare(market).getAffected());
     }
 }

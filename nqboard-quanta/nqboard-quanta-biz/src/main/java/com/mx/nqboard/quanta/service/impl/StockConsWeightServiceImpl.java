@@ -7,7 +7,9 @@ import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.mx.nqboard.quanta.api.dto.SyncResult;
 import com.mx.nqboard.quanta.api.entity.StockConsWeightEntity;
+import com.mx.nqboard.quanta.config.QuantSyncLog;
 import com.mx.nqboard.quanta.mapper.StockConsWeightMapper;
 import com.mx.nqboard.quanta.service.StockConsWeightService;
 import lombok.RequiredArgsConstructor;
@@ -77,7 +79,8 @@ public class StockConsWeightServiceImpl extends ServiceImpl<StockConsWeightMappe
 	 * 从 中证指数官网 同步指数成分股权重（下载 yml 配置的全部指数 closeweight.xls）
 	 */
 	@Override
-	public int syncFromCsindex() {
+	@QuantSyncLog(type = "cons_weight", name = "指数成分股权重同步")
+	public SyncResult syncFromCsindex() {
 		if (StrUtil.isBlank(indexes)) {
 			throw new IllegalStateException("csindex.indexes 未配置，请在 yml 中配置待同步的指数代码列表");
 		}
@@ -103,20 +106,26 @@ public class StockConsWeightServiceImpl extends ServiceImpl<StockConsWeightMappe
 			}
 		}
 		log.info("指数成分股权重同步完成, 共处理 {} 行, 失败 {} 个指数", total, failCount);
-		return total;
+		return SyncResult.builder()
+				.affected(total)
+				.successCount(total)
+				.failCount(failCount)
+				.totalCount(codes.length)
+				.message("同步 " + codes.length + " 个指数, 影响 " + total + " 行, 失败 " + failCount + " 个")
+				.build();
 	}
 
 	/**
 	 * 从本地 xls 文件同步指数成分股权重
 	 */
 	@Override
-	public int syncFromCsindex(String filePath) {
+	public SyncResult syncFromCsindex(String filePath) {
 		File file = new File(filePath);
 		if (!file.isFile()) {
 			throw new IllegalStateException("文件不存在: " + filePath);
 		}
 		log.info("开始从本地文件同步指数成分股权重: {}", filePath);
-		return upsertFile(FileUtil.readBytes(file));
+		return SyncResult.of(upsertFile(FileUtil.readBytes(file)));
 	}
 
 	/**

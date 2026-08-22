@@ -2,6 +2,7 @@ package com.mx.nqboard.quanta.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.mx.nqboard.quanta.api.dto.SyncResult;
 import com.mx.nqboard.quanta.api.entity.StockBasicEntity;
 import com.mx.nqboard.quanta.api.vo.StockOptionVO;
 
@@ -40,8 +41,8 @@ public interface StockBasicService extends IService<StockBasicEntity> {
 	 *   cronExpression = 0 0 18 * * ?   （示例：每天 18:00）
 	 * </pre>
 	 * @param market 市场类型：主板/创业板/科创板，为空时同步 "主板"
-	 * @return 同步成功的条数
+	 * @return 同步结果（成功/失败条数，由 @QuantSyncLog 落 quant_sync_log 追溯）
 	 */
-	int syncFromTushare(String market);
+	SyncResult syncFromTushare(String market);
 
 }

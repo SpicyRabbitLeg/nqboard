@@ -8,7 +8,9 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.mx.nqboard.quanta.api.dto.SyncResult;
 import com.mx.nqboard.quanta.api.entity.TradeCalEntity;
+import com.mx.nqboard.quanta.config.QuantSyncLog;
 import com.mx.nqboard.quanta.mapper.TradeCalMapper;
 import com.mx.nqboard.quanta.service.TradeCalService;
 import lombok.RequiredArgsConstructor;
@@ -82,7 +84,8 @@ public class TradeCalServiceImpl extends ServiceImpl<TradeCalMapper, TradeCalEnt
 	 * 从 tushare 同步交易日历（区间 = 当年前后各 prefetch-years 年），按 (exchange, cal_date) upsert
 	 */
 	@Override
-	public int syncFromTushare() {
+	@QuantSyncLog(type = "trade_cal", name = "交易日历同步")
+	public SyncResult syncFromTushare() {
 		if (StrUtil.isBlank(token)) {
 			throw new IllegalStateException("tushare token 未配置，请在 Nacos 配置或环境变量中设置 tushare.token");
 		}
@@ -94,13 +97,14 @@ public class TradeCalServiceImpl extends ServiceImpl<TradeCalMapper, TradeCalEnt
 		JSONObject data = postTushare(API_NAME_TRADE_CAL,
 				Map.of("exchange", DEFAULT_EXCHANGE, "start_date", start, "end_date", end));
 		if (data == null) {
-			return 0;
+			return SyncResult.builder().affected(0).successCount(0).totalCount(0).message("tushare 无返回数据").build();
 		}
 		List<String> fields = data.getJSONArray("fields").toJavaList(String.class);
 		JSONArray items = data.getJSONArray("items");
 		if (items == null || items.isEmpty()) {
 			log.info("交易日历同步完成, 区间 {} ~ {} 内无数据", start, end);
-			return 0;
+			return SyncResult.builder().affected(0).successCount(0).totalCount(0)
+					.syncRange(start + "~" + end).message("区间内无数据").build();
 		}
 
 		// 区间内已存在记录按 (exchange, cal_date) 建索引：命中走 update（保留原 id），其余批量插入，
@@ -138,7 +142,13 @@ public class TradeCalServiceImpl extends ServiceImpl<TradeCalMapper, TradeCalEnt
 			updated = toUpdate.size();
 		}
 		log.info("从 tushare 同步交易日历完成, 区间: {} ~ {}, 新增 {} 条, 更新 {} 条", start, end, inserted, updated);
-		return inserted + updated;
+		return SyncResult.builder()
+				.affected(inserted + updated)
+				.successCount(inserted + updated)
+				.totalCount(items.size())
+				.syncRange(start + "~" + end)
+				.message("新增 " + inserted + " 条, 更新 " + updated + " 条")
+				.build();
 	}
 
 	/**

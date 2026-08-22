@@ -8,7 +8,9 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.mx.nqboard.quanta.api.dto.SyncResult;
 import com.mx.nqboard.quanta.api.entity.StockIndexDailyEntity;
+import com.mx.nqboard.quanta.config.QuantSyncLog;
 import com.mx.nqboard.quanta.mapper.StockIndexDailyMapper;
 import com.mx.nqboard.quanta.service.StockIndexDailyService;
 import lombok.RequiredArgsConstructor;
@@ -94,10 +96,11 @@ public class StockIndexDailyServiceImpl extends ServiceImpl<StockIndexDailyMappe
 
 	/**
 	 * 无参重载，便于 Quartz 定时任务在未配置参数时直接调用，取 yml 配置
-	 * @return 同步成功的条数
+	 * @return 同步结果
 	 */
 	@Override
-	public int syncFromEastMoney() {
+	@QuantSyncLog(type = "index_daily", name = "指数日线同步")
+	public SyncResult syncFromEastMoney() {
 		return syncFromEastMoney(null);
 	}
 
@@ -107,7 +110,8 @@ public class StockIndexDailyServiceImpl extends ServiceImpl<StockIndexDailyMappe
 	 * 全量：beg=20260101 从 2026-01-01 起；增量：beg=今天，仅当天起
 	 */
 	@Override
-	public int syncFromEastMoney(Boolean full) {
+	@QuantSyncLog(type = "index_daily", name = "指数日线同步")
+	public SyncResult syncFromEastMoney(Boolean full) {
 		if (StrUtil.isBlank(indexes)) {
 			throw new IllegalStateException("index.daily.indexes 未配置，请在 yml 中配置待同步的指数代码列表");
 		}
@@ -154,7 +158,14 @@ public class StockIndexDailyServiceImpl extends ServiceImpl<StockIndexDailyMappe
 			}
 		}
 		log.info("指数日线同步完成, 指数数={}, 累计影响 {} 行, 失败 {} 个", codes.length, total, failCount);
-		return total;
+		return SyncResult.builder()
+				.affected(total)
+				.successCount(total)
+				.failCount(failCount)
+				.totalCount(codes.length)
+				.syncRange("beg=" + beg)
+				.message("同步 " + codes.length + " 个指数, 影响 " + total + " 行, 失败 " + failCount + " 个")
+				.build();
 	}
 
 	/**

@@ -1,6 +1,7 @@
 package com.mx.nqboard.quanta.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.mx.nqboard.quanta.api.dto.SyncResult;
 import com.mx.nqboard.quanta.api.entity.StockIndexDailyEntity;
 
 /**
@@ -23,9 +24,9 @@ public interface StockIndexDailyService extends IService<StockIndexDailyEntity> 
 	 *   methodName   = syncFromEastMoney
 	 *   cronExpression = 0 30 18 * * ?   （示例：每天 18:30 收盘后增量同步）
 	 * </pre>
-	 * @return 同步成功的条数
+	 * @return 同步结果（成功/失败条数，由 @QuantSyncLog 落 quant_sync_log 追溯）
 	 */
-	int syncFromEastMoney();
+	SyncResult syncFromEastMoney();
 
 	/**
 	 * 从 东方财富 同步指数日线K线
@@ -34,8 +35,8 @@ public interface StockIndexDailyService extends IService<StockIndexDailyEntity> 
 	 * 按 yml 配置的指数列表（index.daily.indexes，如 sh000300）逐个拉取，
 	 * 按唯一键 (index_code, trade_date) 批量插入/更新。请求间隔因接口限制已在实现类中写死。
 	 * @param full 是否全量同步：true=从2026-01-01起；false=仅今天；为空取 yml 配置 tushare.daily.full
-	 * @return 同步成功的条数
+	 * @return 同步结果（成功/失败条数，由 @QuantSyncLog 落 quant_sync_log 追溯）
 	 */
-	int syncFromEastMoney(Boolean full);
+	SyncResult syncFromEastMoney(Boolean full);
 
 }

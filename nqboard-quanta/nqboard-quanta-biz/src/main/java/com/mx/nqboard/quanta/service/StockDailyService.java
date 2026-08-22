@@ -1,6 +1,7 @@
 package com.mx.nqboard.quanta.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.mx.nqboard.quanta.api.dto.SyncResult;
 import com.mx.nqboard.quanta.api.entity.StockDailyEntity;
 import com.mx.nqboard.quanta.api.vo.StockDailyKlineVO;
 
@@ -36,9 +37,9 @@ public interface StockDailyService extends IService<StockDailyEntity> {
 	 *   methodName   = syncFromTushare
 	 *   cronExpression = 0 30 18 * * ?   （示例：每天 18:30 收盘后增量同步）
 	 * </pre>
-	 * @return 同步成功的条数
+	 * @return 同步结果（成功/失败条数，由 @QuantSyncLog 落 quant_sync_log 追溯）
 	 */
-	int syncFromTushare();
+	SyncResult syncFromTushare();
 
 	/**
 	 * 从 tushare 同步股票日线行情
@@ -47,9 +48,9 @@ public interface StockDailyService extends IService<StockDailyEntity> {
 	 * → 按唯一键 (ts_code, trade_date) 批量插入/更新
 	 * @param market 市场类型：主板/创业板/科创板，为空取 yml 配置 tushare.daily.market
 	 * @param full 是否全量同步：true=2026-01-01 至今天；false=仅增量获取今天；为空取 yml 配置 tushare.daily.full
-	 * @return 同步成功的条数
+	 * @return 同步结果（成功/失败条数，由 @QuantSyncLog 落 quant_sync_log 追溯）
 	 */
-	int syncFromTushare(String market, Boolean full);
+	SyncResult syncFromTushare(String market, Boolean full);
 
 	/**
 	 * 从 tushare 回补复权因子（adj_factor，按交易日批量，只补 NULL 的交易日）
@@ -57,8 +58,8 @@ public interface StockDailyService extends IService<StockDailyEntity> {
 	 * 日线同步完成后自动执行；也可独立调用（如历史数据初始化后手动回补）。
 	 * 指标计算依赖复权因子做前复权换算，缺失时按 1 处理（轻微失真）。
 	 * </p>
-	 * @return 影响行数
+	 * @return 同步结果（成功/失败条数，由 @QuantSyncLog 落 quant_sync_log 追溯）
 	 */
-	int syncAdjFactorFromTushare();
+	SyncResult syncAdjFactorFromTushare();
 
 }

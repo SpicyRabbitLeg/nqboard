@@ -10,8 +10,10 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.mx.nqboard.quanta.api.dto.SyncResult;
 import com.mx.nqboard.quanta.api.entity.StockBasicEntity;
 import com.mx.nqboard.quanta.api.vo.StockOptionVO;
+import com.mx.nqboard.quanta.config.QuantSyncLog;
 import com.mx.nqboard.quanta.mapper.StockBasicMapper;
 import com.mx.nqboard.quanta.service.StockBasicService;
 import lombok.RequiredArgsConstructor;
@@ -67,9 +69,10 @@ public class StockBasicServiceImpl extends ServiceImpl<StockBasicMapper, StockBa
 
 	/**
 	 * 无参重载，便于 Quartz 定时任务在未配置参数时直接调用
-	 * @return 同步成功的条数
+	 * @return 同步结果
 	 */
-	public int syncFromTushare() {
+	@QuantSyncLog(type = "stock_basic", name = "股票基础信息同步")
+	public SyncResult syncFromTushare() {
 		return syncFromTushare(DEFAULT_MARKET);
 	}
 
@@ -77,7 +80,8 @@ public class StockBasicServiceImpl extends ServiceImpl<StockBasicMapper, StockBa
 	 * 从 tushare 同步股票基础信息（按市场），按 ts_code 唯一键 upsert
 	 */
 	@Override
-	public int syncFromTushare(String market) {
+	@QuantSyncLog(type = "stock_basic", name = "股票基础信息同步")
+	public SyncResult syncFromTushare(String market) {
 		if (StrUtil.isBlank(token)) {
 			throw new IllegalStateException("tushare token 未配置，请在 Nacos 配置或环境变量中设置 tushare.token");
 		}
@@ -143,7 +147,13 @@ public class StockBasicServiceImpl extends ServiceImpl<StockBasicMapper, StockBa
 			entities.add(entity);
 		}
 		log.info("从 tushare 同步完成, market={}, 共处理 {} 条", market, entities.size());
-		return inserted;
+		return SyncResult.builder()
+				.affected(inserted)
+				.successCount(inserted)
+				.failCount(Math.max(0, entities.size() - inserted))
+				.totalCount(entities.size())
+				.syncRange("market=" + syncMarket)
+				.build();
 	}
 
 	/**

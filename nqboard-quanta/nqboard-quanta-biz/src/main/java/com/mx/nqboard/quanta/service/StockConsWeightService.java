@@ -1,6 +1,7 @@
 package com.mx.nqboard.quanta.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.mx.nqboard.quanta.api.dto.SyncResult;
 import com.mx.nqboard.quanta.api.entity.StockConsWeightEntity;
 
 /**
@@ -23,17 +24,17 @@ public interface StockConsWeightService extends IService<StockConsWeightEntity> 
 	 *   methodName   = syncFromCsindex
 	 *   cronExpression = 0 30 18 * * ?   （示例：每天 18:30 收盘后增量同步）
 	 * </pre>
-	 * @return 同步成功的条数
+	 * @return 同步结果（成功/失败条数，由 @QuantSyncLog 落 quant_sync_log 追溯）
 	 */
-	int syncFromCsindex();
+	SyncResult syncFromCsindex();
 
 	/**
 	 * 从本地 xls 文件同步指数成分股权重（解析后按唯一键批量插入/更新）
 	 * <p>
 	 * 文件内包含指数代码/名称/日期，无需额外指定；可用于官网文件下载失败时的补录
 	 * @param filePath 本地 xls 文件绝对路径
-	 * @return 同步成功的条数
+	 * @return 同步结果（成功/失败条数，由 @QuantSyncLog 落 quant_sync_log 追溯）
 	 */
-	int syncFromCsindex(String filePath);
+	SyncResult syncFromCsindex(String filePath);
 
 }

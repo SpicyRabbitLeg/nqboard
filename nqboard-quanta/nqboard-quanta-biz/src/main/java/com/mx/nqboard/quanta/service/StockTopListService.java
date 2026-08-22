@@ -1,6 +1,7 @@
 package com.mx.nqboard.quanta.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.mx.nqboard.quanta.api.dto.SyncResult;
 import com.mx.nqboard.quanta.api.entity.StockTopListEntity;
 
 /**
@@ -23,9 +24,9 @@ public interface StockTopListService extends IService<StockTopListEntity> {
 	 *   methodName   = syncFromTushare
 	 *   cronExpression = 0 30 18 * * ?   （示例：每天 18:30 收盘后增量同步）
 	 * </pre>
-	 * @return 同步成功的条数
+	 * @return 同步结果（成功/失败条数，由 @QuantSyncLog 落 quant_sync_log 追溯）
 	 */
-	int syncFromTushare();
+	SyncResult syncFromTushare();
 
 	/**
 	 * 从 tushare 同步龙虎榜每日明细
@@ -35,8 +36,8 @@ public interface StockTopListService extends IService<StockTopListEntity> {
 	 * 按唯一键 (trade_date, ts_code) 批量插入/更新。请求间隔因限频已在实现类中写死。
 	 * @param tradeDate 指定交易日期 YYYYMMDD，可空
 	 * @param full 是否全量同步：true=2026-01-01 至今天；false=仅增量获取今天；为空取 yml 配置 tushare.daily.full
-	 * @return 同步成功的条数
+	 * @return 同步结果（成功/失败条数，由 @QuantSyncLog 落 quant_sync_log 追溯）
 	 */
-	int syncFromTushare(String tradeDate, Boolean full);
+	SyncResult syncFromTushare(String tradeDate, Boolean full);
 
 }

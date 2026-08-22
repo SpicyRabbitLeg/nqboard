@@ -8,9 +8,11 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.mx.nqboard.quanta.api.dto.SyncResult;
 import com.mx.nqboard.quanta.api.entity.StockIndexDailyEntity;
 import com.mx.nqboard.quanta.api.entity.StockBasicEntity;
 import com.mx.nqboard.quanta.api.entity.StockMoneyFlowEntity;
+import com.mx.nqboard.quanta.config.QuantSyncLog;
 import com.mx.nqboard.quanta.mapper.StockIndexDailyMapper;
 import com.mx.nqboard.quanta.mapper.StockMoneyFlowMapper;
 import com.mx.nqboard.quanta.mapper.StockBasicMapper;
@@ -107,11 +109,13 @@ public class StockMoneyFlowServiceImpl extends ServiceImpl<StockMoneyFlowMapper,
 	private final StockBasicMapper stockBasicMapper;
 
 	@Override
-	public int syncFromEastMoney() {
+	@QuantSyncLog(type = "money_flow", name = "主力资金流同步")
+	public SyncResult syncFromEastMoney() {
 		String tradeDate = resolveTradeDate();
 		if (tradeDate == null) {
 			log.warn("资金流同步跳过：无法解析最新交易日（指数日线无数据且当日为非交易日）");
-			return 0;
+			return SyncResult.builder().affected(0).successCount(0).totalCount(0)
+					.message("跳过：无法解析最新交易日").build();
 		}
 		// 错日覆盖保护：工作日时指数日线最新日应等于今天，否则说明指数同步未完成/失败，
 		// 当日快照若按过期日期落库会覆盖既有正确数据，跳过等待下次重跑（快照接口无法回补历史）
@@ -120,7 +124,9 @@ public class StockMoneyFlowServiceImpl extends ServiceImpl<StockMoneyFlowMapper,
 		if (!weekend && !today.format(BASIC_DATE).equals(tradeDate)) {
 			log.warn("资金流同步跳过：指数日线最新交易日({}) != 今天({})，指数同步未完成，避免当日快照覆盖历史数据，"
 					+ "请确认指数日线任务已成功执行后再重跑本任务", tradeDate, today.format(BASIC_DATE));
-			return 0;
+			return SyncResult.builder().affected(0).successCount(0).totalCount(0)
+					.message("跳过：指数日线最新交易日(" + tradeDate + ") != 今天，避免覆盖历史数据")
+					.build();
 		}
 		log.info("开始从 东方财富 同步个股主力资金流, tradeDate={}", tradeDate);
 
@@ -138,11 +144,18 @@ public class StockMoneyFlowServiceImpl extends ServiceImpl<StockMoneyFlowMapper,
 		}
 		if (CollUtil.isEmpty(rows)) {
 			log.warn("资金流接口无数据返回");
-			return 0;
+			return SyncResult.builder().affected(0).successCount(0).totalCount(0)
+					.message("资金流接口无数据返回").build();
 		}
 		int affected = upsertByUniqueKey(tradeDate, rows);
 		log.info("资金流同步完成, tradeDate={}, 股票数={}, 影响 {} 行", tradeDate, rows.size(), affected);
-		return affected;
+		return SyncResult.builder()
+				.affected(affected)
+				.successCount(affected)
+				.totalCount(rows.size())
+				.syncRange("tradeDate=" + tradeDate)
+				.message("覆盖 " + rows.size() + " 只股票, 影响 " + affected + " 行")
+				.build();
 	}
 
 	/**

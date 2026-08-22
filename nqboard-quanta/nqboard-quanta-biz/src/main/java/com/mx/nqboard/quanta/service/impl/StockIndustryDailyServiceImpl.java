@@ -8,9 +8,11 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.mx.nqboard.quanta.api.dto.SyncResult;
 import com.mx.nqboard.quanta.api.entity.StockIndustryDailyEntity;
 import com.mx.nqboard.quanta.api.entity.StockBasicEntity;
 import com.mx.nqboard.quanta.api.entity.StockDailyEntity;
+import com.mx.nqboard.quanta.config.QuantSyncLog;
 import com.mx.nqboard.quanta.mapper.StockIndustryDailyMapper;
 import com.mx.nqboard.quanta.mapper.StockBasicMapper;
 import com.mx.nqboard.quanta.mapper.StockDailyMapper;
@@ -185,12 +187,14 @@ public class StockIndustryDailyServiceImpl extends ServiceImpl<StockIndustryDail
 	private boolean syncFull;
 
 	@Override
-	public int syncFromEastMoney() {
+	@QuantSyncLog(type = "industry_daily", name = "行业板块日线同步")
+	public SyncResult syncFromEastMoney() {
 		return syncFromEastMoney(null);
 	}
 
 	@Override
-	public int syncFromEastMoney(Boolean full) {
+	@QuantSyncLog(type = "industry_daily", name = "行业板块日线同步")
+	public SyncResult syncFromEastMoney(Boolean full) {
 		boolean syncFull = full != null ? full : this.syncFull;
 		// 增量起点自愈：表内最新交易日前推 7 天（单日漏跑自动回补）；表为空则退化为全量起点
 		String beg;
@@ -246,7 +250,14 @@ public class StockIndustryDailyServiceImpl extends ServiceImpl<StockIndustryDail
 		}
 
 		log.info("行业板块日线同步完成, 板块数={}, 累计影响 {} 行, 失败 {} 个", boards.size(), total, failCount);
-		return total;
+		return SyncResult.builder()
+				.affected(total)
+				.successCount(total)
+				.failCount(failCount)
+				.totalCount(boards.size())
+				.syncRange("beg=" + beg)
+				.message("同步 " + boards.size() + " 个板块, 影响 " + total + " 行, 失败 " + failCount + " 个")
+				.build();
 	}
 
 	/**

@@ -1,6 +1,7 @@
 package com.mx.nqboard.quanta.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.mx.nqboard.quanta.api.dto.SyncResult;
 import com.mx.nqboard.quanta.api.entity.TradeCalEntity;
 
 /**
@@ -16,9 +17,9 @@ public interface TradeCalService extends IService<TradeCalEntity> {
 	 * 无参重载，便于 Quartz 定时任务直接调用（每日开盘前执行一次，刷新节假日/调休日历）
 	 * </p>
 	 *
-	 * @return 同步处理的行数
+	 * @return 同步结果（成功/失败条数，由 @QuantSyncLog 落 quant_sync_log 追溯）
 	 */
-	int syncFromTushare();
+	SyncResult syncFromTushare();
 
 	/**
 	 * 今天是否开盘（定时任务执行前的交易日闸门）

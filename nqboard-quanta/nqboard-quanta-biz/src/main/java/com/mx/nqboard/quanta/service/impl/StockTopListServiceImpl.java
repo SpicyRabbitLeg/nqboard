@@ -8,7 +8,9 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.mx.nqboard.quanta.api.dto.SyncResult;
 import com.mx.nqboard.quanta.api.entity.StockTopListEntity;
+import com.mx.nqboard.quanta.config.QuantSyncLog;
 import com.mx.nqboard.quanta.mapper.StockTopListMapper;
 import com.mx.nqboard.quanta.service.StockTopListService;
 import lombok.RequiredArgsConstructor;
@@ -78,10 +80,11 @@ public class StockTopListServiceImpl extends ServiceImpl<StockTopListMapper, Sto
 
 	/**
 	 * 无参重载，便于 Quartz 定时任务在未配置参数时直接调用，取 yml 配置
-	 * @return 同步成功的条数
+	 * @return 同步结果
 	 */
 	@Override
-	public int syncFromTushare() {
+	@QuantSyncLog(type = "top_list", name = "龙虎榜同步")
+	public SyncResult syncFromTushare() {
 		return syncFromTushare(null, null);
 	}
 
@@ -89,7 +92,8 @@ public class StockTopListServiceImpl extends ServiceImpl<StockTopListMapper, Sto
 	 * 从 tushare 同步龙虎榜每日明细（按交易日期遍历）
 	 */
 	@Override
-	public int syncFromTushare(String tradeDate, Boolean full) {
+	@QuantSyncLog(type = "top_list", name = "龙虎榜同步")
+	public SyncResult syncFromTushare(String tradeDate, Boolean full) {
 		if (StrUtil.isBlank(token)) {
 			throw new IllegalStateException("tushare token 未配置，请在 Nacos 配置或环境变量中设置 tushare.token");
 		}
@@ -145,7 +149,14 @@ public class StockTopListServiceImpl extends ServiceImpl<StockTopListMapper, Sto
 			}
 		}
 		log.info("从 tushare 同步龙虎榜完成, 日期数={}, 累计影响 {} 行, 失败 {} 天", dates.size(), total, failCount);
-		return total;
+		return SyncResult.builder()
+				.affected(total)
+				.successCount(total)
+				.failCount(failCount)
+				.totalCount(dates.size())
+				.syncRange(start + "~" + end)
+				.message("同步 " + dates.size() + " 个交易日, 影响 " + total + " 行, 失败 " + failCount + " 天")
+				.build();
 	}
 
 	/**

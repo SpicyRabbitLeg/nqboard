@@ -141,6 +141,6 @@ public class StockTopListController {
     @PostMapping("/sync")
     public R<Integer> syncFromTushare(@RequestParam(value = "tradeDate", required = false) String tradeDate,
                                       @RequestParam(value = "full", required = false) Boolean full) {
-        return R.ok(stockTopListService.syncFromTushare(tradeDate, full));
+        return R.ok(stockTopListService.syncFromTushare(tradeDate, full).getAffected());
     }
 }

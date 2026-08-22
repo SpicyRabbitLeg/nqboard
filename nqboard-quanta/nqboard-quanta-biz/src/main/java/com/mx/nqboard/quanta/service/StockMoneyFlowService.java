@@ -1,6 +1,7 @@
 package com.mx.nqboard.quanta.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.mx.nqboard.quanta.api.dto.SyncResult;
 import com.mx.nqboard.quanta.api.entity.StockMoneyFlowEntity;
 
 /**
@@ -22,8 +23,8 @@ public interface StockMoneyFlowService extends IService<StockMoneyFlowEntity> {
 	 *   className    = stockMoneyFlowService
 	 *   methodName   = syncFromEastMoney
 	 * </pre>
-	 * @return 同步成功的条数
+	 * @return 同步结果（成功/失败条数，由 @QuantSyncLog 落 quant_sync_log 追溯）
 	 */
-	int syncFromEastMoney();
+	SyncResult syncFromEastMoney();
 
 }

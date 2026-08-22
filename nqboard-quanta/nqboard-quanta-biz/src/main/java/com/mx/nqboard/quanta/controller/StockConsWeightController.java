@@ -140,8 +140,8 @@ public class StockConsWeightController {
     @PostMapping("/sync")
     public R<Integer> syncFromCsindex(@RequestParam(value = "filePath", required = false) String filePath) {
         if (StrUtil.isBlank(filePath)) {
-            return R.ok(stockConsWeightService.syncFromCsindex());
+            return R.ok(stockConsWeightService.syncFromCsindex().getAffected());
         }
-        return R.ok(stockConsWeightService.syncFromCsindex(filePath));
+        return R.ok(stockConsWeightService.syncFromCsindex(filePath).getAffected());
     }
 }

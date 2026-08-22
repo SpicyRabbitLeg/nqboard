@@ -1,6 +1,7 @@
 package com.mx.nqboard.quanta.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.mx.nqboard.quanta.api.dto.SyncResult;
 import com.mx.nqboard.quanta.api.entity.StockIndustryDailyEntity;
 
 /**
@@ -22,9 +23,9 @@ public interface StockIndustryDailyService extends IService<StockIndustryDailyEn
 	 *   className    = stockIndustryDailyService
 	 *   methodName   = syncFromEastMoney
 	 * </pre>
-	 * @return 同步成功的条数
+	 * @return 同步结果（成功/失败条数，由 @QuantSyncLog 落 quant_sync_log 追溯）
 	 */
-	int syncFromEastMoney();
+	SyncResult syncFromEastMoney();
 
 	/**
 	 * 从 东方财富 同步行业板块日线K线
@@ -33,8 +34,8 @@ public interface StockIndustryDailyService extends IService<StockIndustryDailyEn
 	 * 接口（secid=90.BKxxxx）-> 按唯一键 (board_code, trade_date) 批量插入/更新。
 	 * 请求间隔与重试因接口限制已在实现类中处理（间隔可由 yml 配置）。
 	 * @param full 是否全量同步：true=从2026-01-01起；false=仅今天；为空取 yml 配置
-	 * @return 同步成功的条数
+	 * @return 同步结果（成功/失败条数，由 @QuantSyncLog 落 quant_sync_log 追溯）
 	 */
-	int syncFromEastMoney(Boolean full);
+	SyncResult syncFromEastMoney(Boolean full);
 
 }

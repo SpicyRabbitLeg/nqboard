@@ -8,8 +8,10 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.mx.nqboard.quanta.api.dto.SyncResult;
 import com.mx.nqboard.quanta.api.entity.StockBasicEntity;
 import com.mx.nqboard.quanta.api.entity.StockMotHolderEntity;
+import com.mx.nqboard.quanta.config.QuantSyncLog;
 import com.mx.nqboard.quanta.mapper.StockBasicMapper;
 import com.mx.nqboard.quanta.mapper.StockMotHolderMapper;
 import com.mx.nqboard.quanta.service.StockMotHolderService;
@@ -92,10 +94,11 @@ public class StockMotHolderServiceImpl extends ServiceImpl<StockMotHolderMapper,
 
 	/**
 	 * 无参重载，便于 Quartz 定时任务在未配置参数时直接调用，取 yml 配置
-	 * @return 同步成功的条数
+	 * @return 同步结果
 	 */
 	@Override
-	public int syncFromTushare() {
+	@QuantSyncLog(type = "mot_holder", name = "股东增减持同步")
+	public SyncResult syncFromTushare() {
 		return syncFromTushare(null, null);
 	}
 
@@ -106,7 +109,8 @@ public class StockMotHolderServiceImpl extends ServiceImpl<StockMotHolderMapper,
 	 * → 按唯一键 (ts_code, ann_date, holder_name) 批量插入/更新
 	 */
 	@Override
-	public int syncFromTushare(String market, Boolean full) {
+	@QuantSyncLog(type = "mot_holder", name = "股东增减持同步")
+	public SyncResult syncFromTushare(String market, Boolean full) {
 		if (StrUtil.isBlank(token)) {
 			throw new IllegalStateException("tushare token 未配置，请在 Nacos 配置或环境变量中设置 tushare.token");
 		}
@@ -125,7 +129,8 @@ public class StockMotHolderServiceImpl extends ServiceImpl<StockMotHolderMapper,
 				.eq(!isAllMarket(syncMarket), StockBasicEntity::getMarket, syncMarket));
 		if (CollUtil.isEmpty(basics)) {
 			log.warn("stock_basic 无待同步股票，请先同步股票基础信息或调整市场过滤 market={}", syncMarket);
-			return 0;
+			return SyncResult.builder().affected(0).successCount(0).totalCount(0)
+					.message("stock_basic 无待同步股票").build();
 		}
 		List<String> tsCodes = basics.stream().map(StockBasicEntity::getTsCode)
 				.filter(StrUtil::isNotBlank).distinct().toList();
@@ -161,7 +166,14 @@ public class StockMotHolderServiceImpl extends ServiceImpl<StockMotHolderMapper,
 		}
 		log.info("从 tushare 同步股东增减持完成, market={}, full={}, 股票数={}, 累计影响 {} 行, 失败 {} 只",
 				syncMarket, syncFull, tsCodes.size(), total, failCount);
-		return total;
+		return SyncResult.builder()
+				.affected(total)
+				.successCount(total)
+				.failCount(failCount)
+				.totalCount(tsCodes.size())
+				.syncRange(start + "~" + end)
+				.message("同步 " + tsCodes.size() + " 只股票, 影响 " + total + " 行, 失败 " + failCount + " 只")
+				.build();
 	}
 
 	/**

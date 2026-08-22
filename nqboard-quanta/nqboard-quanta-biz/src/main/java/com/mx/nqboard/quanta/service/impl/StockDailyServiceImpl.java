@@ -10,9 +10,11 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.mx.nqboard.quanta.api.dto.SyncResult;
 import com.mx.nqboard.quanta.api.entity.StockBasicEntity;
 import com.mx.nqboard.quanta.api.entity.StockDailyEntity;
 import com.mx.nqboard.quanta.api.vo.StockDailyKlineVO;
+import com.mx.nqboard.quanta.config.QuantSyncLog;
 import com.mx.nqboard.quanta.mapper.StockBasicMapper;
 import com.mx.nqboard.quanta.mapper.StockDailyMapper;
 import com.mx.nqboard.quanta.service.StockDailyService;
@@ -110,10 +112,11 @@ public class StockDailyServiceImpl extends ServiceImpl<StockDailyMapper, StockDa
 
 	/**
 	 * 无参重载，便于 Quartz 定时任务在未配置参数时直接调用，取 yml 配置
-	 * @return 同步成功的条数
+	 * @return 同步结果
 	 */
 	@Override
-	public int syncFromTushare() {
+	@QuantSyncLog(type = "stock_daily", name = "股票日线同步")
+	public SyncResult syncFromTushare() {
 		return syncFromTushare(null, null);
 	}
 
@@ -140,7 +143,8 @@ public class StockDailyServiceImpl extends ServiceImpl<StockDailyMapper, StockDa
 	 * → 按唯一键 (ts_code, trade_date) 批量插入/更新
 	 */
 	@Override
-	public int syncFromTushare(String market, Boolean full) {
+	@QuantSyncLog(type = "stock_daily", name = "股票日线同步")
+	public SyncResult syncFromTushare(String market, Boolean full) {
 		if (StrUtil.isBlank(token)) {
 			throw new IllegalStateException("tushare token 未配置，请在 Nacos 配置或环境变量中设置 tushare.token");
 		}
@@ -167,7 +171,8 @@ public class StockDailyServiceImpl extends ServiceImpl<StockDailyMapper, StockDa
 				.eq(!isAllMarket(syncMarket), StockBasicEntity::getMarket, syncMarket));
 		if (CollUtil.isEmpty(basics)) {
 			log.warn("stock_basic 无待同步股票，请先同步股票基础信息或调整市场过滤 market={}", syncMarket);
-			return 0;
+			return SyncResult.builder().affected(0).successCount(0).totalCount(0)
+					.message("stock_basic 无待同步股票").build();
 		}
 		List<String> tsCodes = basics.stream().map(StockBasicEntity::getTsCode)
 				.filter(StrUtil::isNotBlank).distinct().toList();
@@ -205,13 +210,20 @@ public class StockDailyServiceImpl extends ServiceImpl<StockDailyMapper, StockDa
 				syncMarket, syncFull, tsCodes.size(), total, failCount);
 		// 复权因子回补（按交易日批量，独立失败不影响日线同步结果）
 		try {
-			int adjCount = syncAdjFactorFromTushare();
-			log.info("复权因子回补完成, 影响 {} 行", adjCount);
+			SyncResult adjResult = syncAdjFactorFromTushare();
+			log.info("复权因子回补完成, 影响 {} 行", adjResult.getAffected());
 		}
 		catch (Exception e) {
 			log.error("复权因子回补失败（不影响日线同步结果，指标计算将按因子缺失=1 降级）: {}", e.getMessage());
 		}
-		return total;
+		return SyncResult.builder()
+				.affected(total)
+				.successCount(total)
+				.failCount(failCount)
+				.totalCount(tsCodes.size())
+				.syncRange(start + "~" + end)
+				.message("同步 " + tsCodes.size() + " 只股票, 影响 " + total + " 行, 失败 " + failCount + " 只")
+				.build();
 	}
 
 	/**
@@ -234,10 +246,11 @@ public class StockDailyServiceImpl extends ServiceImpl<StockDailyMapper, StockDa
 	 * 只回补 adj_factor 为 NULL 的交易日（每日增量仅 1 次调用；历史初始化按交易日逐日回补）。
 	 * 指标计算用前复权口径，消除除权除息日跳空造成的假突破/假超跌。
 	 * </p>
-	 * @return 影响行数
+	 * @return 同步结果（待回补交易日数/影响行数/失败数）
 	 */
 	@Override
-	public int syncAdjFactorFromTushare() {
+	@QuantSyncLog(type = "adj_factor", name = "复权因子回补")
+	public SyncResult syncAdjFactorFromTushare() {
 		if (StrUtil.isBlank(token)) {
 			throw new IllegalStateException("tushare token 未配置，请在 Nacos 配置或环境变量中设置 tushare.token");
 		}
@@ -247,7 +260,8 @@ public class StockDailyServiceImpl extends ServiceImpl<StockDailyMapper, StockDa
 				.isNull("adj_factor")
 				.last("order by trade_date asc"));
 		if (CollUtil.isEmpty(dates)) {
-			return 0;
+			return SyncResult.builder().affected(0).successCount(0).totalCount(0)
+					.message("无待回补交易日").build();
 		}
 		log.info("开始回补复权因子, 待回补交易日数: {}", dates.size());
 		int total = 0;
@@ -273,7 +287,14 @@ public class StockDailyServiceImpl extends ServiceImpl<StockDailyMapper, StockDa
 			}
 		}
 		log.info("复权因子回补结束, 影响行数={}, 失败交易日数={}", total, failCount);
-		return total;
+		return SyncResult.builder()
+				.affected(total)
+				.successCount(total)
+				.failCount(failCount)
+				.totalCount(dates.size())
+				.syncRange("待回补交易日 " + dates.size() + " 天")
+				.message("回补 " + dates.size() + " 个交易日, 影响 " + total + " 行, 失败 " + failCount + " 天")
+				.build();
 	}
 
 	/**

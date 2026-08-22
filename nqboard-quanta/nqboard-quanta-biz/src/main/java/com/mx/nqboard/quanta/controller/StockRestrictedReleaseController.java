@@ -138,7 +138,7 @@ public class StockRestrictedReleaseController {
     @SysLog("从 tushare 同步限售解禁")
     @PostMapping("/sync")
     public R<Integer> syncFromTushare(@RequestParam(value = "full", required = false) Boolean full) {
-        return R.ok(stockRestrictedReleaseService.syncFromTushare(full));
+        return R.ok(stockRestrictedReleaseService.syncFromTushare(full).getAffected());
     }
 
 }

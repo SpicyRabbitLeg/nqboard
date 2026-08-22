@@ -137,7 +137,7 @@ public class StockMoneyFlowController {
     @SysLog("从 东方财富 同步个股主力资金流")
     @PostMapping("/sync")
     public R<Integer> syncFromEastMoney() {
-        return R.ok(stockMoneyFlowService.syncFromEastMoney());
+        return R.ok(stockMoneyFlowService.syncFromEastMoney().getAffected());
     }
 
 }

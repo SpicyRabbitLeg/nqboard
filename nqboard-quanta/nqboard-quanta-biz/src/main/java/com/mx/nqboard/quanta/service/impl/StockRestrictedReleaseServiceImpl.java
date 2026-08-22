@@ -8,7 +8,9 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.mx.nqboard.quanta.api.dto.SyncResult;
 import com.mx.nqboard.quanta.api.entity.StockRestrictedReleaseEntity;
+import com.mx.nqboard.quanta.config.QuantSyncLog;
 import com.mx.nqboard.quanta.mapper.StockRestrictedReleaseMapper;
 import com.mx.nqboard.quanta.service.StockRestrictedReleaseService;
 import lombok.RequiredArgsConstructor;
@@ -79,12 +81,14 @@ public class StockRestrictedReleaseServiceImpl extends ServiceImpl<StockRestrict
 	private int lookbackDays;
 
 	@Override
-	public int syncFromTushare() {
+	@QuantSyncLog(type = "restricted_release", name = "限售解禁同步")
+	public SyncResult syncFromTushare() {
 		return syncFromTushare(null);
 	}
 
 	@Override
-	public int syncFromTushare(Boolean full) {
+	@QuantSyncLog(type = "restricted_release", name = "限售解禁同步")
+	public SyncResult syncFromTushare(Boolean full) {
 		if (StrUtil.isBlank(token)) {
 			throw new IllegalStateException("tushare token 未配置，请在 Nacos 配置或环境变量中设置 tushare.token");
 		}
@@ -123,7 +127,13 @@ public class StockRestrictedReleaseServiceImpl extends ServiceImpl<StockRestrict
 		}
 		log.info("从 tushare 同步限售解禁完成, 区间 {} ~ {}, 累计影响 {} 行, 失败 {} 天",
 				startDate.format(BASIC_DATE), today.format(BASIC_DATE), total, failCount);
-		return total;
+		return SyncResult.builder()
+				.affected(total)
+				.successCount(total)
+				.failCount(failCount)
+				.syncRange(startDate.format(BASIC_DATE) + "~" + today.format(BASIC_DATE))
+				.message("影响 " + total + " 行, 失败 " + failCount + " 个公告日")
+				.build();
 	}
 
 	/**

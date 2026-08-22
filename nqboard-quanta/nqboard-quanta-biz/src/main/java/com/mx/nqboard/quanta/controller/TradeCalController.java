@@ -33,7 +33,8 @@ public class TradeCalController {
 	@Inner
 	@PostMapping("/sync")
 	public R<Integer> syncFromTushare() {
-		return R.ok(tradeCalService.syncFromTushare());
+		// 保持 Feign 契约 R<Integer>（影响行数）；成功/失败明细由 @QuantSyncLog 落 quant_sync_log
+		return R.ok(tradeCalService.syncFromTushare().getAffected());
 	}
 
 	/**

@@ -154,7 +154,8 @@ public class StockDailyController {
     @PostMapping("/sync")
     public R<Integer> syncFromTushare(@RequestParam(value = "market", required = false) String market,
                                       @RequestParam(value = "full", required = false) Boolean full) {
-        return R.ok(stockDailyService.syncFromTushare(market, full));
+        // 保持 Feign 契约 R<Integer>（影响行数）；成功/失败明细由 @QuantSyncLog 落 quant_sync_log
+        return R.ok(stockDailyService.syncFromTushare(market, full).getAffected());
     }
 
     /**
@@ -168,6 +169,7 @@ public class StockDailyController {
     @SysLog("从 tushare 回补复权因子")
     @PostMapping("/syncAdjFactor")
     public R<Integer> syncAdjFactorFromTushare() {
-        return R.ok(stockDailyService.syncAdjFactorFromTushare());
+        // 保持 Feign 契约 R<Integer>（影响行数）；成功/失败明细由 @QuantSyncLog 落 quant_sync_log
+        return R.ok(stockDailyService.syncAdjFactorFromTushare().getAffected());
     }
 }

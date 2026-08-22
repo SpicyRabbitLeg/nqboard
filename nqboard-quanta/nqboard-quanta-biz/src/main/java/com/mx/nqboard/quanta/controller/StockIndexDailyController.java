@@ -138,6 +138,6 @@ public class StockIndexDailyController {
     @SysLog("从 东方财富 同步指数日线K线")
     @PostMapping("/sync")
     public R<Integer> syncFromEastMoney(@RequestParam(value = "full", required = false) Boolean full) {
-        return R.ok(stockIndexDailyService.syncFromEastMoney(full));
+        return R.ok(stockIndexDailyService.syncFromEastMoney(full).getAffected());
     }
 }

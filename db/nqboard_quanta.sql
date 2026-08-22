@@ -364,6 +364,37 @@ CREATE TABLE `quant_pipeline_log`
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='盘后流水线执行日志';
 
 -- ----------------------------
+-- 数据同步执行日志（Quartz 定时任务逐任务追溯）
+-- ----------------------------
+DROP TABLE IF EXISTS `quant_sync_log`;
+CREATE TABLE `quant_sync_log`
+(
+    `id`           bigint      NOT NULL COMMENT '业务id（雪花ID）',
+    `sync_type`    varchar(32) NOT NULL COMMENT '任务编码 stock_basic/stock_daily/index_daily/...',
+    `sync_name`    varchar(64)          DEFAULT NULL COMMENT '任务名称（股票日线同步等）',
+    `run_date`     varchar(16) NOT NULL COMMENT '运行日期 YYYYMMDD',
+    `total_count`  int                  DEFAULT NULL COMMENT '处理总数（如待同步股票数/交易日数）',
+    `success_count` int                 DEFAULT NULL COMMENT '成功条数（落库影响行数）',
+    `fail_count`   int                  DEFAULT NULL COMMENT '失败条数',
+    `sync_range`   varchar(64)          DEFAULT NULL COMMENT '同步区间说明（如 20260815~20260822）',
+    `status`       varchar(16) NOT NULL DEFAULT 'RUNNING' COMMENT 'RUNNING/SUCCESS/FAILED',
+    `message`      varchar(1000)        DEFAULT NULL COMMENT '执行说明',
+    `exception`    varchar(2000)        DEFAULT NULL COMMENT '异常信息（截断）',
+    `begin_time`   datetime             DEFAULT NULL COMMENT '开始时间',
+    `end_time`     datetime             DEFAULT NULL COMMENT '结束时间',
+    `elapsed_ms`   bigint               DEFAULT NULL COMMENT '耗时毫秒',
+    `create_by`    varchar(64)          DEFAULT NULL COMMENT '创建人',
+    `update_by`    varchar(64)          DEFAULT NULL COMMENT '修改人',
+    `create_time`  datetime             DEFAULT NULL COMMENT '入库时间',
+    `update_time`  datetime             DEFAULT NULL COMMENT '更新时间',
+    `del_flag`     char(1)     NOT NULL DEFAULT '0' COMMENT '删除标记,1:已删除,0:正常',
+    `order_num`    int                  DEFAULT 0 COMMENT '排序字段',
+    PRIMARY KEY (`id`),
+    KEY            `idx_run_date` (`run_date`),
+    KEY            `idx_type_run_date` (`sync_type`, `run_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='数据同步执行日志';
+
+-- ----------------------------
 -- 每日筛选打分结果（Stage 0/0.5/1，P2 使用）
 -- ----------------------------
 DROP TABLE IF EXISTS `stock_screen_result`;

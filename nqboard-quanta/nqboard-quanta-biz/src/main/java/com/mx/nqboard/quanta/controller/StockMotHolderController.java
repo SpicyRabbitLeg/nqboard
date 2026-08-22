@@ -141,6 +141,6 @@ public class StockMotHolderController {
     @PostMapping("/sync")
     public R<Integer> syncFromTushare(@RequestParam(value = "market", required = false) String market,
                                       @RequestParam(value = "full", required = false) Boolean full) {
-        return R.ok(stockMotHolderService.syncFromTushare(market, full));
+        return R.ok(stockMotHolderService.syncFromTushare(market, full).getAffected());
     }
 }

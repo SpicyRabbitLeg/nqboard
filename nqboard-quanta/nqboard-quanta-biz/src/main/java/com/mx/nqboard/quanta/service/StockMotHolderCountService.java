@@ -1,6 +1,7 @@
 package com.mx.nqboard.quanta.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.mx.nqboard.quanta.api.dto.SyncResult;
 import com.mx.nqboard.quanta.api.entity.StockMotHolderCountEntity;
 
 /**
@@ -23,9 +24,9 @@ public interface StockMotHolderCountService extends IService<StockMotHolderCount
 	 *   methodName   = syncFromTushare
 	 *   cronExpression = 0 30 18 * * ?   （示例：每天 18:30 收盘后增量同步）
 	 * </pre>
-	 * @return 同步成功的条数
+	 * @return 同步结果（成功/失败条数，由 @QuantSyncLog 落 quant_sync_log 追溯）
 	 */
-	int syncFromTushare();
+	SyncResult syncFromTushare();
 
 	/**
 	 * 从 tushare 同步股东户数
@@ -36,8 +37,8 @@ public interface StockMotHolderCountService extends IService<StockMotHolderCount
 	 * 请求间隔因 stk_holdernumber 限频 200 次/分钟，已在实现类中写死（不随日线配置调整）
 	 * @param market 市场类型：主板/创业板/科创板，为空取 yml 配置 tushare.daily.market
 	 * @param full 是否全量同步：true=2026-01-01 至今天；false=仅增量获取今天；为空取 yml 配置 tushare.daily.full
-	 * @return 同步成功的条数
+	 * @return 同步结果（成功/失败条数，由 @QuantSyncLog 落 quant_sync_log 追溯）
 	 */
-	int syncFromTushare(String market, Boolean full);
+	SyncResult syncFromTushare(String market, Boolean full);
 
 }

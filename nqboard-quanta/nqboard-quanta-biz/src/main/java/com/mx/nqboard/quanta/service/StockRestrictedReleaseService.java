@@ -1,6 +1,7 @@
 package com.mx.nqboard.quanta.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.mx.nqboard.quanta.api.dto.SyncResult;
 import com.mx.nqboard.quanta.api.entity.StockRestrictedReleaseEntity;
 
 /**
@@ -22,9 +23,9 @@ public interface StockRestrictedReleaseService extends IService<StockRestrictedR
 	 *   className    = stockRestrictedReleaseService
 	 *   methodName   = syncFromTushare
 	 * </pre>
-	 * @return 同步成功的条数
+	 * @return 同步结果（成功/失败条数，由 @QuantSyncLog 落 quant_sync_log 追溯）
 	 */
-	int syncFromTushare();
+	SyncResult syncFromTushare();
 
 	/**
 	 * 从 tushare 同步限售解禁数据（share_float 接口）
@@ -33,8 +34,8 @@ public interface StockRestrictedReleaseService extends IService<StockRestrictedR
 	 * （restricted-release.lookback-days，默认90天）逐个公告日拉取。
 	 * 按唯一键 (ts_code, float_date, holder_name) 批量插入/更新。
 	 * @param full 是否全量回补：true=按回补天数逐日拉取；false=仅今天；为空取增量
-	 * @return 同步成功的条数
+	 * @return 同步结果（成功/失败条数，由 @QuantSyncLog 落 quant_sync_log 追溯）
 	 */
-	int syncFromTushare(Boolean full);
+	SyncResult syncFromTushare(Boolean full);
 
 }

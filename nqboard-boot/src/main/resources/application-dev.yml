@@ -4,7 +4,7 @@ spring:
   data:
     redis:
       database: 9
-      host: 192.168.1.3
+      host: localhost
       port: 6379
       password:
   # 数据库相关配置
@@ -12,7 +12,43 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: root
     password: root
-    url: jdbc:mysql://192.168.1.3:3306/nqboard?characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=GMT%2B8&allowMultiQueries=true&nullCatalogMeansCurrent=true
+    url: jdbc:mysql://localhost:3306/nqboard?characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=GMT%2B8&allowMultiQueries=true&nullCatalogMeansCurrent=true
+  # OpenFeign 慢同步接口超时（Quartz 定时任务经 Feign 调 quanta 同步接口，同步耗时分钟~小时级，
+  # 与 Nacos 共享配置 application-dev.yml 中保持一致；快接口不在此列，保持默认 60s）
+  cloud:
+    openfeign:
+      client:
+        config:
+          remoteStockDailyService:
+            connectTimeout: 5000
+            readTimeout: 1800000   # 日线同步：约3000股 x 200ms 限频 + 复权因子回补
+          remoteStockMotHolderService:
+            connectTimeout: 5000
+            readTimeout: 2700000   # 股东增减持：约3000股 x 800ms 限频
+          remoteStockMotHolderCountService:
+            connectTimeout: 5000
+            readTimeout: 1800000   # 股东户数：约3000股 x 500ms 限频
+          remoteStockIndexDailyService:
+            connectTimeout: 5000
+            readTimeout: 2100000   # 指数日线：6指数 x 5min 间隔
+          remoteStockIndustryDailyService:
+            connectTimeout: 5000
+            readTimeout: 600000    # 行业板块日线：约86板块 x 3s
+          remoteStockRestrictedReleaseService:
+            connectTimeout: 5000
+            readTimeout: 300000
+          remoteStockTopListService:
+            connectTimeout: 5000
+            readTimeout: 600000
+          remoteStockConsWeightService:
+            connectTimeout: 5000
+            readTimeout: 600000
+          remoteStockMoneyFlowService:
+            connectTimeout: 5000
+            readTimeout: 300000
+          remoteQuantPipelineService:
+            connectTimeout: 5000
+            readTimeout: 900000    # 盘后流水线含 LLM 分析
 
 # 本地文件系统
 file:
@@ -44,12 +80,18 @@ sms:
 # Tushare 数据同步配置（同名配置可在 Nacos 中覆盖）
 tushare:
   # token 属敏感信息，禁止硬编码
-  token: xxxx
+  token: xxxxx
   daily:
     # 日线同步市场过滤：全部 / 主板 / 创业板 / 科创板（留空等价于"全部"）
-    market: 全部
+    market: 主板
     # 是否全量获取：true = 2024-01-01 至今天；false = 仅增量获取今天
     full: false
+  # 交易日历同步配置（tushare trade_cal）
+  trade-cal:
+    # 同步区间：当年前后各 N 年（覆盖当年全部交易日 + 次年节假日预告）
+    prefetch-years: 1
+    # 判断当日无日历数据时是否自动增量同步兜底（false 则直接走周末规则）
+    auto-sync-on-miss: true
 
 # 中证指数成分股权重同步配置（官网 closeweight.xls）
 csindex:
@@ -75,7 +117,7 @@ dify:
   # 是否启用（false 或 key 未配置时自动走规则降级模式，流水线不中断）
   enabled: true
   # Dify API 地址（注意带 /v1）
-  base-url: http://192.168.1.3/v1
+  base-url: http://localhost/v1
   # 短线分析 Workflow 的 API Key（Dify 应用访问 API 页获取）
   workflow-key: 'app-VGb1sbmZD6FrsTVVP16UdQEO'
   # Dify 回调 nqboard 取数接口的静态 Token（请求头 X-Dify-Token；为空放行便于本地调试）
