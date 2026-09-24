@@ -1034,7 +1034,12 @@ INSERT INTO `sys_menu`  VALUES (1987168955648696322, '已办任务', 'finished t
 INSERT INTO `sys_menu`  VALUES (1987169323514322946, '已发任务-详情', 'process', '', '/workflow/task/myProcess/detail', 1987168355175358465, 'iconfont icon-gerenzhongxin', '0', 4, '0', '0', '0', 'spicy', '2025-11-08 22:44:21', 'spicy', '2025-11-08 22:44:21', '0');
 INSERT INTO `sys_menu`  VALUES (1987169626842193921, '已发任务-发送', '', '', '/workflow/task/myProcess/send', 1987168355175358465, 'iconfont icon-shuaxin', '0', 5, '0', '0', '0', 'spicy', '2025-11-08 22:45:34', 'spicy', '2025-11-08 22:45:44', '0');
 INSERT INTO `sys_menu`  VALUES (1987177066992230401, '待办任务-详情', 'to do task', '', '/workflow/task/todo/detail', 1987168355175358465, 'iconfont icon-gerenzhongxin', '0', 6, '0', '0', '0', 'spicy', '2025-11-08 23:15:07', 'spicy', '2025-11-08 23:15:07', '0');
-
+INSERT INTO `sys_menu` VALUES (3000, '专家抽取管理', 'export', NULL, '/export', -1, 'ele-Collection', '1', 100, '0', '0', '0', 'admin', NOW(), 'admin', NULL, '0');
+INSERT INTO `sys_menu` VALUES (3001, '专家管理', 'expert', '', '/export/expert/index', 3000, 'ele-User', '1', 1, '0', '0', '0', 'admin', NOW(), 'admin', NULL, '0');
+INSERT INTO `sys_menu` VALUES (3002, '专家新增', NULL, 'export_expert_add', '', 3001, NULL, '1', 1, '0', NULL, '1', 'admin', NOW(), 'admin', NULL, '0');
+INSERT INTO `sys_menu` VALUES (3003, '专家修改', NULL, 'export_expert_edit', '', 3001, NULL, '1', 2, '0', NULL, '1', 'admin', NOW(), 'admin', NULL, '0');
+INSERT INTO `sys_menu` VALUES (3004, '专家删除', NULL, 'export_expert_del', '', 3001, NULL, '1', 3, '0', NULL, '1', 'admin', NOW(), 'admin', NULL, '0');
+INSERT INTO `sys_menu` VALUES (3005, '专家导出', NULL, 'export_expert_export', '', 3001, NULL, '1', 4, '0', NULL, '1', 'admin', NOW(), 'admin', NULL, '0');
 
 -- ----------------------------
 -- Table structure for sys_oauth_client_details

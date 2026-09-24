@@ -38,7 +38,7 @@ public interface ServiceNameConstants {
 	String DEVICE_SERVICE = "nqboard-device-biz";
 
 	/**
-	 * quanta模块
+	 * export模块
 	 */
-	String QUANTA_SERVICE = "nqboard-quanta-biz";
+	String EXPORT_SERVICE = "nqboard-export-biz";
 }

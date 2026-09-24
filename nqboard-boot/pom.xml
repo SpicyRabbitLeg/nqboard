@@ -54,6 +54,12 @@
 			<artifactId>nqboard-device-biz</artifactId>
 			<version>${revision}</version>
 		</dependency>
+		<!-- 专家抽取模块 -->
+		<dependency>
+			<groupId>com.mx</groupId>
+			<artifactId>nqboard-export-biz</artifactId>
+			<version>${revision}</version>
+		</dependency>
 		<!--安全模块 -->
 		<dependency>
 			<groupId>com.mx</groupId>
