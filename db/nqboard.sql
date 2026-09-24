@@ -774,52 +774,6 @@ CREATE TABLE `sys_job`  (
   UNIQUE INDEX `job_name_group_idx`(`job_name` ASC, `job_group` ASC) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '定时任务调度表' ROW_FORMAT = Dynamic;
 
-INSERT INTO `sys_job` (`job_id`, `job_name`, `job_group`, `job_order`, `job_type`, `execute_path`, `class_name`, `method_name`, `method_params_value`, `cron_expression`, `misfire_policy`, `job_tenant_type`, `job_status`, `job_execute_status`, `create_by`, `create_time`, `remark`)
-VALUES (2090600000000000002, '每周回测校准', 'DEFAULT', '5', '2', NULL, 'stockBacktestTaskService', 'runLatest', NULL, '0 0 10 ? * SAT', '3', '2', '2', '0', 'admin', NOW(), '每周六10:00重跑回测（最新数据校准入池线与模板阈值），任务结果在回测中心页面查看');
--- ---------------- 数据同步任务（bean: stockBasic） ----------------
--- 指数日线：东财，收盘后即可
-INSERT INTO `sys_job` (`job_id`, `job_name`, `job_group`, `job_order`, `job_type`, `class_name`, `method_name`, `cron_expression`, `misfire_policy`, `job_tenant_type`, `job_status`, `job_execute_status`, `create_by`, `create_time`, `remark`)
-VALUES (2090603000000000001, '同步-指数日线', 'DEFAULT', '5', '2', 'stockBasic', 'syncIndexDaily', '0 10 15 ? * MON-FRI', '3', '2', '2', '0', 'admin', NOW(), '东财指数日线K线（工作日15:10）');
-
--- 股票日线：tushare，全量模式单股票一次请求，约17分钟
-INSERT INTO `sys_job` (`job_id`, `job_name`, `job_group`, `job_order`, `job_type`, `class_name`, `method_name`, `cron_expression`, `misfire_policy`, `job_tenant_type`, `job_status`, `job_execute_status`, `create_by`, `create_time`, `remark`)
-VALUES (2090603000000000002, '同步-股票日线', 'DEFAULT', '5', '2', 'stockBasic', 'syncDaily', '0 30 15 ? * MON-FRI', '3', '2', '2', '0', 'admin', NOW(), 'tushare日线全量（工作日15:30，约17分钟）');
-
--- 龙虎榜：tushare，16:30后数据完整
-INSERT INTO `sys_job` (`job_id`, `job_name`, `job_group`, `job_order`, `job_type`, `class_name`, `method_name`, `cron_expression`, `misfire_policy`, `job_tenant_type`, `job_status`, `job_execute_status`, `create_by`, `create_time`, `remark`)
-VALUES (2090603000000000003, '同步-龙虎榜', 'DEFAULT', '5', '2', 'stockBasic', 'syncTopList', '0 40 16 ? * MON-FRI', '3', '2', '2', '0', 'admin', NOW(), 'tushare龙虎榜每日明细（工作日16:40）');
-
--- 股东增减持：tushare
-INSERT INTO `sys_job` (`job_id`, `job_name`, `job_group`, `job_order`, `job_type`, `class_name`, `method_name`, `cron_expression`, `misfire_policy`, `job_tenant_type`, `job_status`, `job_execute_status`, `create_by`, `create_time`, `remark`)
-VALUES (2090603000000000004, '同步-股东增减持', 'DEFAULT', '5', '2', 'stockBasic', 'syncMotHolder', '0 0 17 ? * MON-FRI', '3', '2', '2', '0', 'admin', NOW(), 'tushare股东增减持（工作日17:00）');
-
--- 股东户数：tushare
-INSERT INTO `sys_job` (`job_id`, `job_name`, `job_group`, `job_order`, `job_type`, `class_name`, `method_name`, `cron_expression`, `misfire_policy`, `job_tenant_type`, `job_status`, `job_execute_status`, `create_by`, `create_time`, `remark`)
-VALUES (2090603000000000005, '同步-股东户数', 'DEFAULT', '5', '2', 'stockBasic', 'syncMotHolderCount', '0 10 17 ? * MON-FRI', '3', '2', '2', '0', 'admin', NOW(), 'tushare股东户数（工作日17:10）');
-
--- 主力资金流：东财当日快照
-INSERT INTO `sys_job` (`job_id`, `job_name`, `job_group`, `job_order`, `job_type`, `class_name`, `method_name`, `cron_expression`, `misfire_policy`, `job_tenant_type`, `job_status`, `job_execute_status`, `create_by`, `create_time`, `remark`)
-VALUES (2090603000000000006, '同步-主力资金流', 'DEFAULT', '5', '2', 'stockBasic', 'syncMoneyFlow', '0 30 17 ? * MON-FRI', '3', '2', '2', '0', 'admin', NOW(), '东财个股主力资金流快照（工作日17:30）');
-
--- 行业板块日线：东财，86板块约5分钟
-INSERT INTO `sys_job` (`job_id`, `job_name`, `job_group`, `job_order`, `job_type`, `class_name`, `method_name`, `cron_expression`, `misfire_policy`, `job_tenant_type`, `job_status`, `job_execute_status`, `create_by`, `create_time`, `remark`)
-VALUES (2090603000000000007, '同步-行业板块日线', 'DEFAULT', '5', '2', 'stockBasic', 'syncIndustryDaily', '0 40 17 ? * MON-FRI', '3', '2', '2', '0', 'admin', NOW(), '东财行业板块日线K线（工作日17:40，约5分钟）');
-
--- 限售解禁：tushare，全量回补90天约45秒（自愈漏跑）
-INSERT INTO `sys_job` (`job_id`, `job_name`, `job_group`, `job_order`, `job_type`, `class_name`, `method_name`, `cron_expression`, `misfire_policy`, `job_tenant_type`, `job_status`, `job_execute_status`, `create_by`, `create_time`, `remark`)
-VALUES (2090603000000000008, '同步-限售解禁', 'DEFAULT', '5', '2', 'stockBasic', 'syncRestrictedRelease', '0 0 18 ? * MON-FRI', '3', '2', '2', '0', 'admin', NOW(), 'tushare限售解禁（工作日18:00，回补90天）');
-
--- 股票基础信息：tushare，变动少，每周一次
-INSERT INTO `sys_job` (`job_id`, `job_name`, `job_group`, `job_order`, `job_type`, `class_name`, `method_name`, `cron_expression`, `misfire_policy`, `job_tenant_type`, `job_status`, `job_execute_status`, `create_by`, `create_time`, `remark`)
-VALUES (2090603000000000009, '同步-股票基础信息', 'DEFAULT', '5', '2', 'stockBasic', 'sync', '0 0 10 ? * SUN', '3', '2', '2', '0', 'admin', NOW(), 'tushare股票基础信息（每周日10:00）');
-
--- ---------------- 信号流水线（bean: quantPipelineService） ----------------
--- 盘后信号流水线：筛选 -> 候选池 -> LLM分析 -> 持仓跟踪 -> 命中率（数据全部就绪后执行）
--- 筛选步骤自带数据就绪检查（日线覆盖率>=95%），数据缺失时该步骤 FAILED 并给出明确原因
-INSERT INTO `sys_job` (`job_id`, `job_name`, `job_group`, `job_order`, `job_type`, `class_name`, `method_name`, `cron_expression`, `misfire_policy`, `job_tenant_type`, `job_status`, `job_execute_status`, `create_by`, `create_time`, `remark`)
-VALUES (2090603000000000010, '盘后信号流水线', 'DEFAULT', '5', '2', 'quantPipelineService', 'runPipeline', '0 30 19 ? * MON-FRI', '3', '2', '2', '0', 'admin', NOW(), '信号流水线：筛选打分->候选池->LLM分析->持仓跟踪->命中率（工作日19:30，需数据同步任务先完成）');
-
-
 -- ----------------------------
 -- Records of sys_job
 -- ----------------------------
@@ -1080,24 +1034,6 @@ INSERT INTO `sys_menu`  VALUES (1987168955648696322, '已办任务', 'finished t
 INSERT INTO `sys_menu`  VALUES (1987169323514322946, '已发任务-详情', 'process', '', '/workflow/task/myProcess/detail', 1987168355175358465, 'iconfont icon-gerenzhongxin', '0', 4, '0', '0', '0', 'spicy', '2025-11-08 22:44:21', 'spicy', '2025-11-08 22:44:21', '0');
 INSERT INTO `sys_menu`  VALUES (1987169626842193921, '已发任务-发送', '', '', '/workflow/task/myProcess/send', 1987168355175358465, 'iconfont icon-shuaxin', '0', 5, '0', '0', '0', 'spicy', '2025-11-08 22:45:34', 'spicy', '2025-11-08 22:45:44', '0');
 INSERT INTO `sys_menu`  VALUES (1987177066992230401, '待办任务-详情', 'to do task', '', '/workflow/task/todo/detail', 1987168355175358465, 'iconfont icon-gerenzhongxin', '0', 6, '0', '0', '0', 'spicy', '2025-11-08 23:15:07', 'spicy', '2025-11-08 23:15:07', '0');
-INSERT INTO `sys_menu` (`menu_id`, `name`, `en_name`, `permission`, `path`, `parent_id`, `icon`, `visible`, `sort_order`, `keep_alive`, `embedded`, `menu_type`, `create_by`, `create_time`, `update_by`, `update_time`, `del_flag`) VALUES (2090421625264017410, '量化管理', 'quanta', NULL, '/quanta', -1, 'iconfont icon-diannao1', '1', 4, '0', '0', '0', 'admin', '2026-08-20 20:52:08', NULL, NULL, '0');
-INSERT INTO `sys_menu` (`menu_id`, `name`, `en_name`, `permission`, `path`, `parent_id`, `icon`, `visible`, `sort_order`, `keep_alive`, `embedded`, `menu_type`, `create_by`, `create_time`, `update_by`, `update_time`, `del_flag`) VALUES (2090421823163863042, '股票管理', NULL, NULL, '/quanta/stockBasic/index', 2090421625264017410, 'iconfont icon-xianshimima', '1', 1, '0', '0', '0', 'admin', '2026-08-20 20:52:55', 'admin', '2026-08-20 20:54:19', '0');
-INSERT INTO `sys_menu` (`menu_id`, `name`, `en_name`, `permission`, `path`, `parent_id`, `icon`, `visible`, `sort_order`, `keep_alive`, `embedded`, `menu_type`, `create_by`, `create_time`, `update_by`, `update_time`, `del_flag`) VALUES (2090421934489079809, '新增', NULL, 'quanta_stockBasic_add', NULL, 2090421823163863042, NULL, '1', 1, '0', '0', '1', 'admin', '2026-08-20 20:53:22', NULL, NULL, '0');
-INSERT INTO `sys_menu` (`menu_id`, `name`, `en_name`, `permission`, `path`, `parent_id`, `icon`, `visible`, `sort_order`, `keep_alive`, `embedded`, `menu_type`, `create_by`, `create_time`, `update_by`, `update_time`, `del_flag`) VALUES (2090422034292543489, '编辑', NULL, 'quanta_stockBasic_edit', NULL, 2090421823163863042, 'iconfont icon-xianshimima', '1', 2, '0', '0', '1', 'admin', '2026-08-20 20:53:46', NULL, NULL, '0');
-INSERT INTO `sys_menu` (`menu_id`, `name`, `en_name`, `permission`, `path`, `parent_id`, `icon`, `visible`, `sort_order`, `keep_alive`, `embedded`, `menu_type`, `create_by`, `create_time`, `update_by`, `update_time`, `del_flag`) VALUES (2090422077938470914, '删除', NULL, 'quanta_stockBasic_del', NULL, 2090421823163863042, 'iconfont icon-xianshimima', '1', 3, '0', '0', '1', 'admin', '2026-08-20 20:53:56', NULL, NULL, '0');
-INSERT INTO `sys_menu` (`menu_id`, `name`, `en_name`, `permission`, `path`, `parent_id`, `icon`, `visible`, `sort_order`, `keep_alive`, `embedded`, `menu_type`, `create_by`, `create_time`, `update_by`, `update_time`, `del_flag`) VALUES (2090430000000000001, '日线行情', 'stockDaily', NULL, '/quanta/stockDaily/index', 2090421625264017410, 'iconfont icon-xianshimima', '1', 2, '0', '0', '0', 'admin', '2026-08-20 21:10:00', NULL, NULL, '0');
-INSERT INTO `sys_menu` (`menu_id`, `name`, `en_name`, `permission`, `path`, `parent_id`, `icon`, `visible`, `sort_order`, `keep_alive`, `embedded`, `menu_type`, `create_by`, `create_time`, `update_by`, `update_time`, `del_flag`) VALUES (2090441326455226369, '股票日线', NULL, NULL, '/quanta/stockDaily/index', 2090421625264017410, 'iconfont icon-yangan', '1', 2, '0', '0', '0', 'admin', '2026-08-20 22:10:25', 'admin', '2026-08-20 22:10:59', '0');
-INSERT INTO `sys_menu` (`menu_id`, `name`, `en_name`, `permission`, `path`, `parent_id`, `icon`, `visible`, `sort_order`, `keep_alive`, `embedded`, `menu_type`, `create_by`, `create_time`, `update_by`, `update_time`, `del_flag`) VALUES (2090441326455226370, '股票新闻', 'stockMotAnnNews', NULL, '/quanta/stockMotAnnNews/index', 2090421625264017410, 'iconfont icon-yangan', '1', 3, '0', '0', '0', 'admin', '2026-08-21 10:00:00', NULL, NULL, '0');
-INSERT INTO `sys_menu` (`menu_id`, `name`, `en_name`, `permission`, `path`, `parent_id`, `icon`, `visible`, `sort_order`, `keep_alive`, `embedded`, `menu_type`, `create_by`, `create_time`, `update_by`, `update_time`, `del_flag`) VALUES (2090519705934204930, '新增', NULL, 'quanta_stockMotAnnNews_add', NULL, 2090441326455226370, NULL, '1', 1, '0', '0', '1', 'admin', '2026-08-21 03:21:53', NULL, NULL, '0');
-INSERT INTO `sys_menu` (`menu_id`, `name`, `en_name`, `permission`, `path`, `parent_id`, `icon`, `visible`, `sort_order`, `keep_alive`, `embedded`, `menu_type`, `create_by`, `create_time`, `update_by`, `update_time`, `del_flag`) VALUES (2090519749311696897, '编辑', NULL, 'quanta_stockMotAnnNews_edit', NULL, 2090441326455226370, NULL, '1', 2, '0', '0', '1', 'admin', '2026-08-21 03:22:03', NULL, NULL, '0');
-INSERT INTO `sys_menu` (`menu_id`, `name`, `en_name`, `permission`, `path`, `parent_id`, `icon`, `visible`, `sort_order`, `keep_alive`, `embedded`, `menu_type`, `create_by`, `create_time`, `update_by`, `update_time`, `del_flag`) VALUES (2090519792601108482, '删除', NULL, 'quanta_stockMotAnnNews_del', NULL, 2090441326455226370, NULL, '1', 3, '0', '0', '1', 'admin', '2026-08-21 03:22:13', NULL, NULL, '0');
-INSERT INTO `sys_menu` (`menu_id`, `name`, `en_name`, `permission`, `path`, `parent_id`, `icon`, `visible`, `sort_order`, `keep_alive`, `embedded`, `menu_type`, `create_by`, `create_time`, `del_flag`) VALUES (2090602000000000001, '候选股票池', 'stockCandidate', NULL, '/quanta/stockCandidate/index', 2090421625264017410, 'iconfont icon-shaixuan', '1', 4, '0', '0', '0', 'admin', NOW(), '0');
-INSERT INTO `sys_menu` (`menu_id`, `name`, `en_name`, `permission`, `path`, `parent_id`, `icon`, `visible`, `sort_order`, `keep_alive`, `embedded`, `menu_type`, `create_by`, `create_time`, `del_flag`) VALUES (2090602000000000002, '模拟持仓', 'stockSimPosition', NULL, '/quanta/stockSimPosition/index', 2090421625264017410, 'iconfont icon-jiaoyi', '1', 5, '0', '0', '0', 'admin', NOW(), '0');
-INSERT INTO `sys_menu` (`menu_id`, `name`, `en_name`, `permission`, `path`, `parent_id`, `icon`, `visible`, `sort_order`, `keep_alive`, `embedded`, `menu_type`, `create_by`, `create_time`, `del_flag`) VALUES (2090602000000000003, '回测中心', 'stockBacktestTask', NULL, '/quanta/stockBacktestTask/index', 2090421625264017410, 'iconfont icon-tubiaozhexiantu', '1', 6, '0', '0', '0', 'admin', NOW(), '0');
-INSERT INTO `sys_menu` (`menu_id`, `name`, `en_name`, `permission`, `path`, `parent_id`, `icon`, `visible`, `sort_order`, `keep_alive`, `embedded`, `menu_type`, `create_by`, `create_time`, `del_flag`) VALUES (2090602000000000004, '流水线监控', 'quantPipeline', NULL, '/quanta/quantPipeline/index', 2090421625264017410, 'iconfont icon-shuju', '1', 7, '0', '0', '0', 'admin', NOW(), '0');
-INSERT INTO `sys_menu` (`menu_id`, `name`, `en_name`, `permission`, `path`, `parent_id`, `icon`, `visible`, `sort_order`, `keep_alive`, `embedded`, `menu_type`, `create_by`, `create_time`, `del_flag`) VALUES (2090602000000000005, '命中率日报', 'hitRate', NULL, '/quanta/hitRate/index', 2090421625264017410, 'iconfont icon-baobiao', '1', 8, '0', '0', '0', 'admin', NOW(), '0');
-INSERT INTO `sys_menu` (`menu_id`, `name`, `en_name`, `permission`, `path`, `parent_id`, `icon`, `visible`, `sort_order`, `keep_alive`, `embedded`, `menu_type`, `create_by`, `create_time`, `del_flag`) VALUES (2090602000000000006, '数据同步日志', 'syncLog', NULL, '/quanta/syncLog/index', 2090421625264017410, 'iconfont icon-logs', '1', 9, '0', '0', '0', 'admin', NOW(), '0');
-
 
 
 -- ----------------------------

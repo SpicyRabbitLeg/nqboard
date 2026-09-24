@@ -54,12 +54,6 @@
 			<artifactId>nqboard-device-biz</artifactId>
 			<version>${revision}</version>
 		</dependency>
-		<!-- 量化模块 -->
-		<dependency>
-			<groupId>com.mx</groupId>
-			<artifactId>nqboard-quanta-biz</artifactId>
-			<version>${revision}</version>
-		</dependency>
 		<!--安全模块 -->
 		<dependency>
 			<groupId>com.mx</groupId>
