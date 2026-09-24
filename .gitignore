@@ -60,3 +60,5 @@ Thumbs.db
 Servers
 .metadata
 .flattened-pom.xml
+.claude
+.zcode
