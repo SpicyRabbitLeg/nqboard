@@ -108,7 +108,7 @@ Controller 五个标准接口（对照 `IotCategoryController`）：
 
 | 方法 | 路径 | 说明 | 关键注解 |
 |------|------|------|----------|
-| 分页 | `GET /page ` | MyBatis-Plus `Page` 分页 | `@ParameterObject` |
+| 分页 | `GET /page ` | MyBatis-Plus `Page` 分页（按下方「分页查询规范」先查 id 再查详情） | `@ParameterObject` |
 | 条件查询 | `GET /details` | `list(Wrappers.query(entity))` 通用条件查询 | |
 | 新增 | `POST` | `save(entity)` | `@Validated @RequestBody`、`@SysLog("...")`、`@HasPermission("域_表_ add")` |
 | 修改 | `PUT` | `updateById(entity)` | 同新增 |
@@ -126,6 +126,43 @@ Controller 五个标准接口（对照 `IotCategoryController`）：
 - 导出：`ResponseExcel`（pig4cloud-plugin-excel）+ `@ExcelDictFormat` / `@ExcelProperty` 字段注解。
 
 > Feign 调用方写法：新增业务 `Controller` 前，先确认同域 `-api` 模块是否已有 `RemoteXxxService`；跨域调用用 `OpenFeign`，接口标注 `@FeignClient(contextId = "xxx", value = ServiceNameConstants.XXX)` 并启用 `EnableNqBoardFeignClients`。
+
+### 分页查询规范（先查 id 再 id in 查详情 · 深分页优化）
+
+所有多行列表的分页接口（`GET /page`）统一按**延迟关联**范式实现（参考 `ExpertServiceImpl#pageExperts`），**禁止在 Controller 内直接 `service.page(page, 查询构造器)` 返回全列分页**：
+
+```java
+// Service 三步编排；Controller 仅一行委托：return R.ok(xxxService.pageXxx(page, query));
+@Override
+public Page<XxxEntity> pageXxx(Page<XxxEntity> page, XxxEntity query) {
+    // 1. 仅分页查询 id（覆盖索引，避免深分页全量回表）
+    LambdaQueryWrapper<XxxEntity> idWrapper = buildQueryWrapper(query).select(XxxEntity::getId);
+    if (CollUtil.isEmpty(page.orders())) {
+        idWrapper.orderByDesc(XxxEntity::getId); // 无用户排序时的稳定兜底
+    }
+    Page<XxxEntity> idPage = this.page(page, idWrapper);
+    List<Long> ids = idPage.getRecords().stream().map(XxxEntity::getId).toList();
+    if (CollUtil.isEmpty(ids)) {
+        idPage.setRecords(Collections.emptyList()); // 空页短路，不发起第二次查询
+        return idPage;
+    }
+    // 2. 按本页 id 批量查详情（listByIds 即 WHERE id IN，非手拼 SQL）
+    Map<Long, XxxEntity> detailMap = this.listByIds(ids).stream()
+            .collect(Collectors.toMap(XxxEntity::getId, Function.identity()));
+    // 3. IN 不保序，必须按 id 页顺序内存回填
+    idPage.setRecords(ids.stream().map(detailMap::get).filter(Objects::nonNull).toList());
+    return idPage; // total 已在第一步写入同一个 Page 对象
+}
+```
+
+规则要点：
+
+- 过滤条件必须抽取为 `buildQueryWrapper` 工厂方法，**id 查询、详情查询、count 三者口径单一来源**，禁止两处各写一份导致漂移。
+- `IN` 不保序：详情查回后必须按 id 页顺序内存重排，保证列表顺序与分页排序一致。
+- 无用户排序（`page.orders()` 为空）时默认 `orderByDesc(id)` 兜底，保证分页稳定不重不漏；有用户排序时以 `Page.orders` 为准。
+- 出参保持 `Page<XxxEntity>` 不变（records/total/size/current），前端无感知。
+- 空结果页短路返回；IN 列表大小 = 页大小，无超长 IN 风险。
+- 配套索引：高频过滤列建议建联合索引（如 `idx_disc (subject_category, first_discipline)`），让第一步真正吃到覆盖索引。
 
 ### 实体审计字段约定（MyBatis-Plus 自动填充，禁止漏注）
 

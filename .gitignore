@@ -64,3 +64,7 @@ Servers
 .zcode
 work
 work/**
+
+### office 临时锁文件 ###
+~$*
+

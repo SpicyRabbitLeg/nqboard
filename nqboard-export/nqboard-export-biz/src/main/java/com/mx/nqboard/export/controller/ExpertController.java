@@ -3,8 +3,6 @@ package com.mx.nqboard.export.controller;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ArrayUtil;
-import cn.hutool.core.util.StrUtil;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mx.nqboard.common.core.util.R;
@@ -54,12 +52,7 @@ public class ExpertController {
 	@Operation(summary = "分页查询", description = "分页查询")
 	@GetMapping("/page")
 	public R getExpertPage(@ParameterObject Page<ExpertEntity> page, @ParameterObject ExpertEntity expert) {
-		LambdaQueryWrapper<ExpertEntity> wrapper = Wrappers.lambdaQuery();
-		wrapper.eq(StrUtil.isNotBlank(expert.getSubjectCategory()), ExpertEntity::getSubjectCategory, expert.getSubjectCategory())
-			.eq(StrUtil.isNotBlank(expert.getFirstDiscipline()), ExpertEntity::getFirstDiscipline, expert.getFirstDiscipline())
-			.eq(StrUtil.isNotBlank(expert.getSecondDiscipline()), ExpertEntity::getSecondDiscipline, expert.getSecondDiscipline())
-			.like(StrUtil.isNotBlank(expert.getResearchDirection()), ExpertEntity::getResearchDirection, expert.getResearchDirection());
-		return R.ok(expertService.page(page, wrapper));
+		return R.ok(expertService.pageExperts(page, expert));
 	}
 
 	/**
@@ -71,6 +64,27 @@ public class ExpertController {
 	@GetMapping("/details")
 	public R getDetails(@ParameterObject ExpertEntity expert) {
 		return R.ok(expertService.list(Wrappers.query(expert)));
+	}
+
+	/**
+	 * 学科门类下拉选项
+	 * @return 门类列表
+	 */
+	@Operation(summary = "学科门类下拉选项", description = "学科门类下拉选项")
+	@GetMapping("/options/category")
+	public R listCategoryOptions() {
+		return R.ok(expertService.listCategoryOptions());
+	}
+
+	/**
+	 * 一级学科下拉选项（可按门类级联过滤）
+	 * @param category 学科门类（可选）
+	 * @return 一级学科列表
+	 */
+	@Operation(summary = "一级学科下拉选项", description = "一级学科下拉选项")
+	@GetMapping("/options/discipline")
+	public R listDisciplineOptions(@RequestParam(required = false) String category) {
+		return R.ok(expertService.listDisciplineOptions(category));
 	}
 
 	/**
