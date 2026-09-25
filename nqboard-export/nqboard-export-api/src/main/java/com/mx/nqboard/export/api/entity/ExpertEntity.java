@@ -74,6 +74,13 @@ public class ExpertEntity extends Model<ExpertEntity> {
 	private String delFlag;
 
 	/**
+	 * 专家名称
+	 */
+	@NotBlank(message = "专家名称 不能为空")
+	@Schema(description = "专家名称")
+	private String expertName;
+
+	/**
 	 * 学科门类
 	 */
 	@NotBlank(message = "学科门类 不能为空")

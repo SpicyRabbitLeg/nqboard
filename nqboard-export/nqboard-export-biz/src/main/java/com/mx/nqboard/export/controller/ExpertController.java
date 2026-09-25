@@ -11,8 +11,10 @@ import com.mx.nqboard.common.core.util.R;
 import com.mx.nqboard.common.log.annotation.SysLog;
 import com.mx.nqboard.common.security.annotation.HasPermission;
 import com.mx.nqboard.export.api.entity.ExpertEntity;
+import com.mx.nqboard.export.api.vo.ExpertExcelVO;
 import com.mx.nqboard.export.api.vo.ExpertExportVO;
 import com.mx.nqboard.export.service.ExpertService;
+import com.pig4cloud.plugin.excel.annotation.RequestExcel;
 import com.pig4cloud.plugin.excel.annotation.ResponseExcel;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -20,6 +22,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpHeaders;
+import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -94,6 +97,19 @@ public class ExpertController {
 	@HasPermission("export_expert_edit")
 	public R updateById(@Validated @RequestBody ExpertEntity expert) {
 		return R.ok(expertService.updateById(expert));
+	}
+
+	/**
+	 * 导入专家信息
+	 * @param excelVOList 专家Excel数据列表
+	 * @param bindingResult 数据校验结果
+	 * @return 导入结果
+	 */
+	@PostMapping("/import")
+	@HasPermission("export_expert_add")
+	@Operation(summary = "导入专家信息", description = "导入专家信息")
+	public R importExpert(@RequestExcel List<ExpertExcelVO> excelVOList, BindingResult bindingResult) {
+		return expertService.importExperts(excelVOList, bindingResult);
 	}
 
 	/**

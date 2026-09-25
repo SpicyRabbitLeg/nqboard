@@ -26,6 +26,13 @@ public class ExpertExportVO {
 	private Long id;
 
 	/**
+	 * 专家名称
+	 */
+	@Schema(description = "专家名称")
+	@ExcelProperty("专家名称")
+	private String expertName;
+
+	/**
 	 * 学科门类
 	 */
 	@Schema(description = "学科门类")
