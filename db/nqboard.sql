@@ -1040,6 +1040,12 @@ INSERT INTO `sys_menu` VALUES (3002, '专家新增', NULL, 'export_expert_add', 
 INSERT INTO `sys_menu` VALUES (3003, '专家修改', NULL, 'export_expert_edit', '', 3001, NULL, '1', 2, '0', NULL, '1', 'admin', NOW(), 'admin', NULL, '0');
 INSERT INTO `sys_menu` VALUES (3004, '专家删除', NULL, 'export_expert_del', '', 3001, NULL, '1', 3, '0', NULL, '1', 'admin', NOW(), 'admin', NULL, '0');
 INSERT INTO `sys_menu` VALUES (3005, '专家导出', NULL, 'export_expert_export', '', 3001, NULL, '1', 4, '0', NULL, '1', 'admin', NOW(), 'admin', NULL, '0');
+INSERT INTO `sys_menu` VALUES (3006, '领域管理', 'extractDomain', '', '/export/extract/domain/index', 3000, 'ele-SetUp', '1', 2, '0', '0', '0', 'admin', NOW(), 'admin', NULL, '0');
+INSERT INTO `sys_menu` VALUES (3007, '领域新增', NULL, 'export_extract_domain_add', '', 3006, NULL, '1', 1, '0', NULL, '1', 'admin', NOW(), 'admin', NULL, '0');
+INSERT INTO `sys_menu` VALUES (3008, '领域修改', NULL, 'export_extract_domain_edit', '', 3006, NULL, '1', 2, '0', NULL, '1', 'admin', NOW(), 'admin', NULL, '0');
+INSERT INTO `sys_menu` VALUES (3009, '领域删除', NULL, 'export_extract_domain_del', '', 3006, NULL, '1', 3, '0', NULL, '1', 'admin', NOW(), 'admin', NULL, '0');
+INSERT INTO `sys_menu` VALUES (3010, '专家抽取', 'expertExtract', '', '/export/extract/index', 3000, 'ele-Aim', '1', 1, '0', '0', '0', 'admin', NOW(), 'admin', NULL, '0');
+INSERT INTO `sys_menu` VALUES (3011, '专家抽取执行', NULL, 'export_extract_run', '', 3010, NULL, '1', 1, '0', NULL, '1', 'admin', NOW(), 'admin', NULL, '0');
 
 -- ----------------------------
 -- Table structure for sys_oauth_client_details

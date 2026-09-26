@@ -1,0 +1,138 @@
+app:
+  description: 专家抽取通用LLM任务（tag打标/propose提案/merge合并/parse解析），输入task与payload，输出result
+  icon: "\U0001F916"
+  icon_background: '#FFEAD5'
+  mode: workflow
+  name: 专家抽取LLM
+  use_icon_as_answer_icon: false
+dependencies: []
+kind: app
+version: 0.3.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      enabled: false
+  graph:
+    edges:
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: start
+        targetType: llm
+      id: edge-start-llm
+      source: node_start
+      sourceHandle: source
+      target: node_llm
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: end
+      id: edge-llm-end
+      source: node_llm
+      sourceHandle: source
+      target: node_end
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        desc: 任务类型（tag|propose|merge|parse）与任务数据
+        selected: false
+        title: 开始
+        type: start
+        variables:
+        - label: task
+          max_length: 48
+          options: []
+          required: true
+          type: text-input
+          variable: task
+        - label: payload
+          options: []
+          required: true
+          type: paragraph
+          variable: payload
+      height: 116
+      id: node_start
+      position:
+        x: 80
+        y: 280
+      positionAbsolute:
+        x: 80
+        y: 280
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: 严格按 payload 指令执行任务，只输出 JSON
+        model:
+          completion_params:
+            temperature: 0.1
+          mode: chat
+          name: gpt-4o-mini
+          provider: langgenius/openai/openai
+        prompt_template:
+        - id: llm-system-prompt
+          role: system
+          text: |-
+            你是学科领域分类与体系设计专家。严格按用户输入 payload 中的指令执行任务，
+            只输出 JSON，不要输出任何解释性文字或 markdown 围栏。
+        - id: llm-user-prompt
+          role: user
+          text: '{{#node_start.payload#}}'
+        selected: false
+        title: LLM
+        type: llm
+        variables: []
+        vision:
+          enabled: false
+      height: 98
+      id: node_llm
+      position:
+        x: 400
+        y: 280
+      positionAbsolute:
+        x: 400
+        y: 280
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        desc: ''
+        outputs:
+        - value_selector:
+          - node_llm
+          - text
+          variable: result
+        selected: false
+        title: 结束
+        type: end
+      height: 90
+      id: node_end
+      position:
+        x: 720
+        y: 280
+      positionAbsolute:
+        x: 720
+        y: 280
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    viewport:
+      x: 0
+      y: 0
+      zoom: 0.7
+  hash: ''

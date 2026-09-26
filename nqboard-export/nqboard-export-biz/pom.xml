@@ -40,6 +40,17 @@
 			<groupId>com.mx</groupId>
 			<artifactId>nqboard-common-feign</artifactId>
 		</dependency>
+		<!--hutool json 工具（领域打标/解析 LLM 输出）-->
+		<dependency>
+			<groupId>cn.hutool</groupId>
+			<artifactId>hutool-json</artifactId>
+		</dependency>
+		<!--测试 -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
 		<!--安全模块-->
 		<dependency>
 			<groupId>com.mx</groupId>

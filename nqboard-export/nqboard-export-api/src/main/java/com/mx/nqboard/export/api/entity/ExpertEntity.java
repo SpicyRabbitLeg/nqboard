@@ -105,4 +105,16 @@ public class ExpertEntity extends Model<ExpertEntity> {
 	 */
 	@Schema(description = "研究方向")
 	private String researchDirection;
+
+	/**
+	 * 领域编码（AI打标）
+	 */
+	@Schema(description = "领域编码（AI打标）")
+	private String domainCode;
+
+	/**
+	 * 领域名称
+	 */
+	@Schema(description = "领域名称")
+	private String domainName;
 }
