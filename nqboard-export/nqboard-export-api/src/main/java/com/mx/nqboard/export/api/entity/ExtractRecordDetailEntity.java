@@ -15,7 +15,7 @@ import java.math.BigDecimal;
 
 /**
  * <p>
- * 专家抽取记录明细表（仅存已选/候选，未匹配按记录动态计算）
+ * 专家抽取记录明细表（存已选/候选/复核剔除，未匹配按记录动态计算）
  * </p>
  *
  * @author SpicyRabbitLeg
@@ -69,7 +69,7 @@ public class ExtractRecordDetailEntity extends BaseEntity {
 	/**
 	 * 档位
 	 */
-	@Schema(description = "档位,1:已选,2:候选")
+	@Schema(description = "档位,1:已选,2:候选,3:复核剔除")
 	private String grade;
 
 	/**

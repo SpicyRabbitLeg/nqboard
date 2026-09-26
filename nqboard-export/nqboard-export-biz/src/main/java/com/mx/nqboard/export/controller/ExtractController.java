@@ -42,16 +42,26 @@ public class ExtractController {
 	private final ExtractRecordDetailService extractRecordDetailService;
 
 	/**
-	 * 执行专家抽取
+	 * 执行专家抽取（异步启动）
 	 * @param dto 抽取请求
-	 * @return 抽取记录（含三档数量统计）
+	 * @return 运行中的抽取记录（status=2），进度见 /extract/run/progress
 	 */
-	@Operation(summary = "执行专家抽取", description = "自然语言抽取专家：已选/候选/未匹配三档")
+	@Operation(summary = "执行专家抽取", description = "异步启动：意图解析+向量打分+LLM复核，返回运行中记录（status=2），进度轮询 /extract/run/progress")
 	@SysLog("专家抽取")
 	@PostMapping("/run")
 	@HasPermission("export_extract_run")
 	public R run(@Validated @RequestBody ExtractRunDTO dto) {
 		return R.ok(extractRunService.run(dto));
+	}
+
+	/**
+	 * 当前抽取任务进度
+	 * @return running/stage/done/total/recordId/error
+	 */
+	@Operation(summary = "抽取任务进度", description = "轮询当前抽取任务进度，完成后按 recordId 查看记录与明细")
+	@GetMapping("/run/progress")
+	public R progress() {
+		return R.ok(extractRunService.progress());
 	}
 
 	/**
@@ -65,6 +75,17 @@ public class ExtractController {
 	public R pageRecords(@ParameterObject Page<ExtractRecordEntity> page,
 			@RequestParam(required = false) String keyword) {
 		return R.ok(extractRecordService.pageRecords(page, keyword));
+	}
+
+	/**
+	 * 抽取记录详情（前端轮询进度完成后刷新记录用）
+	 * @param recordId 抽取记录id
+	 * @return 抽取记录
+	 */
+	@Operation(summary = "抽取记录详情", description = "按 id 查询抽取记录（含状态与三档数量）")
+	@GetMapping("/record/{recordId}")
+	public R getRecord(@PathVariable Long recordId) {
+		return R.ok(extractRecordService.getById(recordId));
 	}
 
 	/**

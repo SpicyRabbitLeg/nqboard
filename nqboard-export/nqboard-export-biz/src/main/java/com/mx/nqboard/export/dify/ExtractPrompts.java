@@ -83,4 +83,25 @@ public final class ExtractPrompts {
 				输出格式：{"domains":[],"keywords":[],"related_disciplines":[],"confidence":0.0}
 				%s""".formatted(domainListJson, query, OUTPUT_RULE);
 	}
+
+	/**
+	 * 候选复核：对候选专家逐条判定与查询意图是否真实相关（全量复核模式下池内全部专家均过此判定）
+	 */
+	public static String review(String query, String batchJson) {
+		return """
+				你是专家抽取复核专家。用户给出了自然语言查询，下面是候选专家，请逐条判断其研究方向与查询意图是否真实相关。
+				规则：
+				1. 以研究方向实质内容判定，不得因缺少技术栈字面而否定（学界画像通常不含具体技术栈词，如 Java、Spring）。
+				2. 注意区分表面相似但领域不同的方向，此类判 relevant=false：例如"植物保护"属农业，与"动物保护/动物科学"无关；查询"有机化学"时，无机化学、无机非金属材料、计算材料学等并列分支或材料方向不算相关。
+				3. 仅当研究方向与查询意图存在明显学科关联时判 relevant=true；语义牵强、仅靠宽泛学科沾边的判 relevant=false。
+				4. score 与 domain_name 仅供参考，判定以研究方向实质为准。
+				5. reason 用不超过 20 字说明判定依据。
+				6. index 对应待复核条目的序号，逐条输出，不得遗漏。
+				【用户查询】
+				%s
+				【待复核专家】
+				%s
+				输出格式：[{"index":1,"relevant":true,"reason":"..."}]
+				%s""".formatted(query, batchJson, OUTPUT_RULE);
+	}
 }

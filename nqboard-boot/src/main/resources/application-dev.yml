@@ -18,7 +18,7 @@ spring:
 file:
   local:
     enable: true
-    base-path: /Users/lengleng/Downloads/img
+    base-path: C:\Users\12709\Pictures\nqboard
 
 ## 登录配置
 security:
@@ -39,3 +39,17 @@ jasypt:
 sms:
   is-print: false # 是否打印日志
   config-type: yaml # 配置类型，yaml
+
+
+# dify配置项
+dify:
+  base-url: http://localhost/v1
+  workflow-key: xxxx
+  knowledge-api-key: 'xxxxx' # 知识库 API Key（dataset- 开头，Dify 控制台-知识库-API 获取）
+  dataset-name: nqboard-专家画像 # 专家画像数据集名称（不存在时同步任务自动创建）
+
+# 专家抽取配置项
+extract:
+  score-keep-threshold: 0.65 # rerank 高分直过阈值（实测无机化学边界人 0.641、有机核心 0.62-0.66，取 0.65 使边界人落入 LLM 复核；低分仍全送复核不自动弃）
+  review-batch-size: 100 # LLM 复核每批人数
+  review-concurrency: 4 # 复核批次并发数（在 Dify/LLM 服务端并发容量内调大可线性缩短复核时间）

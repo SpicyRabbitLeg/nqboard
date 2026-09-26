@@ -5,6 +5,8 @@ import com.mx.nqboard.export.api.dto.ExtractRunDTO;
 import com.mx.nqboard.export.api.entity.ExpertEntity;
 import com.mx.nqboard.export.api.entity.ExtractRecordEntity;
 
+import java.util.Map;
+
 /**
  * <p>
  * 专家抽取执行 服务类
@@ -16,14 +18,20 @@ import com.mx.nqboard.export.api.entity.ExtractRecordEntity;
 public interface ExtractRunService {
 
 	/**
-	 * 执行抽取：意图解析 -> 已选(领域精确命中) -> 候选(邻接领域+向量种子) -> 未匹配动态计算 -> 落库
+	 * 执行抽取（异步启动）：预建运行中记录后立即返回，任务经 意图解析 -> 池构建 -> 向量打分 -> 分档复核 -> 落库
 	 * @param dto 抽取请求
-	 * @return 抽取记录（含三档数量统计）
+	 * @return 运行中的抽取记录（status=2，进度见 progress）
 	 */
 	ExtractRecordEntity run(ExtractRunDTO dto);
 
 	/**
-	 * 未匹配专家动态分页（不入库，按记录的解析领域与候选名单实时反查，先查 id 再查详情）
+	 * 当前抽取任务进度（单飞，同一时刻至多一个任务）
+	 * @return running/stage/done/total/recordId/error
+	 */
+	Map<String, Object> progress();
+
+	/**
+	 * 未匹配专家动态分页（不入库，按记录的解析领域与存活候选名单实时反查，含 LLM 复核剔除者）
 	 * @param page 分页对象
 	 * @param recordId 抽取记录id
 	 * @return 未匹配专家分页

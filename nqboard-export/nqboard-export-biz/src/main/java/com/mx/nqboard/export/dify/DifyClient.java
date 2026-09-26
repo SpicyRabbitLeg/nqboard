@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -188,6 +189,27 @@ public class DifyClient {
 		return baseUrl + path;
 	}
 
+	/**
+	 * 组装检索参数：rerank 配置齐全时走 hybrid 双路召回+重排，否则退化为裸向量检索
+	 */
+	private Map<String, Object> buildRetrievalModel(int topK) {
+		Map<String, Object> retrievalModel = new LinkedHashMap<>();
+		if (StrUtil.isNotBlank(rerankProvider) && StrUtil.isNotBlank(rerankModel)) {
+			retrievalModel.put("search_method", "hybrid_search");
+			retrievalModel.put("reranking_enable", true);
+			retrievalModel.put("reranking_mode", "reranking_model");
+			retrievalModel.put("reranking_model",
+					Map.of("reranking_provider_name", rerankProvider, "reranking_model_name", rerankModel));
+		}
+		else {
+			retrievalModel.put("search_method", "semantic_search");
+			retrievalModel.put("reranking_enable", false);
+		}
+		retrievalModel.put("top_k", topK);
+		retrievalModel.put("score_threshold_enabled", false);
+		return retrievalModel;
+	}
+
 	private String httpGet(String path) {
 		cn.hutool.http.HttpResponse response = HttpRequest.get(knowledgeUrl(path))
 			.header("Authorization", "Bearer " + knowledgeApiKey)
@@ -250,16 +272,34 @@ public class DifyClient {
 	}
 
 	/**
-	 * 知识库向量检索（语义种子召回）
+	 * 知识库检索 query 字符上限（Dify HitTestingPayload 校验：String should have at most 250 characters）
+	 */
+	public static final int RETRIEVE_QUERY_MAX_CHARS = 250;
+
+	/**
+	 * Rerank 服务方（hybrid 检索语义精排；留空退化为裸向量检索）
+	 */
+	@Value("${dify.rerank-provider:langgenius/tongyi/tongyi}")
+	private String rerankProvider = "langgenius/tongyi/tongyi";
+
+	/**
+	 * Rerank 模型名
+	 */
+	@Value("${dify.rerank-model:qwen3-rerank}")
+	private String rerankModel = "qwen3-rerank";
+
+	/**
+	 * 知识库检索（hybrid 全文+向量双路召回 + rerank 语义精排）：
+	 * rerank 分数对同学科大类并列分支（如无机化学 vs 有机化学）的区分度远高于裸向量余弦（2026-09-27 A/B 实测），
+	 * 是阈值分档可靠性的基础；rerank 配置留空时退化为裸向量检索
 	 * @param datasetId 数据集 id
-	 * @param query 检索文本
+	 * @param query 检索文本（超长自动截断至上限）
 	 * @param topK 召回条数
-	 * @return records 数组（segment.content 内含【专家ID】标记，score 为相似度）
+	 * @return records 数组（segment.content 内含【专家ID】标记，score 为 rerank 相关度）
 	 */
 	public JSONArray retrieve(String datasetId, String query, int topK) {
-		Map<String, Object> retrievalModel = Map.of("search_method", "semantic_search", "reranking_enable", false,
-				"top_k", topK, "score_threshold_enabled", false);
-		Map<String, Object> body = Map.of("query", query, "retrieval_model", retrievalModel);
+		Map<String, Object> body = Map.of("query", StrUtil.subPre(query, RETRIEVE_QUERY_MAX_CHARS), "retrieval_model",
+				buildRetrievalModel(topK));
 		cn.hutool.http.HttpResponse response = HttpRequest.post(knowledgeUrl("/datasets/" + datasetId + "/retrieve"))
 			.header("Authorization", "Bearer " + knowledgeApiKey)
 			.header("Content-Type", "application/json")

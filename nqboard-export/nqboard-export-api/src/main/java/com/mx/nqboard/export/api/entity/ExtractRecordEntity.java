@@ -12,6 +12,8 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.math.BigDecimal;
+
 /**
  * <p>
  * 专家抽取记录表（每次抽取一条；未匹配不入库，按记录动态计算）
@@ -55,6 +57,12 @@ public class ExtractRecordEntity extends BaseEntity {
 	private String parsedKeywords;
 
 	/**
+	 * 向量高分直过阈值（留存当次取值）
+	 */
+	@Schema(description = "向量高分直过阈值（留存当次取值）")
+	private BigDecimal keepThreshold;
+
+	/**
 	 * 已选数量
 	 */
 	@Schema(description = "已选数量")
@@ -81,7 +89,7 @@ public class ExtractRecordEntity extends BaseEntity {
 	/**
 	 * 状态
 	 */
-	@Schema(description = "状态,0:成功,1:失败")
+	@Schema(description = "状态,0:成功,1:失败,2:运行中")
 	private String status;
 
 	/**
