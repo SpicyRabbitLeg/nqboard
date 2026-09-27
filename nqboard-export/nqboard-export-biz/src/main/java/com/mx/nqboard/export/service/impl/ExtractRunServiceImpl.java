@@ -523,7 +523,8 @@ public class ExtractRunServiceImpl implements ExtractRunService {
 	}
 
 	/**
-	 * 单批复核 + 未覆盖补审
+	 * 单批复核 + 未覆盖补审。复核未完成（批次失败/补审仍未覆盖）的已选人降档为候选：
+	 * 已选语义=领域命中且经 rerank 高分或 LLM 确认，未经验证者不应留在已选
 	 */
 	private void reviewBatchWithRetry(String query, List<ExtractRecordDetailEntity> batch,
 			Map<Long, ExpertEntity> poolExperts) {
@@ -534,37 +535,96 @@ public class ExtractRunServiceImpl implements ExtractRunService {
 			log.warn("LLM 复核输出未覆盖 {} 名成员，追加一轮补审", uncovered.size());
 			List<String> retryBaseline = uncovered.stream().map(ExtractRecordDetailEntity::getReason).toList();
 			reviewOneBatch(query, uncovered, poolExperts);
-			uncoveredOf(uncovered, retryBaseline).forEach(d -> d.setReason(d.getReason() + "，复核未覆盖保留"));
+			uncoveredOf(uncovered, retryBaseline).forEach(this::markUnverifiedCandidate);
 		}
 		progressDone.addAndGet(batch.size());
 	}
 
 	/**
-	 * 单批复核：调 LLM 并应用结果，异常时整批保留兜底
+	 * 未经验证的已选人降档为候选并标注原因
+	 */
+	private void markUnverifiedCandidate(ExtractRecordDetailEntity d) {
+		if (GRADE_SELECTED.equals(d.getGrade())) {
+			d.setGrade(GRADE_CANDIDATE);
+		}
+		d.setReason(d.getReason() + "，复核未覆盖保留");
+	}
+
+	/**
+	 * 单批复核：调 LLM 并应用结果；输出非 JSON 数组（对象包裹/散文）重试一次；仍失败整批保留兜底，
+	 * 兜底保留的已选人同样降档为候选
 	 */
 	private void reviewOneBatch(String query, List<ExtractRecordDetailEntity> batch, Map<Long, ExpertEntity> poolExperts) {
 		try {
-			List<Map<String, Object>> indexed = new ArrayList<>();
-			for (int i = 0; i < batch.size(); i++) {
-				ExtractRecordDetailEntity d = batch.get(i);
-				ExpertEntity expert = poolExperts.get(d.getExpertId());
-				Map<String, Object> row = new LinkedHashMap<>();
-				row.put("index", i + 1);
-				row.put("expert_name", StrUtil.nullToEmpty(d.getExpertName()));
-				row.put("subject_category", StrUtil.nullToEmpty(d.getSubjectCategory()));
-				row.put("first_discipline", StrUtil.nullToEmpty(d.getFirstDiscipline()));
-				row.put("research_direction", StrUtil.nullToEmpty(expert == null ? null : expert.getResearchDirection()));
-				row.put("domain_name", StrUtil.nullToEmpty(expert == null ? null : expert.getDomainName()));
-				row.put("score", d.getScore() == null ? "" : d.getScore().toPlainString());
-				indexed.add(row);
+			String payload = ExtractPrompts.review(query, JSONUtil.toJsonStr(buildReviewRows(batch, poolExperts)));
+			JSONArray array;
+			try {
+				array = parseReviewArray(difyClient.runLLMTask("review", payload));
 			}
-			String result = difyClient.runLLMTask("review", ExtractPrompts.review(query, JSONUtil.toJsonStr(indexed)));
-			applyReviewResult(batch, JSONUtil.parseArray(result));
+			catch (Exception parseError) {
+				log.warn("LLM 复核输出解析失败，重试一次: {}", parseError.getMessage());
+				array = parseReviewArray(difyClient.runLLMTask("review", payload));
+			}
+			applyReviewResult(batch, array);
 		}
 		catch (Exception e) {
 			log.error("LLM 复核批次失败，{} 名专家按保留兜底", batch.size(), e);
-			batch.forEach(d -> d.setReason(d.getReason() + "，复核异常保留"));
+			batch.forEach(d -> {
+				if (GRADE_SELECTED.equals(d.getGrade())) {
+					d.setGrade(GRADE_CANDIDATE);
+				}
+				d.setReason(d.getReason() + "，复核异常保留");
+			});
 		}
+	}
+
+	private List<Map<String, Object>> buildReviewRows(List<ExtractRecordDetailEntity> batch,
+			Map<Long, ExpertEntity> poolExperts) {
+		List<Map<String, Object>> indexed = new ArrayList<>();
+		for (int i = 0; i < batch.size(); i++) {
+			ExtractRecordDetailEntity d = batch.get(i);
+			ExpertEntity expert = poolExperts.get(d.getExpertId());
+			Map<String, Object> row = new LinkedHashMap<>();
+			row.put("index", i + 1);
+			row.put("expert_name", StrUtil.nullToEmpty(d.getExpertName()));
+			row.put("subject_category", StrUtil.nullToEmpty(d.getSubjectCategory()));
+			row.put("first_discipline", StrUtil.nullToEmpty(d.getFirstDiscipline()));
+			row.put("research_direction", StrUtil.nullToEmpty(expert == null ? null : expert.getResearchDirection()));
+			row.put("domain_name", StrUtil.nullToEmpty(expert == null ? null : expert.getDomainName()));
+			row.put("score", d.getScore() == null ? "" : d.getScore().toPlainString());
+			indexed.add(row);
+		}
+		return indexed;
+	}
+
+	/**
+	 * 解析复核输出：优先按 JSON 数组解析；模型偶发把数组包进 JSON 对象（如 {"result":[...]}）时提取内层数组；
+	 * 仍无法解析抛异常，交由调用方重试/兜底
+	 */
+	private JSONArray parseReviewArray(String result) {
+		String cleaned = StrUtil.trim(result);
+		if (StrUtil.isNotEmpty(cleaned) && cleaned.charAt(0) == '[') {
+			return JSONUtil.parseArray(cleaned);
+		}
+		try {
+			JSONObject obj = JSONUtil.parseObj(cleaned);
+			for (String key : List.of("result", "data", "items", "list")) {
+				Object value = obj.get(key);
+				if (value instanceof JSONArray && !((JSONArray) value).isEmpty()) {
+					return (JSONArray) value;
+				}
+			}
+			for (String key : obj.keySet()) {
+				Object value = obj.get(key);
+				if (value instanceof JSONArray && !((JSONArray) value).isEmpty()) {
+					return (JSONArray) value;
+				}
+			}
+		}
+		catch (Exception e) {
+			log.warn("LLM 复核输出容错解析失败: {}", StrUtil.subPre(cleaned, 120));
+		}
+		throw new CheckedException("LLM 复核输出不是 JSON 数组: " + StrUtil.subPre(cleaned, 120));
 	}
 
 	/**
@@ -603,6 +663,9 @@ public class ExtractRunServiceImpl implements ExtractRunService {
 	 */
 	static void applyReviewResult(List<ExtractRecordDetailEntity> batch, JSONArray array) {
 		for (Object item : array) {
+			if (!(item instanceof JSONObject)) {
+				continue;
+			}
 			JSONObject obj = (JSONObject) item;
 			Integer index = obj.getInt("index");
 			if (index == null || index < 1 || index > batch.size()) {

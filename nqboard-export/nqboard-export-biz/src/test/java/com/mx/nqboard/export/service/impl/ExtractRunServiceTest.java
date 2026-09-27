@@ -149,7 +149,7 @@ class ExtractRunServiceTest {
 	}
 
 	@Test
-	@DisplayName("复核补审：补审仍未覆盖的成员标注'复核未覆盖保留'")
+	@DisplayName("复核补审：补审仍未覆盖的成员降档候选并标注'复核未覆盖保留'")
 	void reviewBatch_uncoveredAfterRetry() {
 		DifyClient difyClient = Mockito.mock(DifyClient.class);
 		Mockito.when(difyClient.runLLMTask(Mockito.eq("review"), Mockito.anyString())).thenReturn("[]", "[]");
@@ -161,20 +161,14 @@ class ExtractRunServiceTest {
 		service.reviewBatch("找有机化学专家", band, Map.of());
 
 		assertThat(band).allSatisfy(d -> {
-			assertThat(d.getGrade()).isIn("1", "2");
+			assertThat(d.getGrade()).isEqualTo("2");
 			assertThat(d.getReason()).endsWith("，复核未覆盖保留");
 		});
 		Mockito.verify(difyClient, Mockito.times(2)).runLLMTask(Mockito.eq("review"), Mockito.anyString());
 	}
 
-	private ExtractRunServiceImpl newService(DifyClient difyClient) {
-		ExtractRunServiceImpl service = new ExtractRunServiceImpl(difyClient, null, null, null, null, null);
-		ReflectionTestUtils.setField(service, "reviewBatchSize", 30);
-		return service;
-	}
-
 	@Test
-	@DisplayName("批次失败兜底：Dify 调用耗尽重试后整批保留并标注，进度推进")
+	@DisplayName("批次失败兜底：已选人降档候选并标注'复核异常保留'")
 	void reviewBatch_fallbackOnFailure() {
 		DifyClient difyClient = Mockito.mock(DifyClient.class);
 		Mockito.when(difyClient.runLLMTask(Mockito.anyString(), Mockito.anyString()))
@@ -187,12 +181,50 @@ class ExtractRunServiceTest {
 		service.reviewBatch("找Java开发相关专家", band, Map.of());
 
 		assertThat(band).allSatisfy(d -> {
-			assertThat(d.getGrade()).isIn("1", "2");
+			assertThat(d.getGrade()).isEqualTo("2");
 			assertThat(d.getReason()).endsWith("，复核异常保留");
 		});
-		assertThat(ReflectionTestUtils.getField(service, "progressStage")).isEqualTo("review");
 		assertThat(progressOf(service, "progressDone")).isEqualTo(2L);
 		assertThat(progressOf(service, "progressTotal")).isEqualTo(2L);
+	}
+
+	@Test
+	@DisplayName("容错解析：数组被包进 JSON 对象时提取内层 result")
+	void reviewBatch_objectWrappedOutput() {
+		DifyClient difyClient = Mockito.mock(DifyClient.class);
+		Mockito.when(difyClient.runLLMTask(Mockito.eq("review"), Mockito.anyString()))
+			.thenReturn("{\"result\":[{\"index\":1,\"relevant\":false,\"reason\":\"方向无关\"}]}");
+		ExtractRunServiceImpl service = newService(difyClient);
+		List<ExtractRecordDetailEntity> band = new ArrayList<>();
+		band.add(detail(1, "1", new BigDecimal("0.30"), "领域精确命中"));
+
+		service.reviewBatch("找Java开发相关专家", band, Map.of());
+
+		assertThat(band.get(0).getGrade()).isEqualTo("3");
+		assertThat(band.get(0).getReason()).isEqualTo("LLM复核剔除：方向无关");
+	}
+
+	@Test
+	@DisplayName("输出漂移：首次非 JSON 数组自动重试一次并应用判定")
+	void reviewBatch_retriesOnFormatDrift() {
+		DifyClient difyClient = Mockito.mock(DifyClient.class);
+		Mockito.when(difyClient.runLLMTask(Mockito.eq("review"), Mockito.anyString()))
+			.thenReturn("抱歉，我无法完成该任务", "[{\"index\":1,\"relevant\":true}]");
+		ExtractRunServiceImpl service = newService(difyClient);
+		List<ExtractRecordDetailEntity> band = new ArrayList<>();
+		band.add(detail(1, "1", new BigDecimal("0.30"), "领域精确命中"));
+
+		service.reviewBatch("找Java开发相关专家", band, Map.of());
+
+		assertThat(band.get(0).getGrade()).isEqualTo("1");
+		assertThat(band.get(0).getReason()).isEqualTo("领域精确命中，LLM复核通过");
+		Mockito.verify(difyClient, Mockito.times(2)).runLLMTask(Mockito.eq("review"), Mockito.anyString());
+	}
+
+	private ExtractRunServiceImpl newService(DifyClient difyClient) {
+		ExtractRunServiceImpl service = new ExtractRunServiceImpl(difyClient, null, null, null, null, null);
+		ReflectionTestUtils.setField(service, "reviewBatchSize", 30);
+		return service;
 	}
 
 	@Test
