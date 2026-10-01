@@ -7,7 +7,7 @@
 
 ## 项目概述
 
-NQBoard 是基于 **Spring Cloud Alibaba / Spring Boot 3** 的企业级快速开发平台（衍生自 pig4cloud 架构），同时支持**微服务**与**单体**两种部署形态，落地了 Spring Authorization Server（OAuth2.0，多种授权模式）、Flowable 工作流、IoT 设备管理、量化（quanta）等业务域。
+NQBoard 是基于 **Spring Cloud Alibaba / Spring Boot 3** 的企业级快速开发平台（衍生自 pig4cloud 架构），同时支持**微服务**与**单体**两种部署形态，落地了 Spring Authorization Server（OAuth2.0，多种授权模式）、Flowable 工作流、IoT 设备管理、量化（sniper）等业务域。
 
 | 技术             | 版本          | 技术                | 版本          |
 |------------------|---------------|---------------------|---------------|
@@ -42,22 +42,22 @@ nqboard
 ├── nqboard-workflow   工作流（Flowable 封装，流程定义/实例/任务/监听/表达式）
 │    ├── nqboard-workflow-api
 │    └── nqboard-workflow-biz
-├── nqboard-quanta     量化交易模块（新骨架，尚未实现业务）[6007]
-│    ├── nqboard-quanta-api
-│    └── nqboard-quanta-biz
+├── nqboard-sniper    量化交易模块（新骨架，尚未实现业务）[6007]
+│    ├── nqboard-sniper-api
+│    └── nqboard-sniper-biz
 └── nqboard-visual     运维可视化
      ├── nqboard-visual-monitor   服务监控
      ├── nqboard-visual-codegen   图形化代码生成
      └── nqboard-visual-quartz    定时任务管理台
 ```
 
-> 网关路由约定：`/auth/**`→auth、`/admin/**`→upms、`/device/**`→device、`/quanta/**`→quanta、`/gen/**`→codegen、`/job/**`→quartz。
+> 网关路由约定：`/auth/**`→auth、`/admin/**`→upms、`/device/**`→device、`/sniper/**`→sniper、`/gen/**`→codegen、`/job/**`→quartz。
 
 ---
 
 ## 框架层包结构
 
-每个业务域（如 device、upms、workflow、quanta）遵循 **api / biz 双层**拆分，包路径为 `com.mx.<域>`（quanta 为 `com.mx.nqboard.quanta`）。
+每个业务域（如 device、upms、workflow、sniper）遵循 **api / biz 双层**拆分，包路径为 `com.mx.<域>`（sniper 为 `com.mx.nqboard.sniper`）。
 
 ```lua
 <模块>-api        # 供其他服务引用的公共契约
@@ -191,7 +191,7 @@ nqboard-<域>-api/src/main/resources/META-INF.spring/org.springframework.cloud.o
 
 示例（一行一个 FQCN）：
 ```
-com.mx.nqboard.quanta.api.feign.RemoteStockBasicService
+com.mx.nqboard.sniper.api.feign.RemoteStockBasicService
 ```
 
 - **自查标准**：每新增一个 `RemoteXxxService`，就检查上述 imports 文件是否已追加其全限定名；遗漏即视为缺陷。
@@ -246,8 +246,8 @@ mvn -q clean install -DskipTests
 # 仅编译指定模块及其依赖
 mvn clean install -pl nqboard-common/nqboard-common-bom -am -DskipTests
 
-# 构建并启动某个微服务（示例：quanta）
-mvn spring-boot:run -pl nqboard-quanta/nqboard-quanta-biz -am
+# 构建并启动某个微服务（示例：sniper）
+mvn spring-boot:run -pl nqboard-sniper/nqboard-sniper-biz -am
 
 # 测试
 mvn test
@@ -299,6 +299,6 @@ mvn package -DskipTests -Ddocker.image.prefix=<image-prefix>
 
 ### 计划模式约束（先规划后编码）
 
-- 涉及多文件、多模块或复杂流程（尤其是 quanta 的 FlowService 编排）时，**先给出实现规划（涉及文件、改动点、顺序、风险），经确认后再落代码**，避免破坏既有架构约定。
+- 涉及多文件、多模块或复杂流程（尤其是 sniper 的 FlowService 编排）时，**先给出实现规划（涉及文件、改动点、顺序、风险），经确认后再落代码**，避免破坏既有架构约定。
 
 ---
