@@ -44,6 +44,9 @@ target/
 ### logs ###
 /logs/
 *.log
+*.log.gz
+.mimosa
+
 
 ### temp ignore ###
 *.cache
