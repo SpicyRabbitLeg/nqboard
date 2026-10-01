@@ -46,6 +46,7 @@ target/
 *.log
 *.log.gz
 .mimosa
+.mimosa/*
 
 
 ### temp ignore ###
