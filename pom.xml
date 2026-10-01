@@ -103,6 +103,7 @@
 		<module>nqboard-device</module>
 		<module>nqboard-workflow</module>
 		<module>nqboard-export</module>
+		<module>nqboard-sniper</module>
 	</modules>
 
 	<dependencyManagement>

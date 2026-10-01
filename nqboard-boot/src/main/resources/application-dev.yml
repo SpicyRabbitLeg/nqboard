@@ -44,8 +44,8 @@ sms:
 # dify配置项
 dify:
   base-url: http://localhost/v1
-  workflow-key: xxxx
-  knowledge-api-key: 'xxxxx' # 知识库 API Key（dataset- 开头，Dify 控制台-知识库-API 获取）
+  workflow-key: app-iHosSNqaJmp6ukx9XiwB8vlj
+  knowledge-api-key: 'dataset-sKJI0YlxCA9l2qgXn8ye01PC' # 知识库 API Key（dataset- 开头，Dify 控制台-知识库-API 获取）
   dataset-name: nqboard-专家画像 # 专家画像数据集名称（不存在时同步任务自动创建）
 
 # 专家抽取配置项
