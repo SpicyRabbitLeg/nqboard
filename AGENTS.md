@@ -42,9 +42,9 @@ nqboard
 ├── nqboard-workflow   工作流（Flowable 封装，流程定义/实例/任务/监听/表达式）
 │    ├── nqboard-workflow-api
 │    └── nqboard-workflow-biz
-├── nqboard-quanta     量化交易模块（新骨架，尚未实现业务）[6007]
-│    ├── nqboard-quanta-api
-│    └── nqboard-quanta-biz
+├── nqboard-sniper     短线量化交易模块 [6007]
+│    ├── nqboard-sniper-api
+│    └── nqboard-sniper-biz
 └── nqboard-visual     运维可视化
      ├── nqboard-visual-monitor   服务监控
      ├── nqboard-visual-codegen   图形化代码生成
