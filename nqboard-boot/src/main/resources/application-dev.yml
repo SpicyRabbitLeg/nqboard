@@ -53,3 +53,14 @@ extract:
   score-keep-threshold: 0.65 # rerank 高分直过阈值（实测无机化学边界人 0.641、有机核心 0.62-0.66，取 0.65 使边界人落入 LLM 复核；低分仍全送复核不自动弃）
   review-batch-size: 100 # LLM 复核每批人数
   review-concurrency: 4 # 复核批次并发数（在 Dify/LLM 服务端并发容量内调大可线性缩短复核时间）
+
+
+# sniper 数据接入默认配置（主文档 §11 data 节最小集；密钥走 Nacos+jasypt 覆盖）
+sniper:
+  data:
+    tushare-token: f9539b38bc1def99444d2e61618179db29d480a7de30d153293ff214   # 空 = Tushare 不可用，整链降级东财主源+日预算计数
+    tushare-first: true                # CN_TUSHARE_FIRST
+    daily-budget: 300                  # CN_SCAN_MAX_AKSHARE_REQUESTS（仅东财主源计数）
+    source-delay-ms: 500               # 兜底源节流下限
+    em-circuit-breaker-seconds: 300
+    request-log: true

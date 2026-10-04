@@ -2,7 +2,7 @@
 
 > 基线：[`重构.md`](重构.md) 第 2~7 章（现状规格）+ 本仓库当前代码（2026-10-01 逐文件核对，commit 9ed0a90）。
 > 核对范围：`src/scan/*`、`src/agents/*`（短线 7 分析师 + risk + PM）、`src/market/cn/*`、`src/prediction/{features,calibration,rule_ensemble}`、`src/tools/api.py`、`scripts/scan_buy_signals.py`、`scripts/track_signals.py`、`.env`、`每日操作指南.md`。差异记录见附录 A。
-> 目标：将 A 股短线信号系统（盘后扫描 + 信号跟踪）完整迁移到 nqboard 项目，技术栈 **Java 17 + Spring Boot 3.5（Spring Cloud Alibaba 微服务）+ MySQL 8 + Dify**，落位 **`nqboard-sniper` 模块**（api/biz 双子模块，端口 6008，见 §1.1 与 [`重构.md`](重构.md) §9.2）。
+> 目标：将 A 股短线信号系统（盘后扫描 + 信号跟踪）完整迁移到 nqboard 项目，技术栈 **Java 17 + Spring Boot 3.5（Spring Cloud Alibaba 微服务）+ MySQL 8 + Dify**，落位 **`nqboard-sniper` 模块**（api/biz 双子模块，端口 6007，见 §1.1 与 [`重构.md`](重构.md) §9.2）。
 > 原则：**行为不变优先**——阈值、公式、拒因字符串、fail-closed 语义一律照搬，不做"顺手优化"；确需变更的（见 §2 决策）单独列出。
 > 明确不迁移：14 个名人/全画像 agent（fundamentals、valuation、growth 及 13 位投资人 agent，full profile 遗留）、legacy 交互 CLI、`app/` FastAPI Web UI、北向资金**分析师**（北向数据预检告警保留）、实验性回测/ML 管线（`src/backtesting/`、`src/backtester.py`，与扫描管线无 import 依赖；注意 `src/prediction/` 的 `features/technical.py`、`features/short_structure.py`、`rule_ensemble.py`、`calibration.py` 被 quick_screen/trend_predictor/gate 消费，**在迁移范围内**）、`--intraday` 盘中模式（Java 版仅支持盘后 T 日扫描；如需盘中另立项目）。
 >
@@ -37,7 +37,7 @@
 
 ### 1.1 模块划分（落位 nqboard-sniper）
 
-nqboard 是 pig4cloud 系 Spring Cloud 微服务工程（`com.mx:nqboard`，仓库约定见其 `AGENTS.md`）。业务落位 **`nqboard-sniper`** 模块（骨架已就位：启动类 `SniperApplication`、端口 6008、Nacos 配置导入），按平台 api/biz 双层约定组织：
+nqboard 是 pig4cloud 系 Spring Cloud 微服务工程（`com.mx:nqboard`，仓库约定见其 `AGENTS.md`）。业务落位 **`nqboard-sniper`** 模块（骨架已就位：启动类 `SniperApplication`、端口 6007、Nacos 配置导入），按平台 api/biz 双层约定组织：
 
 ```
 nqboard-sniper/
@@ -199,7 +199,7 @@ nqboard-sniper/
 
 #### 1.4.4 后端接口分组与前端落位
 
-网关路由 `/sniper/**`（6008）。§1.1 已定 `ScanController`/`LedgerController`/`ReviewController`；按本规划补 `DataController`（§3.1/3.2 数据查询 + 数据刷新触发）与 `OpsController`（daily_run/llm_log/request_log 查询）。页面查询走平台标准 MyBatis-Plus 分页 + `R<T>` 返回体；`report_md`/`report_json`/`meta` 等 JSON/长文本列原样透传，由前端渲染。
+网关路由 `/sniper/**`（6007）。§1.1 已定 `ScanController`/`LedgerController`/`ReviewController`；按本规划补 `DataController`（§3.1/3.2 数据查询 + 数据刷新触发）与 `OpsController`（daily_run/llm_log/request_log 查询）。页面查询走平台标准 MyBatis-Plus 分页 + `R<T>` 返回体；`report_md`/`report_json`/`meta` 等 JSON/长文本列原样透传，由前端渲染。
 
 **接口路径三层约定（对齐 device 等现有模块）**：前端/网关经 `/sniper/**` 访问；平台网关 `NqBoardRequestGlobalFilter` 做全局 StripPrefix=1，因此 Controller 的 `@RequestMapping` **不带 `/sniper` 前缀**（对齐 device `@RequestMapping("/category")`）；路由在 Nacos `nqboard-gateway-dev.yml` 增加 `- id: nqboard-sniper-biz / uri: lb://nqboard-sniper-biz / Path=/sniper/**`（限流配置对齐 device 路由样式）。下文各模块文档接口表中的 `/sniper/**` 路径均指前端/网关路径。分页实现按平台延迟关联范式（先查 id 再查详情，`buildQueryWrapper` 单一来源）。
 
@@ -833,7 +833,7 @@ QoS 参数（对齐 Python 版）：
 | Tushare 重试 | 3 次，限频错误退避 2n s、其他 1n s + rand | 自实现双判定（照 Python `_call`），不引 Spring Retry |
 | 东财节流 | 500ms 下限 | 同上 |
 | 东财熔断 | 7 类连接错误 → OPEN 300s | Sentinel 熔断规则（或自研状态机）+ `waitDurationInOpenState=300s` 语义，OPEN 期间直接路由腾讯/新浪 |
-| 重试（东财/腾讯/新浪） | 最多 5 次，退避 2n+rand(0,1) s | 照 Python `run_throttled_retry` |
+| 重试（东财/腾讯/新浪） | 东财直连 3 次、web_fallback 直连端点多数显式 2 次、K线类 3 次；退避 2n+rand(0,1) s | 照 Python 源码（`_run_em_retry` 默认 3、`web_fallback._get` 调用点多数 2、K线默认 3）——初稿"最多 5 次"已按第八轮源码核对修正（附录 A #20） |
 | 日预算 | 300 次/日，仅"东财主源"模式计数；Tushare 主源不消耗 | `AtomicInteger` + `sniper_daily_run.budget_used` 持久化；耗尽 → Stage1 跳票并记 `stage1_skipped_due_to_budget`（Python `rate_budget.py` 语义） |
 | 请求审计 | 全部 HTTP 出站 | AOP 切面统一写 `sniper_request_log`（endpoint/source/params/n_rows/elapsed_ms）。Python 版 `CN_REQUEST_LOG` 是 opt-in 的 JSONL 文件（`src/data/request_log.py`），Java 侧默认全量，对拍录制直接查表 |
 
@@ -1000,7 +1000,8 @@ QoS 参数（对齐 Python 版）：
 
 #### 4.3.5 全市场快照 `sniper_market_snapshot`
 
-- 主源：东财 clist 分页 `GET push2.eastmoney.com/api/qt/clist/get?pn={1..N}&pz=100&po=1&np=1&fltt=2&invt=2&fid=f3&fs=m:0+t:6,m:0+t:80,m:1+t:2,m:1+t:23,m:0+t:81+s:2048&fields=f12,f13,f14,f2,f3,f5,f6,f8,f15,f16,f17,f18`（akshare `stock_zh_a_spot_em` 底层等价；~55 页拉完全市场）。映射：f12→code、f14→name、f2→price、f3→change_pct(%)、f5→volume(手)、f6→amount(元)、f8→turnover_rate、f15/f16/f17→high/low/open、f18→prev_close、f13→交易所（结合代码段定板块）。
+- 主源：东财 clist 分页 `GET push2.eastmoney.com/api/qt/clist/get?pn={1..N}&pz=100&po=1&np=1&fltt=2&invt=2&fid=f3&fs=m:0+t:6,m:0+t:80,m:1+t:2,m:1+t:23,m:0+t:81+s:2048&fields=f12,f13,f14,f2,f3,f5,f6,f8,f15,f16,f17,f18`（akshare `stock_zh_a_spot_em` 底层等价；~55 页拉完全市场）。
+  **2026-10-03 第八轮核对补注**：Java 实现照 akshare 1.18.64 源码——`82.push2` 镜像、`fid=f12`（非 f3）、`fields` 为全量 31 字段串、带 ut 固定 token；翻页按 `data.total` 求总页数，合并后按 f3 降序（附录 A #20）。映射：f12→code、f14→name、f2→price、f3→change_pct(%)、f5→volume(手)、f6→amount(元)、f8→turnover_rate、f15/f16/f17→high/low/open、f18→prev_close、f13→交易所（结合代码段定板块）。
 - 兜底1 新浪行情中心：`GET vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHQNodeData?page={n}&num=80&sort=amount&asc=0&node=hs_a&symbol=&_s_r_a=page`（Sina Referer 头；~70 页）——`trade`=最新价、`settlement`=昨收、`changepercent`=涨跌幅、`amount`(元)、`volume`(**股**,÷100)、`open/high/low`。
 - 兜底2 腾讯批量：`GET qt.gtimg.cn/q={sh|sz}{code},...`（**GBK 解码**，60 码/批，代码表来自 sniper_stock_basic）——payload 按 `~` 分割，位置：2=代码、1=名称、3=最新、4=昨收、5=今开、32=涨跌幅、33=最高、34=最低、36=总手(手)、37=成交额(**万元**×1e4→元)、38=换手率。
 - 更新：每日 15:05 一次全量 upsert（UK trade_date+code）。**无法回填历史**（clist 只有当日），回填期 Stage0 一字板过滤失真的已知问题见 §4.5。三源字段对齐以 Python `quotes_to_spot_df` 的 schema（代码/名称/最新价/涨跌幅/成交额/成交量/今开/最高/最低）为准。
@@ -1095,6 +1096,7 @@ THS 兜底（列改名后入库）：`日期`→`trade_date`、`开盘价`→`op
 #### 4.3.8 个股新闻 `sniper_company_news`
 
 - 主源：东财个股新闻（akshare `stock_news_em(symbol=code)` 底层；Java 直连同款 push2 新闻接口）。列映射：新闻标题→title、新闻内容→body_digest（≤2000 字）、发布时间→published_at、文章来源→source_name、新闻链接→url。
+  **2026-10-03 第八轮核对补注**：akshare 1.18.64 的 `stock_news_em` 底层即 search-api-web jsonp（pageSize=10）——与下方兜底**同源同接口**；Java 单实现两用（cb=jQuerycb、pageSize=max(limit,20)，照 web_fallback.search_news_em），主源/兜底不再区分两路（附录 A #20）。
 - 兜底：`GET search-api-web.eastmoney.com/search/jsonp?cb=jQuerycb&param={json}`，param JSON：`{"uid":"","keyword":"<6位代码>","type":["cmsArticleWebOld"],"client":"web","clientType":"web","clientVersion":"curr","param":{"cmsArticleWebOld":{"searchScope":"default","sort":"default","pageIndex":1,"pageSize":<limit>,"preTag":"<em>","postTag":"</em>"}}}`——**keyword 用代码不是名称**（与 Python 一致）；响应剥 jsonp 壳后取 `result.cmsArticleWebOld[]`，title/content 去 `<em>` 标签，`mediaName`→source_name、`date`→published_at、`url`、`content`→body_digest。
 - 预打标（入库时照抄 Python 规则）：sentiment=`_sentiment_from_text(title+body)`（正/负关键词计数，pos>neg→positive、neg>pos→negative、否则 neutral；关键词表 `_POSITIVE_KW`/`_NEGATIVE_KW` 照搬）；announcement_type 五规则：业绩预告(业绩预告/业绩快报)、回购(回购)、减持(减持/清仓)、监管(立案/问询/处罚/监管)、政策(政策/国务院/央行/证监会)。
 - 更新：deep 票 Stage2 预检时拉（limit 50~100），`fetch_date=当日` 作增量游标；`uk(code,published_at,title(100))` 幂等去重。0 条新闻仅告警不拒票（§5.4）。
@@ -1572,7 +1574,7 @@ sniper:
 | M6（~1周） | 台账 + 复盘（含红线告警） + 调度 + 手动端点 | 台账幂等验证；影子运行启动 |
 | M7 | 影子运行 2~4 周 → 切换 | 一致率 100% 后 Python 版下线为 oracle 保留 |
 
-> 待拍板项：① weighted_score 负 IC（−0.058）——**现状已停用**（`CN_SCAN_MIN_WEIGHTED_SCORE=0`，gate 代码路径保留），迁移照搬停用态即可；"分组共识"决策属可选优化，若做则 M4 时定并在影子运行对比两版差异清单。② 快照无法回填导致历史日期 Stage0 失真——影响对拍样例选择（选近期日期对拍）。③ **连板回溯窗口源码自身不一致**（2026-10-03 核对发现）：`features/technical.py` 的 `consecutive_limit_up` 用 5 日回溯（max_lookback=5），`features/short_structure.py` 用 6 日——Java 唯一指标库只能取其一，**S2 指标库动工前拍板**（建议取 5，与 Stage1 快筛/gate 过热否决的主链路一致；short_structure 仅 trend_predictor 消费，影响面小，偏差须记入对拍差异清单）。
+> 待拍板项：① weighted_score 负 IC（−0.058）——**现状已停用**（`CN_SCAN_MIN_WEIGHTED_SCORE=0`，gate 代码路径保留），迁移照搬停用态即可；"分组共识"决策属可选优化，若做则 M4 时定并在影子运行对比两版差异清单。② 快照无法回填导致历史日期 Stage0 失真——影响对拍样例选择（选近期日期对拍）。③ **连板回溯窗口源码自身不一致**（2026-10-03 核对发现）：`features/technical.py` 的 `consecutive_limit_up` 用 5 日回溯（max_lookback=5），`features/short_structure.py` 用 6 日——Java 唯一指标库只能取其一，**已拍板（2026-10-03）：取 5 日**——与 Stage1 快筛/gate 过热否决的主链路一致；short_structure（仅 trend_predictor 消费）同步统一为 5，与 Python 版 6 日窗口的偏差记入对拍差异清单（golden master 预期差异点）。
 
 ---
 
@@ -1598,6 +1600,7 @@ sniper:
 16. **DDL 全表统一 BaseEntity 六件套（2026-10-02，第四轮）**：用户拍板取消行情/事件表的审计列豁免——13 张行情/事件表与 `sniper_request_log` 全部补 `id` 雪花主键 + `create_by/create_time/update_by/update_time/del_flag`，原复合自然键转 UNIQUE KEY（upsert 幂等语义不变，§4.3.0 规则 2 同步改为"UK 即防重"，D2 的 SQLite 兼容措辞同步改 UK 口径）；行情/事件表批量路径的审计列由代码显式赋值、`del_flag` 恒 '0' 仅作规范留位（查询不做逻辑删除过滤）；01/05 文档 DDL 与说明、README 骨架条目同步。
 17. **文档集自包含化与精度口径统一（2026-10-02，第五轮）**：① `重构.md` / `每日操作指南.md` 随本档一并落位迁移目标仓库（`nqboard-sniper-biz/src/main/resources/doc/`），全部 `docs/重构.md`、`docs/每日操作指南.md` 悬空引用改为同目录相对链接，并新增"文档集导航"头注——开发只读该目录一套文档即可，无需回查 ai-hedge-fund 仓库；② §12 新增"逐位相等 / bit-exact 统一判定口径"头注：数据级按存储精度（价格 1e-4 / 因子 1e-10）取整后相等，计算级维持容差 1e-9（相对），拒因字节级——§4.3.4/§4.5 回填条款同步引用该口径；③ 模块文档：README 头注补配套文档链接与对拍口径指引，01 文档 §3.5 快照 clist URL 补全 `po/np/fltt/invt/fid` 参数（对齐 §4.3.5）、§4.4/§7 的 bit-exact 措辞对齐统一口径，04 文档红线出处改相对链接。
 18. **五路源码逐条核对后的勘误回填（2026-10-03，第六轮）**：对 重构.md 第 2~7 章与本方案全部规格做了五路并行源码核对（数据层/过滤算法/Agent+LLM/Gate+台账/配置项，逐条对照 ai-hedge-fund 源码）。结论：公式/阈值/规则/端点链全部一致。回填的修订：① 台账两处行为口径——never_filled 触发为等待 **>10** 个交易日（tracking.py:392-399）、平仓为**止损全程优先**而非先到先得（tracking.py:401-428），§9 与 03 模块文档同步改；② §3.5 补报告重跑的子表（signal/rejected 无 UK）先删后插语义；③ §4.2 补日预算两处口径（快照无条件消耗、`truncated_at_stage` 取值）与行情反向兜底；④ §4.3.0 补规则 7（source 换算封装在数据层）；⑤ §13 补待拍板项③（连板回溯窗口 technical.py=5 vs short_structure.py=6）；⑥ 重构.md 侧修订：P-01 表 `get_margin_detail` 重复定义 4 次（非 5 次）、§5.1 `industry_cap` 拒因补 `>{cap}` 后缀、§2.4.7 北向 composite 强制 AkShare-only、§4.4.2 补一字涨停检查在 PM 决策路径不触发的警示、§6.1 台账两处同①、§7.2 `CN_SCAN_MIN_LISTING_DAYS` 标注"未设走默认"、P-04 补连板窗口不一致；⑦ 新增附录 B（边界语义补遗）收录核对发现的 30+ 条边界行为，供实现对拍时逐条遵守。
+19. **拍板决议回填（2026-10-03，第七轮）**：动工前用户拍板两项并回填全文——① **端口以骨架实际 6007 为准**（`application.yml` 即 6007）：全部活动规格中的 6008 统一改为 6007，附录 A #13 为历史记录保留原文；② **连板回溯窗口取 5 日**：§13 待拍板项③落定，唯一指标库统一 5 日窗口，short_structure 链路（trend_predictor 消费）与 Python 版 6 日的偏差记入对拍差异清单（§13/B.2 #17/重构.md P-04 同步）。
 
 ---
 
@@ -1626,7 +1629,7 @@ sniper:
 14. 特征 <10 根时返回值**非全 0**：rsi_6/rsi_14=50、ma_ratio=1.0、volume_ratio=1.0，并带 `_gaps=["insufficient_price_history"]`（`technical.py:28-41`）。
 15. MACD 数据 <26 根时 ema26 退化为 ema12，dif≈0（`technical.py:80`）。
 16. short_structure 四处边界：① 封板强度 ×0.15 **仅在当日封板时计入**，未封板该项为 0（`short_structure.py:108`）；② 高开子分实际为 `clip(gap_open_pct×15,-1,1)`，有 ×15 缩放（:105）；③ "换手"实为量比代理 `turnover_ratio_5d=当日量/5日均量`（:74-78）；④ "未封板但有连板记忆 0.2"分支**实际不可达**（连板计数从最新 K 线起数，今日未封板则 count=0，:187-204）。
-17. **连板回溯窗口源码自身不一致**：technical.py=5 日 / short_structure.py=6 日 → §13 待拍板项③。
+17. **连板回溯窗口源码自身不一致**：technical.py=5 日 / short_structure.py=6 日 → §13 待拍板项③（**已拍板取 5**，short_structure 同步统一，偏差记入对拍差异清单）。
 18. Stage 0 规则 9（近涨停剔除）代码注释称"仅作一字板检测字段缺失时的兜底"，但实际在 change_pct 非空时**无条件执行**（`universe.py:357-361`）——以行为为准。
 19. Stage 1 单票异常被静默吞掉继续下一票（`quick_screen.py:209-211`）；`ScreenCandidate.name` 由 quick_screen 回填而非 score_ticker（:180,214）。
 
@@ -1657,3 +1660,4 @@ sniper:
 36. ingest 三重幂等：`ingested_reports` 来源记录 + 同 cohort 同票跳过 + **已有活跃（pending/open）仓位的票不重复入场**（`tracking.py:213-228`）。
 
 > 勘误与核对过程记录：本次核对以五路并行方式逐条对照源码（2026-10-03），全部结论已回填本文与 重构.md；后续若再发现文档与源码偏差，按同样方式回填附录 A 条目并保持两仓库副本同步。
+20. **兜底客户端逐端点源码核对（2026-10-03，第八轮）**：东财/腾讯/新浪直连实现以 `web_fallback.py` + akshare 1.18.64 为基准逐端点核对（T5 阶段），修正正文：① QoS 重试次数——东财直连实际 3 次（`_run_em_retry` 默认）、web_fallback 直连端点多数显式 2 次、K线 3 次（初稿"最多 5 次"不确，§4.2 已改）；② 新闻主源与兜底同源——akshare `stock_news_em` 底层即 search-api-web jsonp，Java 单实现两用（§4.3.8 已注）；③ 快照 clist URL/参数照 akshare 1.18.64：`82.push2` 镜像、`fid=f12`（非 f3）、全量 31 字段 fields 串、ut 固定 token、`data.total` 求总页 + 合并后 f3 降序（§4.3.5 已注）；④ 个股/板块 K线 `fields2` 照 akshare 1.18.64（f51..f61+f116、ut token）；⑤ 腾讯 fqkline 单次 640 根——Python 超窗即截断，Java 照本文档分段拉（行为超集，对拍选 ≤640 根窗口不受影响）；⑥ Python `Connection: close` 防 stale keep-alive（RemoteDisconnected）在 Java 由 JDK 受限头过滤 + stale 连接自动重试兜底，浏览器 UA/Referer 头照搬；⑦ 新闻预打标关键词表实测 `_POSITIVE_KW`=14 个、`_NEGATIVE_KW`=15 个（正文"15/16 个"为笔误），`announcement_type` 五规则无匹配时兜底 **"general"**（非 null）、text 全空才为 null——Java NewsClassifier 照源码语义。两仓库副本同步。

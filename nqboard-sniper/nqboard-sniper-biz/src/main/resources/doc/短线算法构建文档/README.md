@@ -43,7 +43,7 @@ M7      影子运行 2~4 周 → 切换（主文档 §12/§13）
 ## 四、全局约定（摘自主文档，各模块文档不再重复）
 
 - 技术栈：Java 17 + Spring Boot 3.5（无虚拟线程，CompletableFuture + 线程池）+ MyBatis-Plus 3.5.16 + Nacos/jasypt + Dify Workflow（主文档 §1.2）。
-- 落位：`nqboard-sniper`（api/biz 双子模块，端口 6008，网关路由 `/sniper/**`，包 `com.mx.nqboard.sniper`，主文档 §1.1）。
+- 落位：`nqboard-sniper`（api/biz 双子模块，端口 6007，网关路由 `/sniper/**`，包 `com.mx.nqboard.sniper`，主文档 §1.1）。
 - **拒因字符串是跨系统契约**：23 个 `RejectReason.code()` 与 Python 版逐字节一致（主文档 D5），CI 契约测试锁死。
 - **fail-closed**：LLM 调用失败/超时/JSON 非法一律拒票或降 watch，绝不消费默认/占位输出（主文档 D4）。
 - **单位口径**：行情/快照表原样入库 + `source` 列标注；事件/资金类表入库即换算成 Python client 层对外单位（元、股、小数比例），权威矩阵见主文档 §4.3.0。

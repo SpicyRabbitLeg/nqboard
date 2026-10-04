@@ -1,0 +1,214 @@
+{
+  "mode": "flat_short",
+  "gate_version": "3",
+  "as_of": "2026-09-30",
+  "universe": "hs300_csi500",
+  "prefetch_ok": true,
+  "market_ret_5d": -0.041142,
+  "market_gate_blocked": false,
+  "stage0_count": 619,
+  "stage1_count": 50,
+  "stage2_count": 8,
+  "meta": {
+    "budget": {
+      "requests_used": 1,
+      "requests_limit": 300,
+      "requests_remaining": 299,
+      "exhausted": false,
+      "stage1_skipped_due_to_budget": 0,
+      "truncated_at_stage": null
+    },
+    "market_ret_5d": -0.041142
+  },
+  "signals": [
+    {
+      "ticker": "600848.SH",
+      "action": "entry_ok",
+      "confidence": 78,
+      "weighted_score": 0.5204,
+      "quantity": 2100,
+      "trial_cash_used": 19005.0,
+      "reasoning": "加权得分 0.52 | technical_analyst_agent:bullish(62%), sector_rotation_agent:bullish(78%), main_force_flo",
+      "reasons": [
+        "技术面偏多",
+        "主力净流入",
+        "板块偏强",
+        "趋势预测↑"
+      ],
+      "risk_flags": [],
+      "analyst_summary": {
+        "technical_analyst": {
+          "signal": "bullish",
+          "confidence": 62,
+          "reasoning": "{\"short_trend\": {\"signal\": \"bullish\", \"confidence\": 53, \"metrics\": {\"ema_align\": \"bull\", \"adx\": 26.378112740968348}}, \"short_momentum\": {\"signal\": \"bullish\", \"confidence\": 34, \"metrics\": {\"momentum_5d\": 0.0426267281105992, \"volume_ratio\": 1.5556085138664129, \"volume_confirmed\": true}}, \"overbought_oversold\": {\"signal\": \"neutral\", \"confidence\": 50, \"metrics\": {\"rsi_6\": 73.33333333333331, \"bollinger_z\": 2.847589550393876}}, \"breakout\": {\"signal\": \"neutral\", \"confidence\": 50, \"metrics\": {\"breakout_up\": false, \"breakout_down\": false, \"volume_ratio\": 1.5556085138664129}}, \"composite_metrics\": {\"ema5\": 8.749700747243244, \"ema10\": 8.668366656079764, \"ema20\": 8.620030258142172, \"adx\": 26.378112740968348, \"rsi_6\": 73.33333333333331, \"bollinger_z\": 2.847589550393876, \"momentum_5d\": 0.0426267281105992, \"volume_ratio\": 1.5556085138664129, \"high_20\": 9.19, \"last_close\": 9.05, \"limit_up_distance_pct\": 0.05745856353591155, \"consecutive_limit_up\": 0.0, \"macd_hist\": 0.05756917400987858, \"trend_strength\": 0.4108721071321061}}"
+        },
+        "sector_rotation": {
+          "signal": "bullish",
+          "confidence": 78,
+          "reasoning": "所属行业「园区开发」近3日涨幅 4.58%，板块偏强。"
+        },
+        "main_force_flow": {
+          "signal": "bullish",
+          "confidence": 86,
+          "reasoning": "近2日主力持续净流入，3日累计 0.35亿。"
+        },
+        "dragon_tiger": {
+          "signal": "neutral",
+          "confidence": 40,
+          "reasoning": "近30日未上榜龙虎榜，无游资/机构席位信号。"
+        },
+        "policy_sentiment": {
+          "signal": "neutral",
+          "confidence": 40,
+          "reasoning": "近期新闻中政策关键词较少，对股价驱动不明显。"
+        },
+        "sentiment_analyst": {
+          "signal": "bearish",
+          "confidence": 47.28,
+          "reasoning": "{\"insider_trading\": {\"signal\": \"bearish\", \"confidence\": 76, \"metrics\": {\"total_trades\": 38, \"bullish_trades\": 9, \"bearish_trades\": 29, \"weight\": 0.3}}, \"news_sentiment\": {\"signal\": \"neutral\", \"confidence\": 0, \"metrics\": {\"total_articles\": 10, \"bullish_articles\": 0, \"bearish_articles\": 0, \"neutral_articles\": 10, \"articles_classified_by_llm\": 0, \"llm_mode\": \"none\", \"weight\": 0.7}}}"
+        },
+        "trend_predictor": {
+          "signal": "bullish",
+          "confidence": 74,
+          "reasoning": "未来5日预测方向: up, 预期收益 1.22%, 趋势强度 0.41"
+        }
+      },
+      "prefetch_warnings": [],
+      "screen_score": 80.0
+    }
+  ],
+  "rejected": [
+    {
+      "ticker": "600583.SH",
+      "reasons": [
+        "action=watch",
+        "confidence=55<70"
+      ],
+      "decision": {
+        "action": "watch",
+        "quantity": 0,
+        "confidence": 55,
+        "reasoning": "加权得分 0.33 | technical_analyst_agent:bullish(63%), sector_rotation_agent:neutral(48%), main_force_flo",
+        "tradable": true,
+        "block_reason": "",
+        "weighted_score": 0.3343
+      }
+    },
+    {
+      "ticker": "601689.SH",
+      "reasons": [
+        "action=watch",
+        "confidence=55<70"
+      ],
+      "decision": {
+        "action": "watch",
+        "quantity": 0,
+        "confidence": 55,
+        "reasoning": "加权得分 0.14 | technical_analyst_agent:bullish(55%), sector_rotation_agent:bearish(64%), main_force_flo",
+        "tradable": true,
+        "block_reason": "",
+        "weighted_score": 0.1392
+      }
+    },
+    {
+      "ticker": "300142.SZ",
+      "reasons": [
+        "action=watch",
+        "confidence=55<70",
+        "flat_trend_adx=18.4<25",
+        "bullish_agents=2<3",
+        "fund_sentiment_bullish=0<1"
+      ],
+      "decision": {
+        "action": "watch",
+        "quantity": 0,
+        "confidence": 55,
+        "reasoning": "加权得分 0.23 | technical_analyst_agent:bullish(50%), sector_rotation_agent:bullish(68%), main_force_flo",
+        "tradable": true,
+        "block_reason": "",
+        "weighted_score": 0.2287
+      }
+    },
+    {
+      "ticker": "600606.SH",
+      "reasons": [
+        "technical_confidence=49<50"
+      ],
+      "decision": {
+        "action": "entry_ok",
+        "quantity": 9100,
+        "confidence": 82,
+        "reasoning": "加权得分 0.60 | technical_analyst_agent:bullish(49%), sector_rotation_agent:bullish(78%), main_force_flo",
+        "tradable": true,
+        "block_reason": "",
+        "weighted_score": 0.6032
+      }
+    },
+    {
+      "ticker": "300718.SZ",
+      "reasons": [
+        "action=watch",
+        "confidence=55<70",
+        "technical_confidence=26<50",
+        "bullish_agents=0<3",
+        "price_group_bullish=0<1",
+        "fund_sentiment_bullish=0<1"
+      ],
+      "decision": {
+        "action": "watch",
+        "quantity": 0,
+        "confidence": 55,
+        "reasoning": "加权得分 -0.19 | technical_analyst_agent:bearish(26%), sector_rotation_agent:bearish(72%), main_force_fl",
+        "tradable": true,
+        "block_reason": "",
+        "weighted_score": -0.1896
+      }
+    },
+    {
+      "ticker": "600884.SH",
+      "reasons": [
+        "action=watch",
+        "confidence=55<70",
+        "trend_not_up_and_tech_weak",
+        "technical_confidence=24<50",
+        "bullish_agents=0<3",
+        "price_group_bullish=0<1",
+        "fund_sentiment_bullish=0<1"
+      ],
+      "decision": {
+        "action": "watch",
+        "quantity": 0,
+        "confidence": 55,
+        "reasoning": "加权得分 -0.03 | technical_analyst_agent:bearish(24%), sector_rotation_agent:neutral(48%), main_force_fl",
+        "tradable": true,
+        "block_reason": "",
+        "weighted_score": -0.0338
+      }
+    },
+    {
+      "ticker": "000963.SZ",
+      "reasons": [
+        "daily_cap:1"
+      ],
+      "decision": {
+        "action": "entry_ok",
+        "quantity": 500,
+        "confidence": 77,
+        "reasoning": "加权得分 0.50 | technical_analyst_agent:bullish(57%), sector_rotation_agent:bullish(66%), main_force_flo",
+        "tradable": true,
+        "block_reason": "",
+        "weighted_score": 0.5034
+      }
+    }
+  ],
+  "prefetch_warnings": {
+    "600848.SH": [],
+    "600583.SH": [],
+    "601689.SH": [],
+    "300142.SZ": [],
+    "600606.SH": [],
+    "300718.SZ": [],
+    "000963.SZ": [],
+    "600884.SH": []
+  }
+}
