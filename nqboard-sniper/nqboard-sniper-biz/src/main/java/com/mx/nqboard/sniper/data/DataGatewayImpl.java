@@ -34,6 +34,7 @@ import com.mx.nqboard.sniper.data.provider.CompositeProvider;
 import com.mx.nqboard.sniper.service.AdjFactorService;
 import com.mx.nqboard.sniper.service.CompanyNewsService;
 import com.mx.nqboard.sniper.service.DailyPriceService;
+import com.mx.nqboard.sniper.service.IndexDailyService;
 import com.mx.nqboard.sniper.service.DragonTigerService;
 import com.mx.nqboard.sniper.service.FinancialIndicatorService;
 import com.mx.nqboard.sniper.service.FundFlowDailyService;
@@ -74,6 +75,8 @@ public class DataGatewayImpl implements DataGateway {
 	private final IndexConstituentsService indexConstituentsService;
 
 	private final DailyPriceService dailyPriceService;
+
+	private final IndexDailyService indexDailyService;
 
 	private final AdjFactorService adjFactorService;
 
@@ -118,12 +121,22 @@ public class DataGatewayImpl implements DataGateway {
 
 	@Override
 	public List<KlineBar> getIndexPrices(String indexCode6, LocalDate start, LocalDate end) {
-		List<DailyPriceEntity> stored = queryPrices(indexCode6, start, end, AdjustEnum.NONE);
+		List<com.mx.nqboard.sniper.api.entity.IndexDailyEntity> stored = indexDailyService.list(Wrappers
+			.<com.mx.nqboard.sniper.api.entity.IndexDailyEntity>lambdaQuery()
+			.eq(com.mx.nqboard.sniper.api.entity.IndexDailyEntity::getIndexCode, indexCode6)
+			.ge(com.mx.nqboard.sniper.api.entity.IndexDailyEntity::getTradeDate, start)
+			.le(com.mx.nqboard.sniper.api.entity.IndexDailyEntity::getTradeDate, end)
+			.orderByAsc(com.mx.nqboard.sniper.api.entity.IndexDailyEntity::getTradeDate));
 		if (!stored.isEmpty()) {
-			return toBars(stored);
+			return toIndexBars(stored);
 		}
 		dataIngestService.ingestIndexDaily(indexCode6, start, end);
-		return toBars(queryPrices(indexCode6, start, end, AdjustEnum.NONE));
+		return toIndexBars(indexDailyService.list(Wrappers
+			.<com.mx.nqboard.sniper.api.entity.IndexDailyEntity>lambdaQuery()
+			.eq(com.mx.nqboard.sniper.api.entity.IndexDailyEntity::getIndexCode, indexCode6)
+			.ge(com.mx.nqboard.sniper.api.entity.IndexDailyEntity::getTradeDate, start)
+			.le(com.mx.nqboard.sniper.api.entity.IndexDailyEntity::getTradeDate, end)
+			.orderByAsc(com.mx.nqboard.sniper.api.entity.IndexDailyEntity::getTradeDate)));
 	}
 
 	@Override
@@ -432,6 +445,14 @@ public class DataGatewayImpl implements DataGateway {
 		return entities.stream()
 			.map(e -> new KlineBar(e.getCode(), e.getTradeDate(), e.getOpen(), e.getHigh(), e.getLow(),
 					e.getClose(), e.getVolume(), e.getAmount(), e.getPreClose(), e.getSource()))
+			.toList();
+	}
+
+	/** 指数行 → KlineBar（preClose 恒 null：指数无除权昨收语义） */
+	private static List<KlineBar> toIndexBars(List<com.mx.nqboard.sniper.api.entity.IndexDailyEntity> entities) {
+		return entities.stream()
+			.map(e -> new KlineBar(e.getIndexCode(), e.getTradeDate(), e.getOpen(), e.getHigh(), e.getLow(),
+					e.getClose(), e.getVolume(), e.getAmount(), null, e.getSource()))
 			.toList();
 	}
 

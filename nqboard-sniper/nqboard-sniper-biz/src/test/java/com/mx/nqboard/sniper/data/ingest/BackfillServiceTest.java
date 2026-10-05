@@ -35,8 +35,14 @@ class BackfillServiceTest {
 
 	private final DataGateway dataGateway = mock(DataGateway.class);
 
+	private final com.mx.nqboard.sniper.data.provider.em.EastmoneyClient eastmoneyClient =
+			mock(com.mx.nqboard.sniper.data.provider.em.EastmoneyClient.class);
+
+	private final com.mx.nqboard.sniper.service.StockBasicService stockBasicService =
+			mock(com.mx.nqboard.sniper.service.StockBasicService.class);
+
 	private final BackfillService service = new BackfillService(dataIngest, dailyRunService, dataGateway,
-			new DailyBudget(300));
+			new DailyBudget(300), eastmoneyClient, stockBasicService);
 
 	{
 		// runGuarded 打桩为真实执行 work（回填编排逻辑在被测路径上）
@@ -44,6 +50,8 @@ class BackfillServiceTest {
 			java.util.function.Supplier<Map<String, Object>> work = inv.getArgument(2);
 			return work.get();
 		});
+		// ①' 行业修正跑批在回填路径上执行；默认空表（行业修正单测见 patchEmIndustry 相关用例）
+		when(stockBasicService.list()).thenReturn(List.of());
 	}
 
 	@Test
@@ -97,13 +105,65 @@ class BackfillServiceTest {
 
 		boolean first = service.submit(LocalDate.of(2026, 9, 28), LocalDate.of(2026, 9, 30));
 		assertThat(first).isTrue();
-		// 单线程 executor 串行：第二次提交在首个任务结束前可能被拒（AtomicBoolean 语义），结束后允许
+		// 单线程 executor 串行：verify(times(1)) 在 runGuarded 被调用的瞬间即通过，而 backfilling
+		// 复位发生在任务 finally 里稍晚一点——轮询提交直到首任务结束放行（原写法存在竞态偶发失败）
 		verify(dailyRunService, timeout(2000).times(1)).runGuarded(eq(LocalDate.of(2026, 9, 28)),
 				eq(com.mx.nqboard.sniper.api.enums.RunPhaseEnum.DATA_UPDATE), any());
-		// 首任务完成后 backfilling 已复位 → 可再次提交
-		boolean second = service.submit(LocalDate.of(2026, 9, 28), LocalDate.of(2026, 9, 30));
+		boolean second = false;
+		for (int i = 0; i < 100 && !second; i++) {
+			second = service.submit(LocalDate.of(2026, 9, 28), LocalDate.of(2026, 9, 30));
+			if (!second) {
+				Thread.sleep(10);
+			}
+		}
 		assertThat(second).isTrue();
 		verify(dailyRunService, timeout(2000).times(2)).runGuarded(any(), any(), any());
+	}
+
+	@Test
+	@DisplayName("f127 行业修正：非空且差异才覆盖置 'em'，空值保持 tushare 口径")
+	void patchEmIndustryOverwrites() {
+		com.mx.nqboard.sniper.api.entity.StockBasicEntity s1 = stock("600519", "白酒(旧)", "tushare");
+		com.mx.nqboard.sniper.api.entity.StockBasicEntity s2 = stock("000001", null, null);
+		com.mx.nqboard.sniper.api.entity.StockBasicEntity s3 = stock("600036", "银行", "em");
+		when(stockBasicService.list()).thenReturn(List.of(s1, s2, s3));
+		when(eastmoneyClient.industryByCode("600519")).thenReturn("白酒");
+		when(eastmoneyClient.industryByCode("000001")).thenReturn(null);
+		when(eastmoneyClient.industryByCode("600036")).thenReturn("银行");
+
+		Map<String, Object> detail = service.patchEmIndustry();
+
+		assertThat(detail.get("total")).isEqualTo(3);
+		assertThat(detail.get("patched")).isEqualTo(1);
+		assertThat(detail.get("unchanged")).isEqualTo(2);
+		assertThat(detail.get("failed")).isEqualTo(0);
+		verify(stockBasicService).update(any());
+	}
+
+	@Test
+	@DisplayName("f127 行业修正：连续 20 票请求失败中止整批（防风控期空转）")
+	void patchEmIndustryAbortsOnConsecutiveFailures() {
+		List<com.mx.nqboard.sniper.api.entity.StockBasicEntity> stocks = new java.util.ArrayList<>();
+		for (int i = 0; i < 30; i++) {
+			stocks.add(stock("6000" + String.format("%02d", i), null, null));
+		}
+		when(stockBasicService.list()).thenReturn(stocks);
+		when(eastmoneyClient.industryByCode(anyString())).thenThrow(new IllegalStateException("em blocked"));
+
+		Map<String, Object> detail = service.patchEmIndustry();
+
+		assertThat(detail.get("aborted")).isEqualTo(true);
+		assertThat(detail.get("failed")).isEqualTo(20);
+		verify(eastmoneyClient, times(20)).industryByCode(anyString());
+	}
+
+	private static com.mx.nqboard.sniper.api.entity.StockBasicEntity stock(String code, String industry,
+			String industrySource) {
+		com.mx.nqboard.sniper.api.entity.StockBasicEntity e = new com.mx.nqboard.sniper.api.entity.StockBasicEntity();
+		e.setCode(code);
+		e.setIndustry(industry);
+		e.setIndustrySource(industrySource);
+		return e;
 	}
 
 }

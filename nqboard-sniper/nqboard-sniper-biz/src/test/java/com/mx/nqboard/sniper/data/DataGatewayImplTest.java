@@ -60,6 +60,7 @@ class DataGatewayImplTest {
 
 	private final DataGatewayImpl gateway = new DataGatewayImpl(tradeCalendarService, stockBasicService,
 			mock(com.mx.nqboard.sniper.service.IndexConstituentsService.class), dailyPriceService,
+			mock(com.mx.nqboard.sniper.service.IndexDailyService.class),
 			mock(com.mx.nqboard.sniper.service.AdjFactorService.class),
 			mock(com.mx.nqboard.sniper.service.MarketSnapshotService.class),
 			mock(com.mx.nqboard.sniper.service.IndustryBoardDailyService.class),

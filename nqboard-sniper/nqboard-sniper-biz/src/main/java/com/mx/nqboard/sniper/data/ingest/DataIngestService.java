@@ -233,20 +233,34 @@ public class DataIngestService {
 	}
 
 	/**
-	 * 指数日行情（index_daily → code=前6位、adjust='none'；市场门 5 日涨幅与台账基准基准消费）。
+	 * 指数日行情（index_daily → 独立表 sniper_index_daily，index_code=前 6 位；市场门 5 日涨幅与
+	 * 台账基准消费。不入 sniper_daily_price：000905.SH（中证500）与 000905.SZ（厦门港务）
+	 * 6 位代码冲突，同表 UK 会互相覆盖——附录 A #20）。
 	 */
 	public int ingestIndexDaily(String indexCode6, LocalDate start, LocalDate end) {
 		String tsCode = indexCode6 + (indexCode6.startsWith("399") ? ".SZ" : ".SH");
-		List<DailyPriceEntity> bars = tushareClient
+		List<com.mx.nqboard.sniper.api.entity.IndexDailyEntity> bars = tushareClient
 			.indexDaily(tsCode, start.format(COMPACT), end.format(COMPACT))
 			.stream()
-			.map(row -> toPriceEntity(row, null, AdjustEnum.NONE))
-			.map(e -> {
-				e.setCode(indexCode6);
+			.map(row -> {
+				com.mx.nqboard.sniper.api.entity.IndexDailyEntity e = new com.mx.nqboard.sniper.api.entity.IndexDailyEntity();
+				IngestAudit.fill(e);
+				e.setId(IngestAudit.newId());
+				e.setIndexCode(indexCode6);
+				e.setTradeDate(row.date("trade_date"));
+				e.setOpen(row.dec("open"));
+				e.setHigh(row.dec("high"));
+				e.setLow(row.dec("low"));
+				e.setClose(row.dec("close"));
+				// 单位原样：vol=手、amount=千元（tushare index_daily）
+				e.setVolume(row.dec("vol"));
+				e.setAmount(row.dec("amount"));
+				e.setSource("tushare");
+				e.setFetchedAt(java.time.LocalDateTime.now());
 				return e;
 			})
 			.toList();
-		return batchUpsert("index_daily:" + indexCode6, bars, upsertMapper::upsertDailyPrice);
+		return batchUpsert("index_daily:" + indexCode6, bars, upsertMapper::upsertIndexDaily);
 	}
 
 	/**
@@ -402,7 +416,8 @@ public class DataIngestService {
 		e.setHigh(mul(none.getHigh(), factor, maxFactor));
 		e.setLow(mul(none.getLow(), factor, maxFactor));
 		e.setClose(mul(none.getClose(), factor, maxFactor));
-		e.setPreClose(none.getPreClose());
+		// pre_close 仅 none 行有语义（除权调整后昨收），qfq 行不复制——附录 A #20②
+		e.setPreClose(null);
 		e.setVolume(none.getVolume());
 		e.setAmount(none.getAmount());
 		e.setSource(none.getSource());

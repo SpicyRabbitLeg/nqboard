@@ -242,4 +242,13 @@ public class DataController {
 			@DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
 	}
 
+	@PostMapping("/backfill/industry-patch")
+	@SysLog("手动触发f127行业修正跑批")
+	@HasPermission("sniper_data_refresh")
+	@Operation(summary = "提交东财 f127 行业修正异步跑批（stock_basic 全量逐票，EM 节流约 0.5s/票；进度看任务运行记录页）")
+	public R<Boolean> backfillIndustryPatch() {
+		boolean submitted = backfillService.submitIndustryPatch();
+		return submitted ? R.ok(true) : R.failed("行业修正跑批已在运行中，请稍后");
+	}
+
 }

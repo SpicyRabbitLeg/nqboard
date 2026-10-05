@@ -109,6 +109,34 @@ CREATE TABLE `sniper_daily_price`  (
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT='日行情' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
+-- Table structure for sniper_index_daily
+-- 指数日行情（市场门 5 日涨幅、台账 000300/000905/399006 基准消费；独立于 sniper_daily_price——
+-- 000905.SH 指数与 000905.SZ 个股 6 位代码冲突，同表 UK(code,trade_date,adjust) 会互相覆盖，2026-10-04 勘误）
+-- ----------------------------
+DROP TABLE IF EXISTS `sniper_index_daily`;
+CREATE TABLE `sniper_index_daily`  (
+  `id`          bigint NOT NULL COMMENT '雪花id(ASSIGN_ID)',
+  `create_by`   varchar(255) NULL DEFAULT NULL COMMENT '创建人',
+  `create_time` datetime NULL DEFAULT NULL COMMENT '创建时间',
+  `update_by`   varchar(255) NULL DEFAULT NULL COMMENT '修改人',
+  `update_time` datetime NULL DEFAULT NULL COMMENT '修改时间',
+  `del_flag`    char(1) NULL DEFAULT '0' COMMENT '删除状态（0未删除、1删除）',
+  `index_code` char(6) NOT NULL COMMENT '指数代码前6位(000300/000905/399006)',
+  `trade_date` date NOT NULL COMMENT '交易日',
+  `open`       decimal(16,4) NULL COMMENT '开盘价',
+  `high`       decimal(16,4) NULL COMMENT '最高价',
+  `low`        decimal(16,4) NULL COMMENT '最低价',
+  `close`      decimal(16,4) NOT NULL COMMENT '收盘价',
+  `volume`     decimal(18,2) NULL COMMENT '成交量(手,tushare index_daily原样)',
+  `amount`     decimal(20,4) NULL COMMENT '成交额(千元,tushare index_daily原样)',
+  `source`     varchar(20) NOT NULL DEFAULT 'tushare' COMMENT '来源',
+  `fetched_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '拉取时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE KEY `uk_index_daily` (`index_code`, `trade_date`) USING BTREE,
+  KEY `idx_index_daily_date` (`trade_date`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT='指数日行情' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
 -- Table structure for sniper_adj_factor
 -- 复权因子（qfq 重算 + 除权检测；adj_factor 支持 trade_date 全市场一次拉，§4.3.4）
 -- ----------------------------

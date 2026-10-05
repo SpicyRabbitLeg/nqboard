@@ -23,6 +23,11 @@ public enum RunPhaseEnum implements IEnum<String> {
 	DATA_UPDATE("data_update"),
 
 	/**
+	 * 东财 f127 行业修正跑批（stock_basic 全量逐票，EM 节流约 0.5s/票）
+	 */
+	INDUSTRY_PATCH("industry_patch"),
+
+	/**
 	 * 盘后扫描（15:35）
 	 */
 	SCAN("scan"),

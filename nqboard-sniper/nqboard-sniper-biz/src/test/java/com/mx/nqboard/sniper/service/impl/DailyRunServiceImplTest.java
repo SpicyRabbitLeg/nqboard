@@ -68,6 +68,22 @@ class DailyRunServiceImplTest {
 	}
 
 	@Test
+	@DisplayName("work 仅执行一次（回归：三元里重复 get() 曾导致全流程跑两遍）")
+	void workExecutesExactlyOnce() {
+		org.mockito.Mockito.doReturn(null).when(service).getOne(any(), eq(false));
+		org.mockito.Mockito.doReturn(true).when(service).saveOrUpdate(any(DailyRunEntity.class));
+		org.mockito.Mockito.doReturn(true).when(service).updateById(any(DailyRunEntity.class));
+		java.util.concurrent.atomic.AtomicInteger invocations = new java.util.concurrent.atomic.AtomicInteger();
+
+		service.runGuarded(LocalDate.of(2026, 9, 30), RunPhaseEnum.DATA_UPDATE, () -> {
+			invocations.incrementAndGet();
+			return Map.of("ok", 1);
+		});
+
+		assertThat(invocations.get()).isEqualTo(1);
+	}
+
+	@Test
 	@DisplayName("work 异常：写 failed+error 后原样上抛")
 	void failureWritesFailedAndRethrows() {
 		org.mockito.Mockito.doReturn(null).when(service).getOne(any(), eq(false));

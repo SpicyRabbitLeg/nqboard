@@ -100,14 +100,14 @@ class DataIngestServiceTest {
 		assertThat(calls.get(0).get(0).getAdjust()).isEqualTo(com.mx.nqboard.sniper.api.enums.AdjustEnum.NONE);
 		assertThat(calls.get(0).get(0).getAmount()).isEqualByComparingTo("5678");
 		assertThat(calls.get(0).get(0).getPreClose()).isEqualByComparingTo("9.9");
-		// 第二次：qfq 行——close = 10.2×5.0÷10 = 5.1（scale 4）；价格列乘、量额列不乘
+		// 第二次：qfq 行——close = 10.2×5.0÷10 = 5.1（scale 4）；价格列乘、量额列不乘、pre_close 置空（附录 A #20②）
 		DailyPriceEntity qfq = calls.get(1).get(0);
 		assertThat(qfq.getAdjust()).isEqualTo(com.mx.nqboard.sniper.api.enums.AdjustEnum.QFQ);
 		assertThat(qfq.getClose()).isEqualByComparingTo("5.1000");
 		assertThat(qfq.getOpen()).isEqualByComparingTo("5.0000");
 		assertThat(qfq.getVolume()).isEqualByComparingTo("12345");
 		assertThat(qfq.getAmount()).isEqualByComparingTo("5678");
-		assertThat(qfq.getPreClose()).isEqualByComparingTo("9.9");
+		assertThat(qfq.getPreClose()).isNull();
 		assertThat(qfq.getId()).isNotNull();
 	}
 

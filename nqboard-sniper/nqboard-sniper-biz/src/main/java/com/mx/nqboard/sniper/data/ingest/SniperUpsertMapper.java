@@ -35,7 +35,7 @@ public interface SniperUpsertMapper {
 			  (id, create_by, create_time, update_by, update_time, cal_date, is_open, fetched_at)
 			VALUES
 			<foreach collection="list" item="e" separator=",">
-			  (#{e.id}, #{e.createBy}, #{e.createTime}, #{e.updateBy}, #{e.updateTime},
+			  (#{e.id}, 'sniper', #{e.createTime}, 'sniper', #{e.updateTime},
 			   #{e.calDate}, #{e.isOpen}, #{e.fetchedAt})
 			</foreach>
 			AS new
@@ -51,7 +51,7 @@ public interface SniperUpsertMapper {
 			   list_date, industry, industry_source, fetched_at)
 			VALUES
 			<foreach collection="list" item="e" separator=",">
-			  (#{e.id}, #{e.createBy}, #{e.createTime}, #{e.updateBy}, #{e.updateTime},
+			  (#{e.id}, 'sniper', #{e.createTime}, 'sniper', #{e.updateTime},
 			   #{e.code}, #{e.exchange}, #{e.tsCode}, #{e.name},
 			   #{e.listDate}, #{e.industry}, #{e.industrySource}, #{e.fetchedAt})
 			</foreach>
@@ -69,7 +69,7 @@ public interface SniperUpsertMapper {
 			  (id, create_by, create_time, update_by, update_time, index_code, snapshot_date, code, fetched_at)
 			VALUES
 			<foreach collection="list" item="e" separator=",">
-			  (#{e.id}, #{e.createBy}, #{e.createTime}, #{e.updateBy}, #{e.updateTime},
+			  (#{e.id}, 'sniper', #{e.createTime}, 'sniper', #{e.updateTime},
 			   #{e.indexCode}, #{e.snapshotDate}, #{e.code}, #{e.fetchedAt})
 			</foreach>
 			AS new
@@ -85,7 +85,7 @@ public interface SniperUpsertMapper {
 			   open, high, low, close, pre_close, volume, amount, source, fetched_at)
 			VALUES
 			<foreach collection="list" item="e" separator=",">
-			  (#{e.id}, #{e.createBy}, #{e.createTime}, #{e.updateBy}, #{e.updateTime},
+			  (#{e.id}, 'sniper', #{e.createTime}, 'sniper', #{e.updateTime},
 			   #{e.code}, #{e.tradeDate}, #{e.adjust},
 			   #{e.open}, #{e.high}, #{e.low}, #{e.close}, #{e.preClose}, #{e.volume}, #{e.amount},
 			   #{e.source}, #{e.fetchedAt})
@@ -98,13 +98,33 @@ public interface SniperUpsertMapper {
 			</script>""")
 	int upsertDailyPrice(@Param("list") List<DailyPriceEntity> list);
 
+	/** 指数日行情（独立表：000905.SH 与 000905.SZ 同码，不入 sniper_daily_price——附录 A #20） */
+	@Insert("""
+			<script>
+			INSERT INTO sniper_index_daily
+			  (id, create_by, create_time, update_by, update_time, index_code, trade_date,
+			   open, high, low, close, volume, amount, source, fetched_at)
+			VALUES
+			<foreach collection="list" item="e" separator=",">
+			  (#{e.id}, 'sniper', #{e.createTime}, 'sniper', #{e.updateTime},
+			   #{e.indexCode}, #{e.tradeDate},
+			   #{e.open}, #{e.high}, #{e.low}, #{e.close}, #{e.volume}, #{e.amount},
+			   #{e.source}, #{e.fetchedAt})
+			</foreach>
+			AS new
+			ON DUPLICATE KEY UPDATE
+			  open = new.open, high = new.high, low = new.low, close = new.close,
+			  volume = new.volume, amount = new.amount, source = new.source, update_time = new.update_time
+			</script>""")
+	int upsertIndexDaily(@Param("list") List<com.mx.nqboard.sniper.api.entity.IndexDailyEntity> list);
+
 	@Insert("""
 			<script>
 			INSERT INTO sniper_adj_factor
 			  (id, create_by, create_time, update_by, update_time, code, trade_date, factor, fetched_at)
 			VALUES
 			<foreach collection="list" item="e" separator=",">
-			  (#{e.id}, #{e.createBy}, #{e.createTime}, #{e.updateBy}, #{e.updateTime},
+			  (#{e.id}, 'sniper', #{e.createTime}, 'sniper', #{e.updateTime},
 			   #{e.code}, #{e.tradeDate}, #{e.factor}, #{e.fetchedAt})
 			</foreach>
 			AS new
@@ -120,7 +140,7 @@ public interface SniperUpsertMapper {
 			   price, change_pct, open, high, low, prev_close, volume, amount, turnover_rate, source, fetched_at)
 			VALUES
 			<foreach collection="list" item="e" separator=",">
-			  (#{e.id}, #{e.createBy}, #{e.createTime}, #{e.updateBy}, #{e.updateTime},
+			  (#{e.id}, 'sniper', #{e.createTime}, 'sniper', #{e.updateTime},
 			   #{e.tradeDate}, #{e.code}, #{e.name},
 			   #{e.price}, #{e.changePct}, #{e.open}, #{e.high}, #{e.low}, #{e.prevClose},
 			   #{e.volume}, #{e.amount}, #{e.turnoverRate}, #{e.source}, #{e.fetchedAt})
@@ -141,7 +161,7 @@ public interface SniperUpsertMapper {
 			   open, high, low, close, volume, amount, source, fetched_at)
 			VALUES
 			<foreach collection="list" item="e" separator=",">
-			  (#{e.id}, #{e.createBy}, #{e.createTime}, #{e.updateBy}, #{e.updateTime},
+			  (#{e.id}, 'sniper', #{e.createTime}, 'sniper', #{e.updateTime},
 			   #{e.boardName}, #{e.tradeDate},
 			   #{e.open}, #{e.high}, #{e.low}, #{e.close}, #{e.volume}, #{e.amount}, #{e.source}, #{e.fetchedAt})
 			</foreach>
@@ -165,7 +185,7 @@ public interface SniperUpsertMapper {
 			   pe_ttm, pb, ps_ttm, market_cap, source, fetched_at)
 			VALUES
 			<foreach collection="list" item="e" separator=",">
-			  (#{e.id}, #{e.createBy}, #{e.createTime}, #{e.updateBy}, #{e.updateTime},
+			  (#{e.id}, 'sniper', #{e.createTime}, 'sniper', #{e.updateTime},
 			   #{e.code}, #{e.reportPeriod},
 			   #{e.grossMargin}, #{e.netMargin}, #{e.roe}, #{e.revenueGrowth}, #{e.profitGrowth},
 			   #{e.peTtm}, #{e.pb}, #{e.psTtm}, #{e.marketCap}, #{e.source}, #{e.fetchedAt})
@@ -186,7 +206,7 @@ public interface SniperUpsertMapper {
 			   body_digest, published_at, sentiment, announcement_type, fetch_date, fetched_at)
 			VALUES
 			<foreach collection="list" item="e" separator=",">
-			  (#{e.id}, #{e.createBy}, #{e.createTime}, #{e.updateBy}, #{e.updateTime},
+			  (#{e.id}, 'sniper', #{e.createTime}, 'sniper', #{e.updateTime},
 			   #{e.code}, #{e.title}, #{e.sourceName}, #{e.url},
 			   #{e.bodyDigest}, #{e.publishedAt}, #{e.sentiment}, #{e.announcementType},
 			   #{e.fetchDate}, #{e.fetchedAt})
@@ -206,7 +226,7 @@ public interface SniperUpsertMapper {
 			   holder_type, change_vol, avg_price, after_shares, source, fetched_at)
 			VALUES
 			<foreach collection="list" item="e" separator=",">
-			  (#{e.id}, #{e.createBy}, #{e.createTime}, #{e.updateBy}, #{e.updateTime},
+			  (#{e.id}, 'sniper', #{e.createTime}, 'sniper', #{e.updateTime},
 			   #{e.code}, #{e.annDate}, #{e.holderName},
 			   #{e.holderType}, #{e.changeVol}, #{e.avgPrice}, #{e.afterShares}, #{e.source}, #{e.fetchedAt})
 			</foreach>
@@ -224,7 +244,7 @@ public interface SniperUpsertMapper {
 			   main_net, super_net, large_net, medium_net, small_net, source, fetched_at)
 			VALUES
 			<foreach collection="list" item="e" separator=",">
-			  (#{e.id}, #{e.createBy}, #{e.createTime}, #{e.updateBy}, #{e.updateTime},
+			  (#{e.id}, 'sniper', #{e.createTime}, 'sniper', #{e.updateTime},
 			   #{e.code}, #{e.tradeDate},
 			   #{e.mainNet}, #{e.superNet}, #{e.largeNet}, #{e.mediumNet}, #{e.smallNet},
 			   #{e.source}, #{e.fetchedAt})
@@ -243,7 +263,7 @@ public interface SniperUpsertMapper {
 			   net_buy, buy_amt, sell_amt, change_pct, source, fetched_at)
 			VALUES
 			<foreach collection="list" item="e" separator=",">
-			  (#{e.id}, #{e.createBy}, #{e.createTime}, #{e.updateBy}, #{e.updateTime},
+			  (#{e.id}, 'sniper', #{e.createTime}, 'sniper', #{e.updateTime},
 			   #{e.code}, #{e.tradeDate}, #{e.reason},
 			   #{e.netBuy}, #{e.buyAmt}, #{e.sellAmt}, #{e.changePct}, #{e.source}, #{e.fetchedAt})
 			</foreach>
@@ -261,7 +281,7 @@ public interface SniperUpsertMapper {
 			   market_value, float_ratio, float_mv_ratio, source, fetched_at)
 			VALUES
 			<foreach collection="list" item="e" separator=",">
-			  (#{e.id}, #{e.createBy}, #{e.createTime}, #{e.updateBy}, #{e.updateTime},
+			  (#{e.id}, 'sniper', #{e.createTime}, 'sniper', #{e.updateTime},
 			   #{e.code}, #{e.planDate}, #{e.shares},
 			   #{e.marketValue}, #{e.floatRatio}, #{e.floatMvRatio}, #{e.source}, #{e.fetchedAt})
 			</foreach>

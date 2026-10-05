@@ -51,7 +51,13 @@ public class BackfillService {
 
 	private final DailyBudget dailyBudget;
 
+	private final com.mx.nqboard.sniper.data.provider.em.EastmoneyClient eastmoneyClient;
+
+	private final com.mx.nqboard.sniper.service.StockBasicService stockBasicService;
+
 	private final AtomicBoolean backfilling = new AtomicBoolean(false);
+
+	private final AtomicBoolean patching = new AtomicBoolean(false);
 
 	/** 提交异步回填（单线程串行；已在跑时拒绝重复提交） */
 	public boolean submit(LocalDate startDate, LocalDate endDate) {
@@ -70,6 +76,81 @@ public class BackfillService {
 		return true;
 	}
 
+	/** 提交异步 f127 行业修正跑批（已在跑时拒绝重复提交） */
+	public boolean submitIndustryPatch() {
+		if (!patching.compareAndSet(false, true)) {
+			log.warn("industry patch already running; reject submit");
+			return false;
+		}
+		CompletableFuture.runAsync(() -> {
+			try {
+				dailyRunService.runGuarded(LocalDate.now(), RunPhaseEnum.INDUSTRY_PATCH, this::patchEmIndustry);
+			}
+			finally {
+				patching.set(false);
+			}
+		});
+		return true;
+	}
+
+	/**
+	 * 东财 f127 行业修正跑批（§3.2 现用口径，附录 A #20⑤）：stock_basic 全量逐票、EM 节流约
+	 * 0.5s/票（EastmoneyClient 内建 500ms 下限）、f127 非空才覆盖 industry/industry_source='em'、
+	 * 单票失败保持 tushare 口径。连续 20 票请求失败（如 EM 对出口 IP 风控）中止整批——否则
+	 * 5572 票 × 每票重试退避在风控期会空转数小时。
+	 * @return detail 标记（patched/unchanged/failed，中止时含 aborted）
+	 */
+	public Map<String, Object> patchEmIndustry() {
+		int patched = 0;
+		int unchanged = 0;
+		int failed = 0;
+		int consecutiveFailures = 0;
+		boolean aborted = false;
+		List<com.mx.nqboard.sniper.api.entity.StockBasicEntity> stocks = stockBasicService.list();
+		for (com.mx.nqboard.sniper.api.entity.StockBasicEntity stock : stocks) {
+			String emIndustry;
+			try {
+				emIndustry = eastmoneyClient.industryByCode(stock.getCode());
+				consecutiveFailures = 0;
+			}
+			catch (RuntimeException e) {
+				failed++;
+				consecutiveFailures++;
+				log.warn("industry patch failed for {}: {}", stock.getCode(), e.getMessage());
+				if (consecutiveFailures >= 20) {
+					log.error("industry patch aborted after {} consecutive failures", consecutiveFailures);
+					aborted = true;
+					break;
+				}
+				continue;
+			}
+			if (emIndustry == null || emIndustry.isBlank()) {
+				unchanged++;
+				continue;
+			}
+			if (!emIndustry.equals(stock.getIndustry()) || !"em".equals(stock.getIndustrySource())) {
+				// 字符串列 UpdateWrapper（单测环境无 MP lambda 缓存，取舍同 DataGatewayImpl.fetchedToday）
+				stockBasicService.update(new com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper<com.mx.nqboard.sniper.api.entity.StockBasicEntity>()
+					.eq("code", stock.getCode())
+					.set("industry", emIndustry)
+					.set("industry_source", "em"));
+				patched++;
+			}
+			else {
+				unchanged++;
+			}
+		}
+		Map<String, Object> detail = new LinkedHashMap<>();
+		detail.put("total", stocks.size());
+		detail.put("patched", patched);
+		detail.put("unchanged", unchanged);
+		detail.put("failed", failed);
+		if (aborted) {
+			detail.put("aborted", true);
+		}
+		return detail;
+	}
+
 	Map<String, Object> runBackfill(LocalDate startDate, LocalDate endDate) {
 		return dailyRunService.runGuarded(startDate, RunPhaseEnum.DATA_UPDATE, () -> {
 			Map<String, Object> detail = new LinkedHashMap<>();
@@ -78,6 +159,9 @@ public class BackfillService {
 				detail.put("stockBasicRows", dataIngestService.ingestStockBasic());
 				detail.put("calendarRows", dataIngestService.ingestTradeCalendar("19900101",
 						LocalDate.now().plusDays(400).toString()));
+
+				// ①' 东财 f127 行业修正跑批（§3.2 EM 现用口径；连续失败自动中止，不阻塞回填）
+				detail.put("industryPatch", patchEmIndustry());
 
 				// ② 逐交易日：none 行 + 因子（全市场各 1 调）
 				List<LocalDate> tradingDays = dataGateway.getTradingDays(startDate, endDate);

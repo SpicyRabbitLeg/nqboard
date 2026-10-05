@@ -50,7 +50,9 @@ public class DailyRunServiceImpl extends ServiceImpl<DailyRunMapper, DailyRunEnt
 		saveOrUpdate(run);
 
 		try {
-			Map<String, Object> detail = work.get() != null ? work.get() : new LinkedHashMap<>();
+			// work 只能调一次：三元里重复 get() 会把整个任务流程执行两遍（2026-10-04 实测 Tushare 调用翻倍）
+			Map<String, Object> result = work.get();
+			Map<String, Object> detail = result != null ? result : new LinkedHashMap<>();
 			run.setStatus(RunStatusEnum.DONE);
 			run.setDetail(toJson(detail));
 			Object budget = detail.get("budgetUsed");
